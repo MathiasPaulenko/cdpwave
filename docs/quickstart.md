@@ -18,15 +18,15 @@ from cdpwave import CDPClient
 
 async def main() -> None:
     async with await CDPClient.launch(headless=True) as client:
-        page = await client.new_page("https://example.com")
-        await page.page.enable()
+        session = await client.new_page("https://example.com")
+        await session.page.enable()
 
-        result = await page.runtime.evaluate(
+        result = await session.runtime.evaluate(
             "document.title", return_by_value=True
         )
         print(result["result"]["value"])  # "Example Domain"
 
-        await page.close()
+        await session.close()
 
 asyncio.run(main())
 ```
@@ -47,20 +47,20 @@ from cdpwave import CDPClient
 
 async def main() -> None:
     async with await CDPClient.launch(headless=True) as client:
-        page = await client.new_page()
-        await page.page.enable()
+        session = await client.new_page()
+        await session.page.enable()
 
         loaded = asyncio.Event()
 
         async def on_load(_: dict) -> None:
             loaded.set()
 
-        page.on("Page.loadEventFired", on_load)
-        await page.page.navigate("https://example.com")
+        session.on("Page.loadEventFired", on_load)
+        await session.page.navigate("https://example.com")
         await asyncio.wait_for(loaded.wait(), timeout=10.0)
         print("Page loaded!")
 
-        await page.close()
+        await session.close()
 
 asyncio.run(main())
 ```
@@ -74,10 +74,10 @@ import asyncio
 from cdpwave import CDPClient
 
 async def fetch_title(client: CDPClient, url: str) -> str:
-    page = await client.new_page(url)
-    result = await page.runtime.evaluate("document.title", return_by_value=True)
+    session = await client.new_page(url)
+    result = await session.runtime.evaluate("document.title", return_by_value=True)
     title = result["result"]["value"]
-    await page.close()
+    await session.close()
     return title
 
 async def main() -> None:
@@ -98,9 +98,9 @@ asyncio.run(main())
 
 ```python
 async with await CDPClient.launch(headless=True) as client:
-    async with await client.new_page() as page:
-        await page.page.navigate("https://example.com")
-    # page.close() called automatically
+    async with await client.new_page() as session:
+        await session.page.navigate("https://example.com")
+    # session.close() called automatically
 # client.close() called automatically — browser terminated
 ```
 

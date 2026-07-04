@@ -35,10 +35,10 @@ from cdpwave import CDPClient
 
 async def main() -> None:
     async with await CDPClient.launch(headless=True) as client:
-        page = await client.new_page("https://example.com")
-        result = await page.runtime.evaluate("document.title", return_by_value=True)
+        session = await client.new_page("https://example.com")
+        result = await session.runtime.evaluate("document.title", return_by_value=True)
         print(result["result"]["value"])  # "Example Domain"
-        await page.close()
+        await session.close()
 
 asyncio.run(main())
 ```

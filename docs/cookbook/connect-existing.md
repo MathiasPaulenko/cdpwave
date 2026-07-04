@@ -32,10 +32,10 @@ for target in pages:
     print(f"{target.target_id} | {target.title} | {target.url}")
 
 if pages:
-    page = await client.connect_to_page(pages[0].target_id)
-    result = await page.runtime.evaluate("document.title", return_by_value=True)
+    session = await client.connect_to_page(pages[0].target_id)
+    result = await session.runtime.evaluate("document.title", return_by_value=True)
     print(result["result"]["value"])
-    await page.close()
+    await session.close()
 ```
 
 ## Full example
@@ -51,10 +51,10 @@ async def main() -> None:
             print(f"  {t.target_id} | {t.type} | {t.title} | {t.url}")
 
         if pages:
-            page = await client.connect_to_page(pages[0].target_id)
-            result = await page.runtime.evaluate("document.title", return_by_value=True)
+            session = await client.connect_to_page(pages[0].target_id)
+            result = await session.runtime.evaluate("document.title", return_by_value=True)
             print(f"Title: {result['result']['value']}")
-            await page.close()
+            await session.close()
 
 asyncio.run(main())
 ```

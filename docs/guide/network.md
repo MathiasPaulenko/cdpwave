@@ -3,7 +3,7 @@
 ## Enable network monitoring
 
 ```python
-await page.network.enable()
+await session.network.enable()
 ```
 
 ## Monitor requests
@@ -13,7 +13,7 @@ async def on_request(params: dict) -> None:
     req = params["request"]
     print(f"{req['method']} {req['url']}")
 
-page.on("Network.requestWillBeSent", on_request)
+session.on("Network.requestWillBeSent", on_request)
 ```
 
 ## Monitor responses
@@ -23,7 +23,7 @@ async def on_response(params: dict) -> None:
     resp = params["response"]
     print(f"{resp['status']} {resp['mimeType']}")
 
-page.on("Network.responseReceived", on_response)
+session.on("Network.responseReceived", on_response)
 ```
 
 ## Cookies
@@ -31,7 +31,7 @@ page.on("Network.responseReceived", on_response)
 ### Get cookies
 
 ```python
-result = await page.network.get_cookies(urls=["https://example.com"])
+result = await session.network.get_cookies(urls=["https://example.com"])
 for cookie in result["cookies"]:
     print(f"{cookie['name']}={cookie['value']}")
 ```
@@ -39,7 +39,7 @@ for cookie in result["cookies"]:
 ### Set a cookie
 
 ```python
-await page.network.set_cookie(
+await session.network.set_cookie(
     name="session_id",
     value="abc123",
     url="https://example.com",
@@ -51,19 +51,19 @@ await page.network.set_cookie(
 ### Delete a cookie
 
 ```python
-await page.network.delete_cookies("session_id", url="https://example.com")
+await session.network.delete_cookies("session_id", url="https://example.com")
 ```
 
 ### Clear all cookies
 
 ```python
-await page.network.clear_browser_cookies()
+await session.network.clear_browser_cookies()
 ```
 
 ## User agent override
 
 ```python
-await page.network.set_user_agent_override(
+await session.network.set_user_agent_override(
     "cdpwave-bot/1.0",
     accept_language="en-US",
     platform="TestOS",
@@ -75,19 +75,19 @@ await page.network.set_user_agent_override(
 Disable cache:
 
 ```python
-await page.network.set_cache_disabled(True)
+await session.network.set_cache_disabled(True)
 ```
 
 Clear browser cache:
 
 ```python
-await page.network.clear_browser_cache()
+await session.network.clear_browser_cache()
 ```
 
 ## Emulate network conditions
 
 ```python
-await page.network.emulate_network_conditions(
+await session.network.emulate_network_conditions(
     offline=False,
     latency=200,  # ms
     download_throughput=500_000,  # bytes/s
@@ -103,8 +103,8 @@ from cdpwave import CDPClient
 
 async def main() -> None:
     async with await CDPClient.launch(headless=True) as client:
-        page = await client.new_page()
-        await page.network.enable()
+        session = await client.new_page()
+        await session.network.enable()
 
         requests: dict[str, dict] = {}
 
@@ -120,16 +120,16 @@ async def main() -> None:
             if req_id in requests:
                 requests[req_id]["status"] = params["response"]["status"]
 
-        page.on("Network.requestWillBeSent", on_request)
-        page.on("Network.responseReceived", on_response)
+        session.on("Network.requestWillBeSent", on_request)
+        session.on("Network.responseReceived", on_response)
 
-        await page.page.navigate("https://example.com")
+        await session.page.navigate("https://example.com")
         await asyncio.sleep(2)
 
         for info in requests.values():
             print(f"{info['method']:6s} {info.get('status', '?')} {info['url']}")
 
-        await page.close()
+        await session.close()
 
 asyncio.run(main())
 ```

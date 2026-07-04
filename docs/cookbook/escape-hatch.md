@@ -5,7 +5,7 @@ cdpwave covers 7 CDP domains in v1: Page, Runtime, Network, DOM, Target, Log, an
 ## Basic usage
 
 ```python
-result = await page.send("Emulation.setDeviceMetricsOverride", {
+result = await session.send("Emulation.setDeviceMetricsOverride", {
     "width": 375,
     "height": 812,
     "deviceScaleFactor": 3,
@@ -18,13 +18,13 @@ result = await page.send("Emulation.setDeviceMetricsOverride", {
 ## No params
 
 ```python
-await page.send("Page.stopLoading")
+await session.send("Page.stopLoading")
 ```
 
 Or pass `None` explicitly:
 
 ```python
-await page.send("Page.stopLoading", None)
+await session.send("Page.stopLoading", None)
 ```
 
 ## Emulation example
@@ -32,16 +32,16 @@ await page.send("Page.stopLoading", None)
 Set device metrics, take a mobile screenshot, then clear:
 
 ```python
-await page.send("Emulation.setDeviceMetricsOverride", {
+await session.send("Emulation.setDeviceMetricsOverride", {
     "width": 375,
     "height": 812,
     "deviceScaleFactor": 3,
     "mobile": True,
 })
 
-screenshot = await page.page.capture_screenshot(format="png")
+screenshot = await session.page.capture_screenshot(format="png")
 
-await page.send("Emulation.clearDeviceMetricsOverride")
+await session.send("Emulation.clearDeviceMetricsOverride")
 ```
 
 ## Input simulation
@@ -50,7 +50,7 @@ Type text character by character:
 
 ```python
 for char in "cdpwave":
-    await page.send("Input.dispatchKeyEvent", {
+    await session.send("Input.dispatchKeyEvent", {
         "type": "char",
         "text": char,
     })
@@ -59,13 +59,13 @@ for char in "cdpwave":
 Press Enter:
 
 ```python
-await page.send("Input.dispatchKeyEvent", {
+await session.send("Input.dispatchKeyEvent", {
     "type": "keyDown",
     "key": "Enter",
     "code": "Enter",
     "windowsVirtualKeyCode": 13,
 })
-await page.send("Input.dispatchKeyEvent", {
+await session.send("Input.dispatchKeyEvent", {
     "type": "keyUp",
     "key": "Enter",
     "code": "Enter",
@@ -76,8 +76,8 @@ await page.send("Input.dispatchKeyEvent", {
 ## Performance tracing
 
 ```python
-await page.send("Performance.enable")
-metrics = await page.send("Performance.getMetrics")
+await session.send("Performance.enable")
+metrics = await session.send("Performance.getMetrics")
 for metric in metrics["metrics"]:
     print(f"{metric['name']}: {metric['value']}")
 ```
@@ -90,7 +90,7 @@ for metric in metrics["metrics"]:
 from cdpwave import CommandError
 
 try:
-    await page.send("NonExistent.method")
+    await session.send("NonExistent.method")
 except CommandError as e:
     print(f"CDP error: {e.code} {e.message}")
 ```

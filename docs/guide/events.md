@@ -8,7 +8,7 @@ Use `session.on()` to register an async handler:
 async def on_load(params: dict) -> None:
     print("Page loaded!")
 
-page.on("Page.loadEventFired", on_load)
+session.on("Page.loadEventFired", on_load)
 ```
 
 ## Unsubscribe
@@ -16,7 +16,7 @@ page.on("Page.loadEventFired", on_load)
 `on()` returns a `Subscription` object. Call `unsubscribe()` to remove the handler:
 
 ```python
-sub = page.on("Page.loadEventFired", on_load)
+sub = session.on("Page.loadEventFired", on_load)
 # ... later
 sub.unsubscribe()
 ```
@@ -24,7 +24,7 @@ sub.unsubscribe()
 Or use `session.off()`:
 
 ```python
-page.off("Page.loadEventFired", on_load)
+session.off("Page.loadEventFired", on_load)
 ```
 
 ## Error isolation
@@ -38,8 +38,8 @@ async def bad_handler(_: dict) -> None:
 async def good_handler(params: dict) -> None:
     print("Still works!")
 
-page.on("Page.loadEventFired", bad_handler)
-page.on("Page.loadEventFired", good_handler)
+session.on("Page.loadEventFired", bad_handler)
+session.on("Page.loadEventFired", good_handler)
 # bad_handler raises, good_handler still runs
 ```
 
@@ -48,8 +48,8 @@ page.on("Page.loadEventFired", good_handler)
 Register multiple handlers for the same event. All are called in registration order:
 
 ```python
-page.on("Page.loadEventFired", handler_a)
-page.on("Page.loadEventFired", handler_b)
+session.on("Page.loadEventFired", handler_a)
+session.on("Page.loadEventFired", handler_b)
 ```
 
 ## Browser-level events
@@ -84,19 +84,19 @@ from cdpwave import CDPClient
 
 async def main() -> None:
     async with await CDPClient.launch(headless=True) as client:
-        page = await client.new_page()
-        await page.runtime.enable()
+        session = await client.new_page()
+        await session.runtime.enable()
 
         async def on_console(params: dict) -> None:
             msg_type = params["type"]
             args = [a.get("value", a.get("description", "?")) for a in params["args"]]
             print(f"[console.{msg_type}] {' '.join(str(v) for v in args)}")
 
-        page.on("Runtime.consoleAPICalled", on_console)
-        await page.page.navigate("about:blank")
-        await page.runtime.evaluate("console.log('hello from JS')")
+        session.on("Runtime.consoleAPICalled", on_console)
+        await session.page.navigate("about:blank")
+        await session.runtime.evaluate("console.log('hello from JS')")
         await asyncio.sleep(1)
-        await page.close()
+        await session.close()
 
 asyncio.run(main())
 ```

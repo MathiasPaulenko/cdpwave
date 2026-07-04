@@ -5,7 +5,7 @@
 ```python
 import base64
 
-result = await page.page.capture_screenshot(format="png")
+result = await session.page.capture_screenshot(format="png")
 with open("screenshot.png", "wb") as f:
     f.write(base64.b64decode(result["data"]))
 ```
@@ -13,7 +13,7 @@ with open("screenshot.png", "wb") as f:
 ## JPEG screenshot
 
 ```python
-result = await page.page.capture_screenshot(format="jpeg", quality=90)
+result = await session.page.capture_screenshot(format="jpeg", quality=90)
 with open("screenshot.jpg", "wb") as f:
     f.write(base64.b64decode(result["data"]))
 ```
@@ -30,13 +30,13 @@ clip = {
     "height": 100,
     "scale": 1,
 }
-result = await page.page.capture_screenshot(format="png", clip=clip)
+result = await session.page.capture_screenshot(format="png", clip=clip)
 ```
 
 ## Full page screenshot
 
 ```python
-result = await page.page.capture_screenshot(
+result = await session.page.capture_screenshot(
     format="png",
     capture_beyond_viewport=True,
 )
@@ -47,7 +47,7 @@ result = await page.page.capture_screenshot(
 ```python
 import base64
 
-result = await page.page.print_to_pdf(
+result = await session.page.print_to_pdf(
     print_background=True,
     paper_width=8.5,
     paper_height=11.0,
@@ -63,7 +63,7 @@ with open("output.pdf", "wb") as f:
 ## Landscape PDF
 
 ```python
-result = await page.page.print_to_pdf(
+result = await session.page.print_to_pdf(
     landscape=True,
     print_background=True,
 )
@@ -78,9 +78,9 @@ from cdpwave import CDPClient
 
 async def main() -> None:
     async with await CDPClient.launch(headless=True) as client:
-        page = await client.new_page("https://example.com")
-        await page.page.enable()
-        await page.page.navigate("https://example.com")
+        session = await client.new_page("https://example.com")
+        await session.page.enable()
+        await session.page.navigate("https://example.com")
 
         # Wait for load
         loaded = asyncio.Event()
@@ -88,20 +88,20 @@ async def main() -> None:
         async def on_load(_: dict) -> None:
             loaded.set()
 
-        page.on("Page.loadEventFired", on_load)
+        session.on("Page.loadEventFired", on_load)
         await asyncio.wait_for(loaded.wait(), timeout=10.0)
 
         # Screenshot
-        shot = await page.page.capture_screenshot(format="png")
+        shot = await session.page.capture_screenshot(format="png")
         with open("screenshot.png", "wb") as f:
             f.write(base64.b64decode(shot["data"]))
 
         # PDF
-        pdf = await page.page.print_to_pdf(print_background=True)
+        pdf = await session.page.print_to_pdf(print_background=True)
         with open("output.pdf", "wb") as f:
             f.write(base64.b64decode(pdf["data"]))
 
-        await page.close()
+        await session.close()
 
 asyncio.run(main())
 ```

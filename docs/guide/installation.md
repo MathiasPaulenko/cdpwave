@@ -31,10 +31,10 @@ from cdpwave import CDPClient
 
 async def main() -> None:
     async with await CDPClient.launch(headless=True) as client:
-        page = await client.new_page("about:blank")
-        result = await page.runtime.evaluate("1 + 1", return_by_value=True)
+        session = await client.new_page("about:blank")
+        result = await session.runtime.evaluate("1 + 1", return_by_value=True)
         print(result["result"]["value"])  # 2
-        await page.close()
+        await session.close()
 
 asyncio.run(main())
 ```

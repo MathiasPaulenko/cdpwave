@@ -5,8 +5,8 @@ cdpwave uses flatten sessions — a single WebSocket connection manages all tabs
 ## Create a new page
 
 ```python
-page1 = await client.new_page("https://example.com")
-page2 = await client.new_page("https://www.python.org")
+session1 = await client.new_page("https://example.com")
+session2 = await client.new_page("https://www.python.org")
 ```
 
 Each `CDPSession` has its own domain properties (`page`, `runtime`, `network`, etc.) and event dispatcher.
@@ -24,24 +24,24 @@ for target in pages:
 ```python
 pages = await client.get_pages()
 if pages:
-    page = await client.connect_to_page(pages[0].target_id)
-    result = await page.runtime.evaluate("document.title", return_by_value=True)
+    session = await client.connect_to_page(pages[0].target_id)
+    result = await session.runtime.evaluate("document.title", return_by_value=True)
     print(result["result"]["value"])
-    await page.close()
+    await session.close()
 ```
 
 ## Close a page
 
 ```python
-await page.close()
+await session.close()
 ```
 
-This detaches the session and closes the target. The `page.is_closed` property returns `True` after close.
+This detaches the session and closes the target. The `session.is_closed` property returns `True` after close.
 
 ## Close via target
 
 ```python
-await page.target.close_target(page.target_id)
+await session.target.close_target(session.target_id)
 ```
 
 The session's `is_closed` property will become `True` when the browser sends `Target.detachedFromTarget`.
@@ -53,10 +53,10 @@ import asyncio
 from cdpwave import CDPClient, CDPSession
 
 async def fetch_title(client: CDPClient, url: str) -> str:
-    page = await client.new_page(url)
-    result = await page.runtime.evaluate("document.title", return_by_value=True)
+    session = await client.new_page(url)
+    result = await session.runtime.evaluate("document.title", return_by_value=True)
     title = result["result"]["value"]
-    await page.close()
+    await session.close()
     return title
 
 async def main() -> None:
@@ -74,17 +74,17 @@ asyncio.run(main())
 ## Close one tab, keep others
 
 ```python
-page1 = await client.new_page("https://example.com")
-page2 = await client.new_page("https://example.com")
+session1 = await client.new_page("https://example.com")
+session2 = await client.new_page("https://example.com")
 
-await page1.close()
-assert page1.is_closed
+await session1.close()
+assert session1.is_closed
 
-# page2 still works
-result = await page2.runtime.evaluate("document.title", return_by_value=True)
+# session2 still works
+result = await session2.runtime.evaluate("document.title", return_by_value=True)
 print(result["result"]["value"])  # "Example Domain"
 
-await page2.close()
+await session2.close()
 ```
 
 ## Cleanup

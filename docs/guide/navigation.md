@@ -3,21 +3,21 @@
 ## Navigate to a URL
 
 ```python
-await page.page.enable()
-await page.page.navigate("https://example.com")
+await session.page.enable()
+await session.page.navigate("https://example.com")
 ```
 
 `Page.navigate` returns a dict with `frameId` and `loaderId`:
 
 ```python
-result = await page.page.navigate("https://example.com")
+result = await session.page.navigate("https://example.com")
 print(result["frameId"])
 ```
 
 ## Navigate with referrer
 
 ```python
-await page.page.navigate(
+await session.page.navigate(
     "https://example.com",
     referrer="https://google.com",
 )
@@ -26,25 +26,25 @@ await page.page.navigate(
 ## Reload
 
 ```python
-await page.page.reload()
+await session.page.reload()
 ```
 
 Reload with cache bypass:
 
 ```python
-await page.page.reload(ignore_cache=True)
+await session.page.reload(ignore_cache=True)
 ```
 
 ## Stop loading
 
 ```python
-await page.page.stop()
+await session.page.stop()
 ```
 
 Or via the escape hatch:
 
 ```python
-await page.send("Page.stopLoading")
+await session.send("Page.stopLoading")
 ```
 
 ## Wait strategies
@@ -61,8 +61,8 @@ loaded = asyncio.Event()
 async def on_load(_: dict) -> None:
     loaded.set()
 
-page.on("Page.loadEventFired", on_load)
-await page.page.navigate("https://example.com")
+session.on("Page.loadEventFired", on_load)
+await session.page.navigate("https://example.com")
 await asyncio.wait_for(loaded.wait(), timeout=10.0)
 ```
 
@@ -71,7 +71,7 @@ await asyncio.wait_for(loaded.wait(), timeout=10.0)
 ```python
 for _ in range(20):
     await asyncio.sleep(0.5)
-    result = await page.runtime.evaluate(
+    result = await session.runtime.evaluate(
         "document.title", return_by_value=True
     )
     title = result.get("result", {}).get("value", "")
@@ -95,8 +95,8 @@ async def on_response(_: dict) -> None:
     if pending == 0:
         idle.set()
 
-page.on("Network.requestWillBeSent", on_request)
-page.on("Network.responseReceived", on_response)
-await page.page.navigate("https://example.com")
+session.on("Network.requestWillBeSent", on_request)
+session.on("Network.responseReceived", on_response)
+await session.page.navigate("https://example.com")
 await asyncio.wait_for(idle.wait(), timeout=15.0)
 ```

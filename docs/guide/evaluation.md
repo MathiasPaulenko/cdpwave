@@ -3,7 +3,7 @@
 ## Evaluate an expression
 
 ```python
-result = await page.runtime.evaluate("document.title")
+result = await session.runtime.evaluate("document.title")
 ```
 
 The result dict contains a `result` key with the remote object:
@@ -22,7 +22,7 @@ The result dict contains a `result` key with the remote object:
 To get the actual JavaScript value in the response, use `return_by_value=True`:
 
 ```python
-result = await page.runtime.evaluate("1 + 1", return_by_value=True)
+result = await session.runtime.evaluate("1 + 1", return_by_value=True)
 print(result["result"]["value"])  # 2
 ```
 
@@ -31,7 +31,7 @@ Without `return_by_value`, non-primitive values are returned as remote object re
 ## Await a promise
 
 ```python
-result = await page.runtime.evaluate(
+result = await session.runtime.evaluate(
     "fetch('https://api.github.com').then(r => r.status)",
     await_promise=True,
     return_by_value=True,
@@ -44,7 +44,7 @@ print(result["result"]["value"])  # 200
 Execute a function with arguments:
 
 ```python
-result = await page.runtime.call_function_on(
+result = await session.runtime.call_function_on(
     "function(a, b) { return a + b; }",
     arguments=[{"value": 2}, {"value": 3}],
     return_by_value=True,
@@ -57,7 +57,7 @@ print(result["result"]["value"])  # 5
 Some events require `Runtime.enable` to be called first:
 
 ```python
-await page.runtime.enable()
+await session.runtime.enable()
 ```
 
 ## Common patterns
@@ -65,7 +65,7 @@ await page.runtime.enable()
 ### Get page title
 
 ```python
-result = await page.runtime.evaluate(
+result = await session.runtime.evaluate(
     "document.title", return_by_value=True
 )
 title = result["result"]["value"]
@@ -74,7 +74,7 @@ title = result["result"]["value"]
 ### Get all links
 
 ```python
-result = await page.runtime.evaluate(
+result = await session.runtime.evaluate(
     "Array.from(document.querySelectorAll('a')).map(a => a.href)",
     return_by_value=True,
 )
@@ -84,7 +84,7 @@ links = result["result"]["value"]
 ### Execute multiple statements
 
 ```python
-result = await page.runtime.evaluate(
+result = await session.runtime.evaluate(
     """
     const title = document.title;
     const links = document.querySelectorAll('a').length;

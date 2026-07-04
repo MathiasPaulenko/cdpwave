@@ -28,8 +28,8 @@ from cdpwave import (
 
 try:
     async with await CDPClient.launch(headless=True) as client:
-        page = await client.new_page()
-        result = await page.runtime.evaluate("document.title", return_by_value=True)
+        session = await client.new_page()
+        result = await session.runtime.evaluate("document.title", return_by_value=True)
 except BrowserNotFoundError:
     print("Install Chrome or set CDPWAVE_BROWSER_PATH")
 except CommandTimeoutError:
@@ -46,7 +46,7 @@ except CDPError as e:
 
 ```python
 try:
-    await page.send("NonExistent.method")
+    await session.send("NonExistent.method")
 except CommandError as e:
     print(f"Code: {e.code}")    # -32601
     print(f"Message: {e.message}")  # "'NonExistent.method' wasn't found"
@@ -61,9 +61,9 @@ If the browser closes a tab (e.g., `window.close()` in JS), the session becomes 
 from cdpwave import SessionClosedError
 
 try:
-    await page.runtime.evaluate("window.close()")
+    await session.runtime.evaluate("window.close()")
     await asyncio.sleep(1)
-    await page.runtime.evaluate("1 + 1")
+    await session.runtime.evaluate("1 + 1")
 except SessionClosedError:
     print("Session was closed by the browser")
 ```
