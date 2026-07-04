@@ -15,19 +15,23 @@ from cdpwave.domains.background_service import BackgroundServiceDomain
 from cdpwave.domains.cast import CastDomain
 from cdpwave.domains.console import ConsoleDomain
 from cdpwave.domains.debugger import DebuggerDomain
+from cdpwave.domains.device_access import DeviceAccessDomain
 from cdpwave.domains.device_orientation import DeviceOrientationDomain
 from cdpwave.domains.dom import DOMDomain
 from cdpwave.domains.emulation import EmulationDomain
 from cdpwave.domains.fetch import FetchDomain
 from cdpwave.domains.headless_experimental import HeadlessExperimentalDomain
+from cdpwave.domains.indexed_db import IndexedDBDomain
 from cdpwave.domains.input import InputDomain
 from cdpwave.domains.io import IODomain
 from cdpwave.domains.log import LogDomain
+from cdpwave.domains.media import MediaDomain
 from cdpwave.domains.memory import MemoryDomain
 from cdpwave.domains.network import NetworkDomain
 from cdpwave.domains.overlay import OverlayDomain
 from cdpwave.domains.page import PageDomain
 from cdpwave.domains.performance import PerformanceDomain
+from cdpwave.domains.preload import PreloadDomain
 from cdpwave.domains.profiler import ProfilerDomain
 from cdpwave.domains.runtime import RuntimeDomain
 from cdpwave.domains.schema import SchemaDomain
@@ -118,6 +122,10 @@ class CDPSession:
         self._tethering = TetheringDomain(self._sender)
         self._background_service = BackgroundServiceDomain(self._sender)
         self._cast = CastDomain(self._sender)
+        self._preload = PreloadDomain(self._sender)
+        self._indexed_db = IndexedDBDomain(self._sender)
+        self._media = MediaDomain(self._sender)
+        self._device_access = DeviceAccessDomain(self._sender)
 
     @property
     def page(self) -> PageDomain:
@@ -278,6 +286,26 @@ class CDPSession:
     def cast(self) -> CastDomain:
         """Cast domain wrapper for sink discovery and tab mirroring."""
         return self._cast
+
+    @property
+    def preload(self) -> PreloadDomain:
+        """Preload domain wrapper for speculative loading control."""
+        return self._preload
+
+    @property
+    def indexed_db(self) -> IndexedDBDomain:
+        """IndexedDB domain wrapper for IndexedDB inspection and manipulation."""
+        return self._indexed_db
+
+    @property
+    def media(self) -> MediaDomain:
+        """Media domain wrapper for media player inspection."""
+        return self._media
+
+    @property
+    def device_access(self) -> DeviceAccessDomain:
+        """DeviceAccess domain wrapper for Bluetooth/USB device prompts."""
+        return self._device_access
 
     @property
     def session_id(self) -> str:

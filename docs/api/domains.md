@@ -127,3 +127,19 @@
 ## Cast
 
 ::: cdpwave.domains.cast.CastDomain
+
+## Preload
+
+::: cdpwave.domains.preload.PreloadDomain
+
+## IndexedDB
+
+::: cdpwave.domains.indexed_db.IndexedDBDomain
+
+## Media
+
+::: cdpwave.domains.media.MediaDomain
+
+## DeviceAccess
+
+::: cdpwave.domains.device_access.DeviceAccessDomain
