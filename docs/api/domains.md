@@ -163,3 +163,19 @@
 ## Browser
 
 ::: cdpwave.domains.browser.BrowserDomain
+
+## CacheStorage
+
+::: cdpwave.domains.cache_storage.CacheStorageDomain
+
+## CSS
+
+::: cdpwave.domains.css.CSSDomain
+
+## DOMDebugger
+
+::: cdpwave.domains.dom_debugger.DOMDebuggerDomain
+
+## EventBreakpoints
+
+::: cdpwave.domains.event_breakpoints.EventBreakpointsDomain

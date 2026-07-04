@@ -13,13 +13,17 @@ from cdpwave.domains.animation import AnimationDomain
 from cdpwave.domains.audits import AuditsDomain
 from cdpwave.domains.background_service import BackgroundServiceDomain
 from cdpwave.domains.browser import BrowserDomain
+from cdpwave.domains.cache_storage import CacheStorageDomain
 from cdpwave.domains.cast import CastDomain
 from cdpwave.domains.console import ConsoleDomain
+from cdpwave.domains.css import CSSDomain
 from cdpwave.domains.debugger import DebuggerDomain
 from cdpwave.domains.device_access import DeviceAccessDomain
 from cdpwave.domains.device_orientation import DeviceOrientationDomain
 from cdpwave.domains.dom import DOMDomain
+from cdpwave.domains.dom_debugger import DOMDebuggerDomain
 from cdpwave.domains.emulation import EmulationDomain
+from cdpwave.domains.event_breakpoints import EventBreakpointsDomain
 from cdpwave.domains.extensions import ExtensionsDomain
 from cdpwave.domains.fetch import FetchDomain
 from cdpwave.domains.headless_experimental import HeadlessExperimentalDomain
@@ -135,6 +139,10 @@ class CDPSession:
         self._pwa = PWADomain(self._sender)
         self._worker = WorkerDomain(self._sender)
         self._inspector = InspectorDomain(self._sender)
+        self._cache_storage = CacheStorageDomain(self._sender)
+        self._css = CSSDomain(self._sender)
+        self._dom_debugger = DOMDebuggerDomain(self._sender)
+        self._event_breakpoints = EventBreakpointsDomain(self._sender)
 
     @property
     def page(self) -> PageDomain:
@@ -335,6 +343,26 @@ class CDPSession:
     def inspector(self) -> InspectorDomain:
         """Inspector domain wrapper for inspector lifecycle events."""
         return self._inspector
+
+    @property
+    def cache_storage(self) -> CacheStorageDomain:
+        """CacheStorage domain wrapper for Cache API inspection."""
+        return self._cache_storage
+
+    @property
+    def css(self) -> CSSDomain:
+        """CSS domain wrapper for CSS styles and stylesheets."""
+        return self._css
+
+    @property
+    def dom_debugger(self) -> DOMDebuggerDomain:
+        """DOMDebugger domain wrapper for DOM and event breakpoints."""
+        return self._dom_debugger
+
+    @property
+    def event_breakpoints(self) -> EventBreakpointsDomain:
+        """EventBreakpoints domain wrapper for instrumentation breakpoints."""
+        return self._event_breakpoints
 
     @property
     def session_id(self) -> str:
