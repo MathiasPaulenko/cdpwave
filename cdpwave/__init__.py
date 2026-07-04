@@ -3,7 +3,7 @@
 Public API exports for the cdpwave package.
 """
 
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 
 from cdpwave.client import CDPClient, CDPSession
 from cdpwave.events.dispatcher import EventDispatcher

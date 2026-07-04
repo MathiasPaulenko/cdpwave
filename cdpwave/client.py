@@ -8,6 +8,8 @@ from typing import Any
 
 from cdpwave.browser.discovery import TargetDiscovery, TargetInfo
 from cdpwave.browser.launcher import BrowserLauncher
+from cdpwave.domains.accessibility import AccessibilityDomain
+from cdpwave.domains.animation import AnimationDomain
 from cdpwave.domains.audits import AuditsDomain
 from cdpwave.domains.console import ConsoleDomain
 from cdpwave.domains.debugger import DebuggerDomain
@@ -23,7 +25,9 @@ from cdpwave.domains.performance import PerformanceDomain
 from cdpwave.domains.profiler import ProfilerDomain
 from cdpwave.domains.runtime import RuntimeDomain
 from cdpwave.domains.security import SecurityDomain
+from cdpwave.domains.storage import StorageDomain
 from cdpwave.domains.target import TargetDomain
+from cdpwave.domains.tracing import TracingDomain
 from cdpwave.events.dispatcher import EventDispatcher
 from cdpwave.events.handlers import EventHandler, Subscription
 from cdpwave.exceptions import SessionClosedError
@@ -86,6 +90,10 @@ class CDPSession:
         self._overlay = OverlayDomain(self._sender)
         self._security = SecurityDomain(self._sender)
         self._audits = AuditsDomain(self._sender)
+        self._accessibility = AccessibilityDomain(self._sender)
+        self._storage = StorageDomain(self._sender)
+        self._tracing = TracingDomain(self._sender)
+        self._animation = AnimationDomain(self._sender)
 
     @property
     def page(self) -> PageDomain:
@@ -166,6 +174,26 @@ class CDPSession:
     def audits(self) -> AuditsDomain:
         """Audits domain wrapper for Lighthouse-style audits and contrast checks."""
         return self._audits
+
+    @property
+    def accessibility(self) -> AccessibilityDomain:
+        """Accessibility domain wrapper for AX tree inspection."""
+        return self._accessibility
+
+    @property
+    def storage(self) -> StorageDomain:
+        """Storage domain wrapper for cookies, IndexedDB, and cache storage."""
+        return self._storage
+
+    @property
+    def tracing(self) -> TracingDomain:
+        """Tracing domain wrapper for performance tracing and timeline recording."""
+        return self._tracing
+
+    @property
+    def animation(self) -> AnimationDomain:
+        """Animation domain wrapper for CSS/Web animation inspection and control."""
+        return self._animation
 
     @property
     def session_id(self) -> str:

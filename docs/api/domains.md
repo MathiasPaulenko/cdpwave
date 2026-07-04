@@ -63,3 +63,19 @@
 ## Audits
 
 ::: cdpwave.domains.audits.AuditsDomain
+
+## Accessibility
+
+::: cdpwave.domains.accessibility.AccessibilityDomain
+
+## Storage
+
+::: cdpwave.domains.storage.StorageDomain
+
+## Tracing
+
+::: cdpwave.domains.tracing.TracingDomain
+
+## Animation
+
+::: cdpwave.domains.animation.AnimationDomain
