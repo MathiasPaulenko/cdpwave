@@ -1,3 +1,5 @@
+"""Event dispatcher for routing CDP events to registered async handlers."""
+
 import logging
 from typing import Any
 

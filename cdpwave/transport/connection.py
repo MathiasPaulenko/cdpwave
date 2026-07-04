@@ -163,7 +163,9 @@ class Connection:
                     params = data.get("params", {})
                     session = data.get("sessionId")
                     if self._event_callback is not None:
-                        await self._event_callback(method, params, session)
+                        asyncio.ensure_future(
+                            self._event_callback(method, params, session)
+                        )
                     else:
                         logger.debug("← event: %s (session=%s)", method, session)
         except websockets.ConnectionClosedOK:

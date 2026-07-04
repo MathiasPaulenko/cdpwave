@@ -10,6 +10,9 @@ from cdpwave.browser.discovery import TargetDiscovery, TargetInfo
 from cdpwave.browser.launcher import BrowserLauncher
 from cdpwave.domains.console import ConsoleDomain
 from cdpwave.domains.dom import DOMDomain
+from cdpwave.domains.emulation import EmulationDomain
+from cdpwave.domains.fetch import FetchDomain
+from cdpwave.domains.input import InputDomain
 from cdpwave.domains.log import LogDomain
 from cdpwave.domains.network import NetworkDomain
 from cdpwave.domains.page import PageDomain
@@ -68,6 +71,9 @@ class CDPSession:
         self._dom = DOMDomain(self._sender)
         self._log = LogDomain(self._sender)
         self._console = ConsoleDomain(self._sender)
+        self._input = InputDomain(self._sender)
+        self._emulation = EmulationDomain(self._sender)
+        self._fetch = FetchDomain(self._sender)
 
     @property
     def page(self) -> PageDomain:
@@ -103,6 +109,21 @@ class CDPSession:
     def console(self) -> ConsoleDomain:
         """Console domain wrapper (deprecated, use Runtime events)."""
         return self._console
+
+    @property
+    def input(self) -> InputDomain:
+        """Input domain wrapper for synthetic input events (mouse, keyboard, touch)."""
+        return self._input
+
+    @property
+    def emulation(self) -> EmulationDomain:
+        """Emulation domain wrapper for device metrics, sensors, and throttling."""
+        return self._emulation
+
+    @property
+    def fetch(self) -> FetchDomain:
+        """Fetch domain wrapper for request interception and modification."""
+        return self._fetch
 
     @property
     def session_id(self) -> str:

@@ -1,3 +1,5 @@
+"""Command correlation via asyncio Futures for matching CDP request/response pairs."""
+
 import asyncio
 from typing import Any
 

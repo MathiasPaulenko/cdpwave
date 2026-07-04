@@ -1,3 +1,5 @@
+"""Custom exception classes for cdpwave errors."""
+
 class CDPError(Exception):
     """Base exception for all cdpwave errors."""
 

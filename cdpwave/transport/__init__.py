@@ -1,0 +1,1 @@
+"""WebSocket transport, message serialization, and command correlation."""

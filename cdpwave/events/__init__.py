@@ -1,0 +1,1 @@
+"""Event dispatching and handler management for CDP events."""
