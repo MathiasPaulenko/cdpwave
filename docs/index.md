@@ -1,11 +1,5 @@
 # cdpwave
 
-[![CI](https://github.com/MathiasPaulenko/cdpwave/actions/workflows/ci.yml/badge.svg)](https://github.com/MathiasPaulenko/cdpwave/actions/workflows/ci.yml)
-[![Tests](https://github.com/MathiasPaulenko/cdpwave/actions/workflows/test.yml/badge.svg)](https://github.com/MathiasPaulenko/cdpwave/actions/workflows/test.yml)
-[![PyPI](https://img.shields.io/pypi/v/cdpwave.svg)](https://pypi.org/project/cdpwave/)
-[![Python](https://img.shields.io/pypi/pyversions/cdpwave.svg)](https://pypi.org/project/cdpwave/)
-[![License: MIT](https://img.shields.io/badge-License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
 Chrome DevTools Protocol for Python — direct, typed, async.
 
 cdpwave talks to Chrome over a raw WebSocket. No Node.js, no ChromeDriver, no browser downloads. Just pure Python with full type hints and async-first design.
@@ -43,16 +37,10 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-## Documentation
+## Next steps
 
-Full documentation at [mathiaspaulenko.github.io/cdpwave](https://mathiaspaulenko.github.io/cdpwave/).
-
-- [Quickstart](https://mathiaspaulenko.github.io/cdpwave/quickstart/) — 10-minute tutorial
-- [Guide](https://mathiaspaulenko.github.io/cdpwave/guide/installation/) — in-depth feature coverage
-- [Cookbook](https://mathiaspaulenko.github.io/cdpwave/cookbook/connect-existing/) — common recipes
-- [API Reference](https://mathiaspaulenko.github.io/cdpwave/api/client/) — auto-generated docs
-- [Migration](https://mathiaspaulenko.github.io/cdpwave/migration/pyppeteer/) — from pyppeteer or pychrome
-
-## License
-
-MIT
+- [Quickstart](quickstart.md) — 10-minute tutorial
+- [Guide](guide/installation.md) — in-depth coverage of each feature
+- [Cookbook](cookbook/connect-existing.md) — recipes for common scenarios
+- [API Reference](api/client.md) — auto-generated docs for every class
+- [Migration](migration/pyppeteer.md) — coming from pyppeteer or pychrome

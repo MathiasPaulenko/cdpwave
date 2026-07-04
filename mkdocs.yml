@@ -1,0 +1,91 @@
+site_name: cdpwave
+site_description: Chrome DevTools Protocol for Python — direct, typed, async
+site_url: https://mathiaspaulenko.github.io/cdpwave/
+repo_url: https://github.com/MathiasPaulenko/cdpwave
+repo_name: MathiasPaulenko/cdpwave
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+  palette:
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - Guide:
+      - Installation: guide/installation.md
+      - Browser Launch: guide/browser-launch.md
+      - Navigation: guide/navigation.md
+      - JavaScript Evaluation: guide/evaluation.md
+      - Events: guide/events.md
+      - Network: guide/network.md
+      - DOM: guide/dom.md
+      - Screenshots & PDF: guide/screenshots.md
+      - Multi-Tab: guide/multi-tab.md
+  - Cookbook:
+      - Connect to Existing Browser: cookbook/connect-existing.md
+      - Headless & Docker: cookbook/headless.md
+      - Custom Flags: cookbook/custom-flags.md
+      - Escape Hatch: cookbook/escape-hatch.md
+      - Error Handling: cookbook/error-handling.md
+  - API Reference:
+      - CDPClient & CDPSession: api/client.md
+      - Session: api/session.md
+      - Domains: api/domains.md
+      - Events: api/events.md
+      - Exceptions: api/exceptions.md
+  - Migration:
+      - From pyppeteer: migration/pyppeteer.md
+      - From pychrome: migration/pychrome.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: true
+            show_signature_annotations: true
+            separate_signature: true
+            show_root_heading: true
+            show_root_full_path: false
+            members_order: source
+            docstring_style: google
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - tables
+  - toc:
+      permalink: true
