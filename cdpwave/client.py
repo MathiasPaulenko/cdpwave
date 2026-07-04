@@ -13,19 +13,23 @@ from cdpwave.domains.animation import AnimationDomain
 from cdpwave.domains.audits import AuditsDomain
 from cdpwave.domains.console import ConsoleDomain
 from cdpwave.domains.debugger import DebuggerDomain
+from cdpwave.domains.device_orientation import DeviceOrientationDomain
 from cdpwave.domains.dom import DOMDomain
 from cdpwave.domains.emulation import EmulationDomain
 from cdpwave.domains.fetch import FetchDomain
 from cdpwave.domains.input import InputDomain
 from cdpwave.domains.io import IODomain
 from cdpwave.domains.log import LogDomain
+from cdpwave.domains.memory import MemoryDomain
 from cdpwave.domains.network import NetworkDomain
 from cdpwave.domains.overlay import OverlayDomain
 from cdpwave.domains.page import PageDomain
 from cdpwave.domains.performance import PerformanceDomain
 from cdpwave.domains.profiler import ProfilerDomain
 from cdpwave.domains.runtime import RuntimeDomain
+from cdpwave.domains.schema import SchemaDomain
 from cdpwave.domains.security import SecurityDomain
+from cdpwave.domains.sensor import SensorDomain
 from cdpwave.domains.service_worker import ServiceWorkerDomain
 from cdpwave.domains.storage import StorageDomain
 from cdpwave.domains.system_info import SystemInfoDomain
@@ -102,6 +106,10 @@ class CDPSession:
         self._system_info = SystemInfoDomain(self._sender)
         self._web_authn = WebAuthnDomain(self._sender)
         self._io = IODomain(self._sender)
+        self._memory = MemoryDomain(self._sender)
+        self._schema = SchemaDomain(self._sender)
+        self._device_orientation = DeviceOrientationDomain(self._sender)
+        self._sensor = SensorDomain(self._sender)
 
     @property
     def page(self) -> PageDomain:
@@ -222,6 +230,26 @@ class CDPSession:
     def io(self) -> IODomain:
         """IO domain wrapper for reading stream handles."""
         return self._io
+
+    @property
+    def memory(self) -> MemoryDomain:
+        """Memory domain wrapper for DOM counters, sampling, and GC control."""
+        return self._memory
+
+    @property
+    def schema(self) -> SchemaDomain:
+        """Schema domain wrapper for CDP domain discovery."""
+        return self._schema
+
+    @property
+    def device_orientation(self) -> DeviceOrientationDomain:
+        """DeviceOrientation domain wrapper for sensor simulation."""
+        return self._device_orientation
+
+    @property
+    def sensor(self) -> SensorDomain:
+        """Sensor domain wrapper for device sensor simulation."""
+        return self._sensor
 
     @property
     def session_id(self) -> str:
