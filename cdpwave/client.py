@@ -12,6 +12,7 @@ from cdpwave.domains.accessibility import AccessibilityDomain
 from cdpwave.domains.animation import AnimationDomain
 from cdpwave.domains.audits import AuditsDomain
 from cdpwave.domains.background_service import BackgroundServiceDomain
+from cdpwave.domains.browser import BrowserDomain
 from cdpwave.domains.cast import CastDomain
 from cdpwave.domains.console import ConsoleDomain
 from cdpwave.domains.debugger import DebuggerDomain
@@ -445,6 +446,7 @@ class CDPClient:
         self._session_dispatchers: dict[str, EventDispatcher] = {}
         self._sessions: dict[str, CDPSession] = {}
         self._closed = False
+        self._browser = BrowserDomain(self.send)
 
     async def _event_callback(
         self,
@@ -526,6 +528,11 @@ class CDPClient:
         """
         return await self._connection.send_command(method, params)
 
+    @property
+    def browser(self) -> BrowserDomain:
+        """Browser domain wrapper for browser-level commands."""
+        return self._browser
+
     @classmethod
     async def launch(
         cls,
@@ -571,6 +578,7 @@ class CDPClient:
         client._session_dispatchers = {}
         client._sessions = {}
         client._closed = False
+        client._browser = BrowserDomain(client.send)
         return client
 
     @classmethod
@@ -603,6 +611,7 @@ class CDPClient:
         client._session_dispatchers = {}
         client._sessions = {}
         client._closed = False
+        client._browser = BrowserDomain(client.send)
         return client
 
     async def new_page(self, url: str = "about:blank") -> CDPSession:

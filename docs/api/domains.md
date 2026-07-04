@@ -159,3 +159,7 @@
 ## Inspector
 
 ::: cdpwave.domains.inspector.InspectorDomain
+
+## Browser
+
+::: cdpwave.domains.browser.BrowserDomain
