@@ -8,17 +8,21 @@ from typing import Any
 
 from cdpwave.browser.discovery import TargetDiscovery, TargetInfo
 from cdpwave.browser.launcher import BrowserLauncher
+from cdpwave.domains.audits import AuditsDomain
 from cdpwave.domains.console import ConsoleDomain
+from cdpwave.domains.debugger import DebuggerDomain
 from cdpwave.domains.dom import DOMDomain
 from cdpwave.domains.emulation import EmulationDomain
 from cdpwave.domains.fetch import FetchDomain
 from cdpwave.domains.input import InputDomain
 from cdpwave.domains.log import LogDomain
 from cdpwave.domains.network import NetworkDomain
+from cdpwave.domains.overlay import OverlayDomain
 from cdpwave.domains.page import PageDomain
 from cdpwave.domains.performance import PerformanceDomain
 from cdpwave.domains.profiler import ProfilerDomain
 from cdpwave.domains.runtime import RuntimeDomain
+from cdpwave.domains.security import SecurityDomain
 from cdpwave.domains.target import TargetDomain
 from cdpwave.events.dispatcher import EventDispatcher
 from cdpwave.events.handlers import EventHandler, Subscription
@@ -78,6 +82,10 @@ class CDPSession:
         self._fetch = FetchDomain(self._sender)
         self._performance = PerformanceDomain(self._sender)
         self._profiler = ProfilerDomain(self._sender)
+        self._debugger = DebuggerDomain(self._sender)
+        self._overlay = OverlayDomain(self._sender)
+        self._security = SecurityDomain(self._sender)
+        self._audits = AuditsDomain(self._sender)
 
     @property
     def page(self) -> PageDomain:
@@ -138,6 +146,26 @@ class CDPSession:
     def profiler(self) -> ProfilerDomain:
         """Profiler domain wrapper for CPU profiling and code coverage."""
         return self._profiler
+
+    @property
+    def debugger(self) -> DebuggerDomain:
+        """Debugger domain wrapper for breakpoints, stepping, and script inspection."""
+        return self._debugger
+
+    @property
+    def overlay(self) -> OverlayDomain:
+        """Overlay domain wrapper for visual highlighting and inspect mode."""
+        return self._overlay
+
+    @property
+    def security(self) -> SecurityDomain:
+        """Security domain wrapper for certificate error handling."""
+        return self._security
+
+    @property
+    def audits(self) -> AuditsDomain:
+        """Audits domain wrapper for Lighthouse-style audits and contrast checks."""
+        return self._audits
 
     @property
     def session_id(self) -> str:

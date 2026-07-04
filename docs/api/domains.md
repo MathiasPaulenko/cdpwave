@@ -47,3 +47,19 @@
 ## Profiler
 
 ::: cdpwave.domains.profiler.ProfilerDomain
+
+## Debugger
+
+::: cdpwave.domains.debugger.DebuggerDomain
+
+## Overlay
+
+::: cdpwave.domains.overlay.OverlayDomain
+
+## Security
+
+::: cdpwave.domains.security.SecurityDomain
+
+## Audits
+
+::: cdpwave.domains.audits.AuditsDomain

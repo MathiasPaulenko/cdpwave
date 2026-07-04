@@ -1,7 +1,6 @@
 """Functional tests for Performance and Profiler domains."""
 
 import asyncio
-from typing import Any
 
 import pytest
 
