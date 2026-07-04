@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cdpwave"
-version = "0.1.0"
+version = "1.0.0"
 description = "Chrome DevTools Protocol for Python — direct CDP over WebSocket, no Selenium, no Playwright"
 readme = "README.md"
 license = { text = "MIT" }
@@ -12,7 +12,7 @@ requires-python = ">=3.11"
 authors = [{ name = "Mathias Paulenko", email = "mathias.paulenko@outlook.com" }]
 keywords = ["cdp", "chrome", "devtools", "browser", "automation", "async", "chromium"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Framework :: AsyncIO",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
