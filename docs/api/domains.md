@@ -111,3 +111,19 @@
 ## Sensor
 
 ::: cdpwave.domains.sensor.SensorDomain
+
+## HeadlessExperimental
+
+::: cdpwave.domains.headless_experimental.HeadlessExperimentalDomain
+
+## Tethering
+
+::: cdpwave.domains.tethering.TetheringDomain
+
+## BackgroundService
+
+::: cdpwave.domains.background_service.BackgroundServiceDomain
+
+## Cast
+
+::: cdpwave.domains.cast.CastDomain

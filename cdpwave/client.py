@@ -11,12 +11,15 @@ from cdpwave.browser.launcher import BrowserLauncher
 from cdpwave.domains.accessibility import AccessibilityDomain
 from cdpwave.domains.animation import AnimationDomain
 from cdpwave.domains.audits import AuditsDomain
+from cdpwave.domains.background_service import BackgroundServiceDomain
+from cdpwave.domains.cast import CastDomain
 from cdpwave.domains.console import ConsoleDomain
 from cdpwave.domains.debugger import DebuggerDomain
 from cdpwave.domains.device_orientation import DeviceOrientationDomain
 from cdpwave.domains.dom import DOMDomain
 from cdpwave.domains.emulation import EmulationDomain
 from cdpwave.domains.fetch import FetchDomain
+from cdpwave.domains.headless_experimental import HeadlessExperimentalDomain
 from cdpwave.domains.input import InputDomain
 from cdpwave.domains.io import IODomain
 from cdpwave.domains.log import LogDomain
@@ -34,6 +37,7 @@ from cdpwave.domains.service_worker import ServiceWorkerDomain
 from cdpwave.domains.storage import StorageDomain
 from cdpwave.domains.system_info import SystemInfoDomain
 from cdpwave.domains.target import TargetDomain
+from cdpwave.domains.tethering import TetheringDomain
 from cdpwave.domains.tracing import TracingDomain
 from cdpwave.domains.web_authn import WebAuthnDomain
 from cdpwave.events.dispatcher import EventDispatcher
@@ -110,6 +114,10 @@ class CDPSession:
         self._schema = SchemaDomain(self._sender)
         self._device_orientation = DeviceOrientationDomain(self._sender)
         self._sensor = SensorDomain(self._sender)
+        self._headless_experimental = HeadlessExperimentalDomain(self._sender)
+        self._tethering = TetheringDomain(self._sender)
+        self._background_service = BackgroundServiceDomain(self._sender)
+        self._cast = CastDomain(self._sender)
 
     @property
     def page(self) -> PageDomain:
@@ -250,6 +258,26 @@ class CDPSession:
     def sensor(self) -> SensorDomain:
         """Sensor domain wrapper for device sensor simulation."""
         return self._sensor
+
+    @property
+    def headless_experimental(self) -> HeadlessExperimentalDomain:
+        """HeadlessExperimental domain wrapper for headless window bounds."""
+        return self._headless_experimental
+
+    @property
+    def tethering(self) -> TetheringDomain:
+        """Tethering domain wrapper for port binding."""
+        return self._tethering
+
+    @property
+    def background_service(self) -> BackgroundServiceDomain:
+        """BackgroundService domain wrapper for background service event observation."""
+        return self._background_service
+
+    @property
+    def cast(self) -> CastDomain:
+        """Cast domain wrapper for sink discovery and tab mirroring."""
+        return self._cast
 
     @property
     def session_id(self) -> str:
