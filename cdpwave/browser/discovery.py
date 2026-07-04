@@ -1,3 +1,5 @@
+"""HTTP discovery for Chrome DevTools Protocol endpoints."""
+
 import asyncio
 import json
 import urllib.request
@@ -7,6 +9,16 @@ from typing import Any
 
 @dataclass(frozen=True)
 class TargetInfo:
+    """Information about a CDP target (tab/page).
+
+    Attributes:
+        target_id: Unique target identifier.
+        type: Target type (e.g. ``"page"``).
+        title: Page title.
+        url: Page URL.
+        web_socket_debugger_url: Optional direct WebSocket URL for the target.
+    """
+
     target_id: str
     type: str
     title: str
@@ -16,6 +28,15 @@ class TargetInfo:
 
 @dataclass(frozen=True)
 class VersionInfo:
+    """Browser version information from ``/json/version``.
+
+    Attributes:
+        browser: Browser name and version string.
+        protocol_version: CDP protocol version.
+        user_agent: Browser user agent string.
+        web_socket_debugger_url: Browser-level WebSocket URL.
+    """
+
     browser: str
     protocol_version: str
     user_agent: str
@@ -36,10 +57,13 @@ def _http_put(url: str) -> Any:
 
 
 class TargetDiscovery:
+    """HTTP-based discovery for CDP targets via ``/json/version`` and ``/json/list``."""
+
     def __init__(self, host: str = "localhost", port: int = 9222) -> None:
         self._base_url = f"http://{host}:{port}"
 
     async def get_version(self) -> VersionInfo:
+        """Fetch browser version information."""
         data: dict[str, Any] = await asyncio.to_thread(
             _http_get, f"{self._base_url}/json/version"
         )
@@ -51,6 +75,7 @@ class TargetDiscovery:
         )
 
     async def list_targets(self) -> list[TargetInfo]:
+        """List all available CDP targets."""
         data: list[dict[str, Any]] = await asyncio.to_thread(
             _http_get, f"{self._base_url}/json/list"
         )
@@ -68,6 +93,7 @@ class TargetDiscovery:
         return targets
 
     async def new_tab(self, url: str = "about:blank") -> TargetInfo:
+        """Create a new tab and return its target info."""
         data: dict[str, Any] = await asyncio.to_thread(
             _http_put, f"{self._base_url}/json/new?{url}"
         )
@@ -80,7 +106,9 @@ class TargetDiscovery:
         )
 
     async def activate_tab(self, target_id: str) -> None:
+        """Activate a tab by target ID."""
         await asyncio.to_thread(_http_get, f"{self._base_url}/json/activate/{target_id}")
 
     async def close_tab(self, target_id: str) -> None:
+        """Close a tab by target ID."""
         await asyncio.to_thread(_http_get, f"{self._base_url}/json/close/{target_id}")

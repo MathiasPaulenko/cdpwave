@@ -1,3 +1,5 @@
+"""Browser executable discovery for Chrome, Edge, Brave, and Chromium."""
+
 import os
 import shutil
 import sys
@@ -40,6 +42,7 @@ _LINUX_NAMES: dict[str, list[str]] = {
 
 
 def _check_paths(paths: list[str]) -> str | None:
+    """Return the first existing path from a list, or None."""
     for path in paths:
         if os.path.isfile(path):
             return path
@@ -47,6 +50,7 @@ def _check_paths(paths: list[str]) -> str | None:
 
 
 def _find_on_linux(names: list[str]) -> str | None:
+    """Find an executable by name on Linux using PATH lookup."""
     for name in names:
         path = shutil.which(name)
         if path:
@@ -55,6 +59,7 @@ def _find_on_linux(names: list[str]) -> str | None:
 
 
 def find_chrome() -> str | None:
+    """Find a Chrome executable path, or None if not found."""
     env_path = os.environ.get("CDPWAVE_CHROME_PATH")
     if env_path and os.path.isfile(env_path):
         return env_path
@@ -66,6 +71,7 @@ def find_chrome() -> str | None:
 
 
 def find_edge() -> str | None:
+    """Find an Edge executable path, or None if not found."""
     env_path = os.environ.get("CDPWAVE_EDGE_PATH")
     if env_path and os.path.isfile(env_path):
         return env_path
@@ -77,6 +83,7 @@ def find_edge() -> str | None:
 
 
 def find_brave() -> str | None:
+    """Find a Brave executable path, or None if not found."""
     env_path = os.environ.get("CDPWAVE_BRAVE_PATH")
     if env_path and os.path.isfile(env_path):
         return env_path
@@ -88,6 +95,7 @@ def find_brave() -> str | None:
 
 
 def find_chromium() -> str | None:
+    """Find a Chromium executable path, or None if not found."""
     env_path = os.environ.get("CDPWAVE_CHROMIUM_PATH")
     if env_path and os.path.isfile(env_path):
         return env_path
@@ -109,6 +117,20 @@ _SEARCH_ORDER: list[BrowserType] = ["chrome", "edge", "brave", "chromium"]
 
 
 def find_browser(preferred: BrowserType | None = None) -> str:
+    """Find a Chromium-based browser executable.
+
+    Searches Chrome, Edge, Brave, and Chromium in order. The
+    ``CDPWAVE_BROWSER_PATH`` environment variable overrides all detection.
+
+    Args:
+        preferred: Optional preferred browser type to search first.
+
+    Returns:
+        The path to the browser executable.
+
+    Raises:
+        BrowserNotFoundError: If no browser is found.
+    """
     env_override = os.environ.get("CDPWAVE_BROWSER_PATH")
     if env_override and os.path.isfile(env_override):
         return env_override

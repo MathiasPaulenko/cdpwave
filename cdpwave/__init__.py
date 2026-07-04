@@ -1,3 +1,8 @@
+"""cdpwave — Chrome DevTools Protocol client for Python.
+
+Public API exports for the cdpwave package.
+"""
+
 __version__ = "0.1.0"
 
 from cdpwave.client import CDPClient, CDPSession

@@ -1,15 +1,26 @@
+"""Network domain: monitoring, cookies, cache, and emulation."""
+
 from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
 
 class NetworkDomain(BaseDomain):
+    """Wrapper for the CDP Network domain."""
+
     async def enable(
         self,
         max_total_buffer_size: int | None = None,
         max_resource_buffer_size: int | None = None,
         max_post_data_size: int | None = None,
     ) -> dict[str, Any]:
+        """Enable Network domain events.
+
+        Args:
+            max_total_buffer_size: Optional max total buffer size in bytes.
+            max_resource_buffer_size: Optional max per-resource buffer size.
+            max_post_data_size: Optional max POST data size to capture.
+        """
         params: dict[str, Any] = {}
         if max_total_buffer_size is not None:
             params["maxTotalBufferSize"] = max_total_buffer_size
@@ -20,6 +31,7 @@ class NetworkDomain(BaseDomain):
         return await self._call("Network.enable", params or None)
 
     async def disable(self) -> dict[str, Any]:
+        """Disable Network domain events."""
         return await self._call("Network.disable")
 
     async def set_user_agent_override(
@@ -28,6 +40,13 @@ class NetworkDomain(BaseDomain):
         accept_language: str | None = None,
         platform: str | None = None,
     ) -> dict[str, Any]:
+        """Override the browser's User-Agent string.
+
+        Args:
+            user_agent: The User-Agent string to use.
+            accept_language: Optional Accept-Language header value.
+            platform: Optional platform override.
+        """
         params: dict[str, Any] = {"userAgent": user_agent}
         if accept_language is not None:
             params["acceptLanguage"] = accept_language
@@ -39,21 +58,36 @@ class NetworkDomain(BaseDomain):
         self,
         headers: dict[str, str],
     ) -> dict[str, Any]:
+        """Set extra HTTP headers for all requests.
+
+        Args:
+            headers: Dict of header name to value.
+        """
         return await self._call(
             "Network.setExtraRequestHeaders",
             {"headers": headers},
         )
 
     async def clear_browser_cookies(self) -> dict[str, Any]:
+        """Clear all browser cookies."""
         return await self._call("Network.clearBrowserCookies")
 
     async def clear_browser_cache(self) -> dict[str, Any]:
+        """Clear the browser cache."""
         return await self._call("Network.clearBrowserCache")
 
     async def get_cookies(
         self,
         urls: list[str] | None = None,
     ) -> dict[str, Any]:
+        """Get cookies for the current page or specified URLs.
+
+        Args:
+            urls: Optional list of URLs to get cookies for.
+
+        Returns:
+            Response dict containing ``cookies`` list.
+        """
         params: dict[str, Any] = {}
         if urls is not None:
             params["urls"] = urls
@@ -71,6 +105,22 @@ class NetworkDomain(BaseDomain):
         same_site: str | None = None,
         expires: float | None = None,
     ) -> dict[str, Any]:
+        """Set a cookie.
+
+        Args:
+            name: Cookie name.
+            value: Cookie value.
+            url: Optional URL to associate the cookie with.
+            domain: Optional cookie domain.
+            path: Optional cookie path.
+            secure: If True, cookie is secure-only.
+            http_only: If True, cookie is HTTP-only.
+            same_site: Optional SameSite attribute.
+            expires: Optional expiration time as Unix timestamp.
+
+        Returns:
+            Response dict indicating success.
+        """
         params: dict[str, Any] = {
             "name": name,
             "value": value,
@@ -96,6 +146,14 @@ class NetworkDomain(BaseDomain):
         domain: str | None = None,
         path: str | None = None,
     ) -> dict[str, Any]:
+        """Delete cookies matching the given name and constraints.
+
+        Args:
+            name: Cookie name to delete.
+            url: Optional URL to scope the deletion.
+            domain: Optional domain to scope the deletion.
+            path: Optional path to scope the deletion.
+        """
         params: dict[str, Any] = {"name": name}
         if url is not None:
             params["url"] = url
@@ -109,6 +167,14 @@ class NetworkDomain(BaseDomain):
         self,
         request_id: str,
     ) -> dict[str, Any]:
+        """Get the body of a response by request ID.
+
+        Args:
+            request_id: The CDP request ID.
+
+        Returns:
+            Response dict containing ``body`` and ``base64Encoded``.
+        """
         return await self._call(
             "Network.getResponseBody",
             {"requestId": request_id},
@@ -118,6 +184,11 @@ class NetworkDomain(BaseDomain):
         self,
         cache_disabled: bool,
     ) -> dict[str, Any]:
+        """Enable or disable the browser cache.
+
+        Args:
+            cache_disabled: If True, disable the cache.
+        """
         return await self._call(
             "Network.setCacheDisabled",
             {"cacheDisabled": cache_disabled},
@@ -130,6 +201,14 @@ class NetworkDomain(BaseDomain):
         download_throughput: float = -1,
         upload_throughput: float = -1,
     ) -> dict[str, Any]:
+        """Emulate network conditions.
+
+        Args:
+            offline: If True, emulate being offline.
+            latency: Latency in milliseconds.
+            download_throughput: Download throughput in bytes/sec (-1 for unlimited).
+            upload_throughput: Upload throughput in bytes/sec (-1 for unlimited).
+        """
         return await self._call(
             "Network.emulateNetworkConditions",
             {

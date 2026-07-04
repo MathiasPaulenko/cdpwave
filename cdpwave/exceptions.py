@@ -3,11 +3,17 @@ class CDPError(Exception):
 
 
 class ConnectionClosedError(CDPError):
-    """WebSocket connection was closed."""
+    """Raised when the WebSocket connection is closed."""
 
 
 class CommandError(CDPError):
-    """CDP command returned an error response."""
+    """Raised when a CDP command returns an error response.
+
+    Attributes:
+        code: The CDP error code.
+        message: The CDP error message.
+        data: Optional additional error data from the CDP response.
+    """
 
     def __init__(self, code: int, message: str, data: dict[str, object] | None = None) -> None:
         self.code = code
@@ -17,24 +23,24 @@ class CommandError(CDPError):
 
 
 class CommandTimeoutError(CDPError):
-    """CDP command did not respond within timeout."""
+    """Raised when a CDP command does not respond within the timeout."""
 
 
 class BrowserNotFoundError(CDPError):
-    """No Chromium-based browser found on the system."""
+    """Raised when no Chromium-based browser is found on the system."""
 
 
 class SessionClosedError(CDPError):
-    """CDP session was closed by the browser."""
+    """Raised when a CDP session is closed by the browser."""
 
 
 class DiscoveryError(CDPError):
-    """HTTP discovery endpoint request failed."""
+    """Raised when an HTTP discovery endpoint request fails."""
 
 
 class LaunchTimeoutError(CDPError):
-    """Browser did not start within the specified timeout."""
+    """Raised when the browser does not start within the specified timeout."""
 
 
 class LaunchError(CDPError):
-    """Browser crashed or failed during startup."""
+    """Raised when the browser crashes or fails during startup."""

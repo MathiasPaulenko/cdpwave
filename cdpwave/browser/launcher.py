@@ -1,3 +1,5 @@
+"""Browser process launcher with auto-detection and CI support."""
+
 import asyncio
 import contextlib
 import json
@@ -33,6 +35,16 @@ def _find_free_port() -> int:
 
 @dataclass(frozen=True)
 class BrowserInfo:
+    """Information about a launched browser instance.
+
+    Attributes:
+        web_socket_debugger_url: WebSocket URL for CDP communication.
+        browser_version: Browser version string.
+        protocol_version: CDP protocol version.
+        user_agent: Browser user agent string.
+        port: The remote debugging port.
+    """
+
     web_socket_debugger_url: str
     browser_version: str
     protocol_version: str
@@ -41,6 +53,12 @@ class BrowserInfo:
 
 
 class BrowserLauncher:
+    """Launches and manages a Chromium-based browser process.
+
+    Handles browser path detection, flag construction, process lifecycle,
+    and endpoint discovery via HTTP polling.
+    """
+
     def __init__(
         self,
         browser_path: str | None = None,
@@ -59,6 +77,7 @@ class BrowserLauncher:
         self._info: BrowserInfo | None = None
 
     def _build_args(self) -> list[str]:
+        """Build the command-line arguments for the browser process."""
         if self._browser_path is None:
             self._browser_path = find_browser()
 
@@ -90,10 +109,24 @@ class BrowserLauncher:
         return args
 
     def _create_temp_user_dir(self) -> str:
+        """Create a temporary user data directory and return its path."""
         self._temp_dir = tempfile.mkdtemp(prefix="cdpwave-")
         return self._temp_dir
 
     async def launch(self, timeout: float = 10.0) -> BrowserInfo:
+        """Launch the browser and wait for the CDP endpoint to be ready.
+
+        Args:
+            timeout: Maximum seconds to wait for the browser endpoint.
+
+        Returns:
+            BrowserInfo with connection details.
+
+        Raises:
+            RuntimeError: If the browser is already running.
+            LaunchError: If the browser process exits during startup.
+            LaunchTimeoutError: If the endpoint does not become ready in time.
+        """
         if self._process is not None:
             raise RuntimeError("Browser is already running")
 
@@ -109,6 +142,7 @@ class BrowserLauncher:
         return self._info
 
     async def _wait_for_endpoint(self, timeout: float = 10.0) -> BrowserInfo:
+        """Poll the HTTP discovery endpoint until the browser is ready."""
         url = f"http://localhost:{self._port}/json/version"
         delay = 0.1
         elapsed = 0.0
@@ -138,6 +172,7 @@ class BrowserLauncher:
         )
 
     async def close(self) -> None:
+        """Terminate the browser process and clean up temporary files."""
         if self._process is not None:
             with contextlib.suppress(Exception):
                 if self._process.returncode is None:
@@ -157,14 +192,17 @@ class BrowserLauncher:
 
     @property
     def is_running(self) -> bool:
+        """Whether the browser process is still running."""
         return self._process is not None and self._process.returncode is None
 
     @property
     def info(self) -> BrowserInfo | None:
+        """BrowserInfo if the browser has been launched, else None."""
         return self._info
 
 
 def _fetch_version(url: str) -> dict[str, object]:
+    """Fetch and parse JSON from the ``/json/version`` endpoint."""
     with urllib.request.urlopen(url, timeout=5) as resp:
         data = json.loads(resp.read().decode("utf-8"))
         return data  # type: ignore[no-any-return]

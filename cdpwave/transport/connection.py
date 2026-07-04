@@ -1,3 +1,5 @@
+"""WebSocket connection for CDP communication."""
+
 import asyncio
 import contextlib
 import logging
@@ -23,9 +25,16 @@ EventCallback = Callable[
     [str, dict[str, Any], str | None],
     Awaitable[None],
 ]
+"""Async callback for CDP events: (method, params, session_id)."""
 
 
 class Connection:
+    """WebSocket connection to a CDP endpoint.
+
+    Manages the WebSocket lifecycle, command correlation, and event
+    dispatching. A single Connection serves all sessions (flatten mode).
+    """
+
     def __init__(
         self,
         url: str,
@@ -41,6 +50,7 @@ class Connection:
         self._default_timeout = default_timeout
 
     async def connect(self) -> None:
+        """Open the WebSocket connection and start the receive loop."""
         self._ws = await websockets.connect(self._url)
         self._receive_task = asyncio.create_task(self._receive_loop())
         logger.info("Connected to %s", self._url)
@@ -52,6 +62,23 @@ class Connection:
         session_id: str | None = None,
         timeout: float | None = None,
     ) -> dict[str, Any]:
+        """Send a CDP command and await its response.
+
+        Args:
+            method: CDP method name (e.g. ``"Page.navigate"``).
+            params: Optional command parameters.
+            session_id: Optional target session ID for flatten sessions.
+            timeout: Optional timeout in seconds. Defaults to
+                ``default_timeout`` set at construction.
+
+        Returns:
+            The CDP response result dict.
+
+        Raises:
+            ConnectionClosedError: If the connection is not open.
+            CommandTimeoutError: If the command does not respond in time.
+            CommandError: If the CDP response contains an error.
+        """
         if self._ws is None or self._closed:
             raise ConnectionClosedError("Connection is closed")
 
@@ -77,6 +104,10 @@ class Connection:
             raise CommandTimeoutError(f"Command timeout: {method}") from None
 
     async def close(self) -> None:
+        """Close the WebSocket connection and cancel the receive loop.
+
+        All pending commands are rejected with ConnectionClosedError.
+        """
         if self._closed:
             return
         self._closed = True
@@ -95,13 +126,16 @@ class Connection:
 
     @property
     def url(self) -> str:
+        """The WebSocket URL this connection is connected to."""
         return self._url
 
     @property
     def is_closed(self) -> bool:
+        """Whether the connection has been closed."""
         return self._closed
 
     async def _receive_loop(self) -> None:
+        """Background task that reads WebSocket messages and dispatches them."""
         assert self._ws is not None
         try:
             async for raw in self._ws:
