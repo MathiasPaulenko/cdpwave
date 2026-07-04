@@ -16,6 +16,8 @@ from cdpwave.domains.input import InputDomain
 from cdpwave.domains.log import LogDomain
 from cdpwave.domains.network import NetworkDomain
 from cdpwave.domains.page import PageDomain
+from cdpwave.domains.performance import PerformanceDomain
+from cdpwave.domains.profiler import ProfilerDomain
 from cdpwave.domains.runtime import RuntimeDomain
 from cdpwave.domains.target import TargetDomain
 from cdpwave.events.dispatcher import EventDispatcher
@@ -74,6 +76,8 @@ class CDPSession:
         self._input = InputDomain(self._sender)
         self._emulation = EmulationDomain(self._sender)
         self._fetch = FetchDomain(self._sender)
+        self._performance = PerformanceDomain(self._sender)
+        self._profiler = ProfilerDomain(self._sender)
 
     @property
     def page(self) -> PageDomain:
@@ -124,6 +128,16 @@ class CDPSession:
     def fetch(self) -> FetchDomain:
         """Fetch domain wrapper for request interception and modification."""
         return self._fetch
+
+    @property
+    def performance(self) -> PerformanceDomain:
+        """Performance domain wrapper for runtime metrics and timeline."""
+        return self._performance
+
+    @property
+    def profiler(self) -> ProfilerDomain:
+        """Profiler domain wrapper for CPU profiling and code coverage."""
+        return self._profiler
 
     @property
     def session_id(self) -> str:

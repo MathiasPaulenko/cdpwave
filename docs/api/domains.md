@@ -27,3 +27,23 @@
 ## Console
 
 ::: cdpwave.domains.console.ConsoleDomain
+
+## Input
+
+::: cdpwave.domains.input.InputDomain
+
+## Emulation
+
+::: cdpwave.domains.emulation.EmulationDomain
+
+## Fetch
+
+::: cdpwave.domains.fetch.FetchDomain
+
+## Performance
+
+::: cdpwave.domains.performance.PerformanceDomain
+
+## Profiler
+
+::: cdpwave.domains.profiler.ProfilerDomain
