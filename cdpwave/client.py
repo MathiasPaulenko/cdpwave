@@ -19,10 +19,12 @@ from cdpwave.domains.device_access import DeviceAccessDomain
 from cdpwave.domains.device_orientation import DeviceOrientationDomain
 from cdpwave.domains.dom import DOMDomain
 from cdpwave.domains.emulation import EmulationDomain
+from cdpwave.domains.extensions import ExtensionsDomain
 from cdpwave.domains.fetch import FetchDomain
 from cdpwave.domains.headless_experimental import HeadlessExperimentalDomain
 from cdpwave.domains.indexed_db import IndexedDBDomain
 from cdpwave.domains.input import InputDomain
+from cdpwave.domains.inspector import InspectorDomain
 from cdpwave.domains.io import IODomain
 from cdpwave.domains.log import LogDomain
 from cdpwave.domains.media import MediaDomain
@@ -33,6 +35,7 @@ from cdpwave.domains.page import PageDomain
 from cdpwave.domains.performance import PerformanceDomain
 from cdpwave.domains.preload import PreloadDomain
 from cdpwave.domains.profiler import ProfilerDomain
+from cdpwave.domains.pwa import PWADomain
 from cdpwave.domains.runtime import RuntimeDomain
 from cdpwave.domains.schema import SchemaDomain
 from cdpwave.domains.security import SecurityDomain
@@ -44,6 +47,7 @@ from cdpwave.domains.target import TargetDomain
 from cdpwave.domains.tethering import TetheringDomain
 from cdpwave.domains.tracing import TracingDomain
 from cdpwave.domains.web_authn import WebAuthnDomain
+from cdpwave.domains.worker import WorkerDomain
 from cdpwave.events.dispatcher import EventDispatcher
 from cdpwave.events.handlers import EventHandler, Subscription
 from cdpwave.exceptions import SessionClosedError
@@ -126,6 +130,10 @@ class CDPSession:
         self._indexed_db = IndexedDBDomain(self._sender)
         self._media = MediaDomain(self._sender)
         self._device_access = DeviceAccessDomain(self._sender)
+        self._extensions = ExtensionsDomain(self._sender)
+        self._pwa = PWADomain(self._sender)
+        self._worker = WorkerDomain(self._sender)
+        self._inspector = InspectorDomain(self._sender)
 
     @property
     def page(self) -> PageDomain:
@@ -306,6 +314,26 @@ class CDPSession:
     def device_access(self) -> DeviceAccessDomain:
         """DeviceAccess domain wrapper for Bluetooth/USB device prompts."""
         return self._device_access
+
+    @property
+    def extensions(self) -> ExtensionsDomain:
+        """Extensions domain wrapper for loading and managing extensions."""
+        return self._extensions
+
+    @property
+    def pwa(self) -> PWADomain:
+        """PWA domain wrapper for installing and managing PWAs."""
+        return self._pwa
+
+    @property
+    def worker(self) -> WorkerDomain:
+        """Worker domain wrapper for dedicated worker lifecycle events."""
+        return self._worker
+
+    @property
+    def inspector(self) -> InspectorDomain:
+        """Inspector domain wrapper for inspector lifecycle events."""
+        return self._inspector
 
     @property
     def session_id(self) -> str:

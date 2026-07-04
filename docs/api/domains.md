@@ -143,3 +143,19 @@
 ## DeviceAccess
 
 ::: cdpwave.domains.device_access.DeviceAccessDomain
+
+## Extensions
+
+::: cdpwave.domains.extensions.ExtensionsDomain
+
+## PWA
+
+::: cdpwave.domains.pwa.PWADomain
+
+## Worker
+
+::: cdpwave.domains.worker.WorkerDomain
+
+## Inspector
+
+::: cdpwave.domains.inspector.InspectorDomain
