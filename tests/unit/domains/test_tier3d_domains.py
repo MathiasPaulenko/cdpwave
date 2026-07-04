@@ -1,0 +1,219 @@
+"""Unit tests for ServiceWorker, SystemInfo, WebAuthn, and IO domains."""
+
+import pytest
+
+from cdpwave.domains.io import IODomain
+from cdpwave.domains.service_worker import ServiceWorkerDomain
+from cdpwave.domains.system_info import SystemInfoDomain
+from cdpwave.domains.web_authn import WebAuthnDomain
+from tests.unit.fake_sender import FakeSender
+
+
+@pytest.mark.unit
+class TestServiceWorkerDomain:
+    async def test_enable(self) -> None:
+        fake = FakeSender({})
+        domain = ServiceWorkerDomain(fake)
+        await domain.enable()
+        assert fake.last_call == ("ServiceWorker.enable", None)
+
+    async def test_disable(self) -> None:
+        fake = FakeSender({})
+        domain = ServiceWorkerDomain(fake)
+        await domain.disable()
+        assert fake.last_call == ("ServiceWorker.disable", None)
+
+    async def test_start_worker(self) -> None:
+        fake = FakeSender({})
+        domain = ServiceWorkerDomain(fake)
+        await domain.start_worker("https://example.com/sw")
+        assert fake.last_call == (
+            "ServiceWorker.startWorker",
+            {"scope": "https://example.com/sw"},
+        )
+
+    async def test_stop_worker(self) -> None:
+        fake = FakeSender({})
+        domain = ServiceWorkerDomain(fake)
+        await domain.stop_worker("123")
+        assert fake.last_call == (
+            "ServiceWorker.stopWorker",
+            {"versionId": "123"},
+        )
+
+    async def test_unregister(self) -> None:
+        fake = FakeSender({})
+        domain = ServiceWorkerDomain(fake)
+        await domain.unregister("https://example.com/sw")
+        assert fake.last_call == (
+            "ServiceWorker.unregister",
+            {"scope": "https://example.com/sw"},
+        )
+
+    async def test_deliver_push_message(self) -> None:
+        fake = FakeSender({})
+        domain = ServiceWorkerDomain(fake)
+        await domain.deliver_push_message(
+            "https://example.com", "reg1", "data123"
+        )
+        method, params = fake.last_call
+        assert method == "ServiceWorker.deliverPushMessage"
+        assert params is not None
+        assert params["origin"] == "https://example.com"
+        assert params["registrationId"] == "reg1"
+        assert params["data"] == "data123"
+
+
+@pytest.mark.unit
+class TestSystemInfoDomain:
+    async def test_get_info(self) -> None:
+        fake = FakeSender({"gpu": {}, "modelName": "Test"})
+        domain = SystemInfoDomain(fake)
+        result = await domain.get_info()
+        assert fake.last_call == ("SystemInfo.getInfo", None)
+        assert "modelName" in result
+
+    async def test_get_process_info(self) -> None:
+        fake = FakeSender({"processInfo": []})
+        domain = SystemInfoDomain(fake)
+        await domain.get_process_info()
+        assert fake.last_call == ("SystemInfo.getProcessInfo", None)
+
+    async def test_get_feature_state(self) -> None:
+        fake = FakeSender({"featureEnabled": True})
+        domain = SystemInfoDomain(fake)
+        await domain.get_feature_state("Vulkan")
+        assert fake.last_call == (
+            "SystemInfo.getFeatureState",
+            {"featureName": "Vulkan"},
+        )
+
+    async def test_get_gpu_info(self) -> None:
+        fake = FakeSender({"gpu": {}})
+        domain = SystemInfoDomain(fake)
+        await domain.get_gpu_info()
+        assert fake.last_call == ("SystemInfo.getGPUInfo", None)
+
+
+@pytest.mark.unit
+class TestWebAuthnDomain:
+    async def test_enable(self) -> None:
+        fake = FakeSender({})
+        domain = WebAuthnDomain(fake)
+        await domain.enable()
+        assert fake.last_call == ("WebAuthn.enable", None)
+
+    async def test_disable(self) -> None:
+        fake = FakeSender({})
+        domain = WebAuthnDomain(fake)
+        await domain.disable()
+        assert fake.last_call == ("WebAuthn.disable", None)
+
+    async def test_add_virtual_authenticator(self) -> None:
+        fake = FakeSender({"authenticatorId": "auth1"})
+        domain = WebAuthnDomain(fake)
+        await domain.add_virtual_authenticator(
+            {"protocol": "ctap2", "transport": "usb"}
+        )
+        method, params = fake.last_call
+        assert method == "WebAuthn.addVirtualAuthenticator"
+        assert params is not None
+        assert params["options"]["protocol"] == "ctap2"
+
+    async def test_remove_virtual_authenticator(self) -> None:
+        fake = FakeSender({})
+        domain = WebAuthnDomain(fake)
+        await domain.remove_virtual_authenticator("auth1")
+        assert fake.last_call == (
+            "WebAuthn.removeVirtualAuthenticator",
+            {"authenticatorId": "auth1"},
+        )
+
+    async def test_add_credential(self) -> None:
+        fake = FakeSender({})
+        domain = WebAuthnDomain(fake)
+        await domain.add_credential("auth1", {"credentialId": "cred1"})
+        method, params = fake.last_call
+        assert method == "WebAuthn.addCredential"
+        assert params is not None
+        assert params["authenticatorId"] == "auth1"
+        assert params["credential"]["credentialId"] == "cred1"
+
+    async def test_get_credentials(self) -> None:
+        fake = FakeSender({"credentials": []})
+        domain = WebAuthnDomain(fake)
+        await domain.get_credentials("auth1")
+        assert fake.last_call == (
+            "WebAuthn.getCredentials",
+            {"authenticatorId": "auth1"},
+        )
+
+    async def test_remove_credential(self) -> None:
+        fake = FakeSender({})
+        domain = WebAuthnDomain(fake)
+        await domain.remove_credential("auth1", "cred1")
+        assert fake.last_call == (
+            "WebAuthn.removeCredential",
+            {"authenticatorId": "auth1", "credentialId": "cred1"},
+        )
+
+    async def test_clear_credentials(self) -> None:
+        fake = FakeSender({})
+        domain = WebAuthnDomain(fake)
+        await domain.clear_credentials("auth1")
+        assert fake.last_call == (
+            "WebAuthn.clearCredentials",
+            {"authenticatorId": "auth1"},
+        )
+
+    async def test_set_user_verified(self) -> None:
+        fake = FakeSender({})
+        domain = WebAuthnDomain(fake)
+        await domain.set_user_verified("auth1", True)
+        method, params = fake.last_call
+        assert method == "WebAuthn.setUserVerified"
+        assert params is not None
+        assert params["authenticatorId"] == "auth1"
+        assert params["isUserVerified"] is True
+
+    async def test_set_automatic_presence_simulation(self) -> None:
+        fake = FakeSender({})
+        domain = WebAuthnDomain(fake)
+        await domain.set_automatic_presence_simulation("auth1", True)
+        method, params = fake.last_call
+        assert method == "WebAuthn.setAutomaticPresenceSimulation"
+        assert params is not None
+        assert params["authenticatorId"] == "auth1"
+        assert params["enabled"] is True
+
+
+@pytest.mark.unit
+class TestIODomain:
+    async def test_read(self) -> None:
+        fake = FakeSender({"data": "abc", "eof": True, "base64Encoded": False})
+        domain = IODomain(fake)
+        await domain.read("handle1")
+        assert fake.last_call == ("IO.read", {"handle": "handle1"})
+
+    async def test_read_with_offset_size(self) -> None:
+        fake = FakeSender({"data": "abc", "eof": False})
+        domain = IODomain(fake)
+        await domain.read("handle1", offset=10, size=1024)
+        method, params = fake.last_call
+        assert method == "IO.read"
+        assert params is not None
+        assert params["handle"] == "handle1"
+        assert params["offset"] == 10
+        assert params["size"] == 1024
+
+    async def test_close(self) -> None:
+        fake = FakeSender({})
+        domain = IODomain(fake)
+        await domain.close("handle1")
+        assert fake.last_call == ("IO.close", {"handle": "handle1"})
+
+    async def test_resolve_blob(self) -> None:
+        fake = FakeSender({"uuid": "blob-uuid-123"})
+        domain = IODomain(fake)
+        await domain.resolve_blob("obj1")
+        assert fake.last_call == ("IO.resolveBlob", {"objectId": "obj1"})

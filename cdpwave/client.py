@@ -17,6 +17,7 @@ from cdpwave.domains.dom import DOMDomain
 from cdpwave.domains.emulation import EmulationDomain
 from cdpwave.domains.fetch import FetchDomain
 from cdpwave.domains.input import InputDomain
+from cdpwave.domains.io import IODomain
 from cdpwave.domains.log import LogDomain
 from cdpwave.domains.network import NetworkDomain
 from cdpwave.domains.overlay import OverlayDomain
@@ -25,9 +26,12 @@ from cdpwave.domains.performance import PerformanceDomain
 from cdpwave.domains.profiler import ProfilerDomain
 from cdpwave.domains.runtime import RuntimeDomain
 from cdpwave.domains.security import SecurityDomain
+from cdpwave.domains.service_worker import ServiceWorkerDomain
 from cdpwave.domains.storage import StorageDomain
+from cdpwave.domains.system_info import SystemInfoDomain
 from cdpwave.domains.target import TargetDomain
 from cdpwave.domains.tracing import TracingDomain
+from cdpwave.domains.web_authn import WebAuthnDomain
 from cdpwave.events.dispatcher import EventDispatcher
 from cdpwave.events.handlers import EventHandler, Subscription
 from cdpwave.exceptions import SessionClosedError
@@ -94,6 +98,10 @@ class CDPSession:
         self._storage = StorageDomain(self._sender)
         self._tracing = TracingDomain(self._sender)
         self._animation = AnimationDomain(self._sender)
+        self._service_worker = ServiceWorkerDomain(self._sender)
+        self._system_info = SystemInfoDomain(self._sender)
+        self._web_authn = WebAuthnDomain(self._sender)
+        self._io = IODomain(self._sender)
 
     @property
     def page(self) -> PageDomain:
@@ -194,6 +202,26 @@ class CDPSession:
     def animation(self) -> AnimationDomain:
         """Animation domain wrapper for CSS/Web animation inspection and control."""
         return self._animation
+
+    @property
+    def service_worker(self) -> ServiceWorkerDomain:
+        """ServiceWorker domain wrapper for service worker inspection and control."""
+        return self._service_worker
+
+    @property
+    def system_info(self) -> SystemInfoDomain:
+        """SystemInfo domain wrapper for system and GPU information."""
+        return self._system_info
+
+    @property
+    def web_authn(self) -> WebAuthnDomain:
+        """WebAuthn domain wrapper for virtual authenticator management."""
+        return self._web_authn
+
+    @property
+    def io(self) -> IODomain:
+        """IO domain wrapper for reading stream handles."""
+        return self._io
 
     @property
     def session_id(self) -> str:
@@ -366,6 +394,25 @@ class CDPClient:
             handler: The handler to remove.
         """
         self._dispatcher.off(event_name, handler)
+
+    async def send(
+        self,
+        method: str,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Send a raw CDP command to the browser target (no session).
+
+        Use this for browser-level commands like ``SystemInfo.getInfo``
+        that are only supported on the browser target, not page sessions.
+
+        Args:
+            method: CDP method name (e.g. ``"SystemInfo.getInfo"``).
+            params: Optional command parameters.
+
+        Returns:
+            The CDP response result dict.
+        """
+        return await self._connection.send_command(method, params)
 
     @classmethod
     async def launch(

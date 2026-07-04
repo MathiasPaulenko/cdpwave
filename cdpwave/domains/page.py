@@ -96,6 +96,7 @@ class PageDomain(BaseDomain):
         margin_bottom: float = 0.4,
         margin_left: float = 0.4,
         margin_right: float = 0.4,
+        return_as_stream: bool = False,
     ) -> dict[str, Any]:
         """Print the page to PDF.
 
@@ -110,25 +111,26 @@ class PageDomain(BaseDomain):
             margin_bottom: Bottom margin in inches.
             margin_left: Left margin in inches.
             margin_right: Right margin in inches.
+            return_as_stream: Return a stream handle instead of base64 data.
 
         Returns:
-            Response dict containing base64-encoded ``data``.
+            Response dict containing base64-encoded ``data`` or
+            ``stream`` handle if ``return_as_stream`` is True.
         """
-        return await self._call(
-            "Page.printToPDF",
-            {
-                "landscape": landscape,
-                "displayHeaderFooter": display_header_footer,
-                "printBackground": print_background,
-                "scale": scale,
-                "paperWidth": paper_width,
-                "paperHeight": paper_height,
-                "marginTop": margin_top,
-                "marginBottom": margin_bottom,
-                "marginLeft": margin_left,
-                "marginRight": margin_right,
-            },
-        )
+        params: dict[str, Any] = {
+            "landscape": landscape,
+            "displayHeaderFooter": display_header_footer,
+            "printBackground": print_background,
+            "scale": scale,
+            "paperWidth": paper_width,
+            "paperHeight": paper_height,
+            "marginTop": margin_top,
+            "marginBottom": margin_bottom,
+            "marginLeft": margin_left,
+            "marginRight": margin_right,
+            "transferMode": "ReturnAsStream" if return_as_stream else "ReturnAsBase64",
+        }
+        return await self._call("Page.printToPDF", params)
 
     async def get_layout_metrics(self) -> dict[str, Any]:
         """Return page layout metrics (viewport, content size)."""

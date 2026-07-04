@@ -79,3 +79,19 @@
 ## Animation
 
 ::: cdpwave.domains.animation.AnimationDomain
+
+## ServiceWorker
+
+::: cdpwave.domains.service_worker.ServiceWorkerDomain
+
+## SystemInfo
+
+::: cdpwave.domains.system_info.SystemInfoDomain
+
+## WebAuthn
+
+::: cdpwave.domains.web_authn.WebAuthnDomain
+
+## IO
+
+::: cdpwave.domains.io.IODomain
