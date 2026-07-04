@@ -131,3 +131,67 @@ class StorageDomain(BaseDomain):
             "Storage.setStorageBucketInfo",
             {"bucket": bucket},
         )
+
+    async def track_indexed_db_for_origin(self, origin: str) -> dict[str, Any]:
+        """Start tracking IndexedDB storage for an origin.
+
+        Emits ``Storage.indexedDBListUpdated`` events when the database
+        list changes.
+
+        Args:
+            origin: Origin to track.
+        """
+        return await self._call(
+            "Storage.trackIndexedDBForOrigin",
+            {"origin": origin},
+        )
+
+    async def untrack_indexed_db_for_origin(self, origin: str) -> dict[str, Any]:
+        """Stop tracking IndexedDB storage for an origin.
+
+        Args:
+            origin: Origin to stop tracking.
+        """
+        return await self._call(
+            "Storage.untrackIndexedDBForOrigin",
+            {"origin": origin},
+        )
+
+    async def track_cache_storage_for_origin(self, origin: str) -> dict[str, Any]:
+        """Start tracking Cache Storage for an origin.
+
+        Emits ``Storage.cacheStorageListUpdated`` events when the cache
+        list changes.
+
+        Args:
+            origin: Origin to track.
+        """
+        return await self._call(
+            "Storage.trackCacheStorageForOrigin",
+            {"origin": origin},
+        )
+
+    async def untrack_cache_storage_for_origin(self, origin: str) -> dict[str, Any]:
+        """Stop tracking Cache Storage for an origin.
+
+        Args:
+            origin: Origin to stop tracking.
+        """
+        return await self._call(
+            "Storage.untrackCacheStorageForOrigin",
+            {"origin": origin},
+        )
+
+    async def get_storage_key_for_frame(self, frame_id: str) -> dict[str, Any]:
+        """Get the storage key for a frame.
+
+        Args:
+            frame_id: Frame ID to get the storage key for.
+
+        Returns:
+            Dict with ``storageKey``.
+        """
+        return await self._call(
+            "Storage.getStorageKeyForFrame",
+            {"frameId": frame_id},
+        )

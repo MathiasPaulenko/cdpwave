@@ -76,7 +76,15 @@ class EmulationDomain(BaseDomain):
         return await self._call("Emulation.setDeviceMetricsOverride", params)
 
     async def clear_device_metrics_override(self) -> dict[str, Any]:
-        """Clear any overridden device metrics."""
+        """Clear any overridden device metrics.
+
+        Removes the device metrics override set by
+        ``set_device_metrics_override``, restoring the real device
+        metrics.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Emulation.clearDeviceMetricsOverride")
 
     async def set_user_agent_override(
@@ -151,7 +159,15 @@ class EmulationDomain(BaseDomain):
         )
 
     async def clear_geolocation_override(self) -> dict[str, Any]:
-        """Clear any overridden geolocation."""
+        """Clear any overridden geolocation.
+
+        Removes the geolocation override set by
+        ``set_geolocation_override``, restoring the real device
+        location.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Emulation.clearGeolocationOverride")
 
     async def set_touch_emulation_enabled(
@@ -202,7 +218,15 @@ class EmulationDomain(BaseDomain):
         )
 
     async def clear_default_background_color_override(self) -> dict[str, Any]:
-        """Clear the default background color override."""
+        """Clear the default background color override.
+
+        Removes the background color override set by
+        ``set_default_background_color_override``, restoring the
+        default transparent or white background.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Emulation.setDefaultBackgroundColorOverride")
 
     async def set_idle_override(
@@ -225,7 +249,14 @@ class EmulationDomain(BaseDomain):
         )
 
     async def clear_idle_override(self) -> dict[str, Any]:
-        """Clear the idle state override."""
+        """Clear the idle state override.
+
+        Removes the idle state override set by ``set_idle_override``,
+        restoring the real idle state of the device.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Emulation.clearIdleOverride")
 
     async def set_timezone_override(self, timezone_id: str) -> dict[str, Any]:
@@ -240,7 +271,14 @@ class EmulationDomain(BaseDomain):
         )
 
     async def clear_timezone_override(self) -> dict[str, Any]:
-        """Clear the timezone override."""
+        """Clear the timezone override.
+
+        Removes the timezone override set by ``set_timezone_override``,
+        restoring the system timezone.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call(
             "Emulation.setTimezoneOverride",
             {"timezoneId": ""},
@@ -325,4 +363,67 @@ class EmulationDomain(BaseDomain):
         return await self._call(
             "Emulation.setVisibleSize",
             {"width": width, "height": height},
+        )
+
+    async def set_scrollbars_hidden(self, hidden: bool) -> dict[str, Any]:
+        """Hide or show scrollbars.
+
+        Args:
+            hidden: Whether to hide scrollbars.
+        """
+        return await self._call(
+            "Emulation.setScrollbarsHidden",
+            {"hidden": hidden},
+        )
+
+    async def set_javascript_disabled(self, disabled: bool) -> dict[str, Any]:
+        """Disable or enable JavaScript execution.
+
+        Args:
+            disabled: Whether to disable JavaScript.
+        """
+        return await self._call(
+            "Emulation.setJavaScriptDisabled",
+            {"disabled": disabled},
+        )
+
+    async def set_document_cookie_disabled(self, disabled: bool) -> dict[str, Any]:
+        """Disable or enable document.cookie access.
+
+        Args:
+            disabled: Whether to disable document.cookie.
+        """
+        return await self._call(
+            "Emulation.setDocumentCookieDisabled",
+            {"disabled": disabled},
+        )
+
+    async def set_emit_touch_events_for_mouse(
+        self,
+        enabled: bool,
+        configuration: str = "mobile",
+    ) -> dict[str, Any]:
+        """Emit touch events for mouse events.
+
+        Args:
+            enabled: Whether to emit touch events for mouse.
+            configuration: ``"mobile"`` or ``"desktop"``.
+        """
+        return await self._call(
+            "Emulation.setEmitTouchEventsForMouse",
+            {"enabled": enabled, "configuration": configuration},
+        )
+
+    async def set_auto_dark_mode_override(
+        self,
+        enabled: bool,
+    ) -> dict[str, Any]:
+        """Override the auto dark mode setting.
+
+        Args:
+            enabled: Whether to enable auto dark mode.
+        """
+        return await self._call(
+            "Emulation.setAutoDarkModeOverride",
+            {"enabled": enabled},
         )

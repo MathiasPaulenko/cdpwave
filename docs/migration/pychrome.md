@@ -1,6 +1,6 @@
 # Migrating from pychrome
 
-pychrome is a threading-based CDP wrapper. cdpwave is a modern async-first replacement with type hints and browser detection.
+pychrome is a threading-based CDP wrapper. cdpwave is a modern async-first replacement with full CDP coverage, type hints, and browser detection.
 
 ## Key differences
 
@@ -10,6 +10,7 @@ pychrome is a threading-based CDP wrapper. cdpwave is a modern async-first repla
 | Sessions | Legacy (one WS per tab) | Flatten (one WS for all) |
 | Browser launcher | No | Yes (auto-detection) |
 | Typing | No type hints | mypy --strict |
+| CDP coverage | Dynamic (everything is dynamic) | All 48 domains, 386 typed methods |
 | API | `tab.Page.navigate(url=...)` | `await session.page.navigate("...")` |
 | Context manager | No | Yes |
 | Events | Sync callbacks | Async handlers with error isolation |
@@ -68,7 +69,8 @@ asyncio.run(main())
 1. **No `tab.start()`** — sessions are ready immediately after `new_page()` or `connect_to_page()`.
 2. **No `tab.wait()`** — use events with `asyncio.Event` or poll with `runtime.evaluate`.
 3. **Async handlers** — event handlers must be `async def`, not regular functions.
-4. **Domain properties** — use `session.page`, `session.runtime`, `session.network`, etc. instead of `tab.Page`, `tab.Runtime`.
+4. **Full domain access** — all 48 CDP domains are typed properties: `session.page`, `session.runtime`, `session.network`, `session.dom`, `session.debugger`, `session.fetch`, `session.emulation`, `session.input`, etc.
 5. **Browser detection** — `CDPClient.launch()` finds and starts Chrome automatically. No need to run Chrome separately.
 6. **Flatten sessions** — all tabs share one WebSocket connection via `sessionId` multiplexing.
 7. **Context manager** — use `async with` for guaranteed cleanup. No manual `stop()` / `close_tab()`.
+8. **Typed wrappers** — unlike pychrome where everything is dynamic, cdpwave provides typed methods with docstrings and IDE autocomplete for all 386 CDP commands.

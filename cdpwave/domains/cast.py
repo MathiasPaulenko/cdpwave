@@ -13,11 +13,24 @@ class CastDomain(BaseDomain):
     """
 
     async def enable(self) -> dict[str, Any]:
-        """Enable the Cast domain and start sink discovery."""
+        """Enable the Cast domain and start sink discovery.
+
+        Begins discovering available Cast sinks (receivers)
+        on the local network.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Cast.enable")
 
     async def disable(self) -> dict[str, Any]:
-        """Disable the Cast domain and stop sink discovery."""
+        """Disable the Cast domain and stop sink discovery.
+
+        Stops discovering Cast sinks and clears the sink list.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Cast.disable")
 
     async def set_sink_to_use(self, sink_name: str) -> dict[str, Any]:

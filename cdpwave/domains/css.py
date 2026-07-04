@@ -13,11 +13,24 @@ class CSSDomain(BaseDomain):
     """
 
     async def enable(self) -> dict[str, Any]:
-        """Enable the CSS domain."""
+        """Enable the CSS domain.
+
+        Activates CSS domain events and reporting.
+        Must be called before using other methods in this domain.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("CSS.enable")
 
     async def disable(self) -> dict[str, Any]:
-        """Disable the CSS domain."""
+        """Disable the CSS domain.
+
+        Deactivates CSS domain events and reporting.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("CSS.disable")
 
     async def get_inline_styles(
@@ -111,3 +124,126 @@ class CSSDomain(BaseDomain):
             Dict with ``medias`` list.
         """
         return await self._call("CSS.getMediaQueries")
+
+    async def add_rule(
+        self,
+        style_sheet_id: str,
+        rule_text: str,
+        location: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Add a CSS rule to a stylesheet.
+
+        Args:
+            style_sheet_id: Stylesheet ID to add the rule to.
+            rule_text: CSS rule text (e.g. ``".cls { color: red; }"``).
+            location: Optional location dict for insertion point.
+
+        Returns:
+            Dict with ``rule`` CSSRule object.
+        """
+        params: dict[str, Any] = {
+            "styleSheetId": style_sheet_id,
+            "ruleText": rule_text,
+        }
+        if location is not None:
+            params["location"] = location
+        return await self._call("CSS.addRule", params)
+
+    async def set_style_text(
+        self,
+        style_sheet_id: str,
+        range_start: dict[str, Any],
+        style_text: str,
+    ) -> dict[str, Any]:
+        """Set the text of a CSS style in a stylesheet.
+
+        Args:
+            style_sheet_id: Stylesheet ID.
+            range_start: Source range dict with ``startLine``, ``startColumn``,
+                ``endLine``, ``endColumn``.
+            style_text: New CSS style text.
+        """
+        return await self._call(
+            "CSS.setStyleTexts",
+            {
+                "edits": [
+                    {
+                        "styleSheetId": style_sheet_id,
+                        "range": range_start,
+                        "text": style_text,
+                    }
+                ],
+            },
+        )
+
+    async def set_rule_selector(
+        self,
+        style_sheet_id: str,
+        range_start: dict[str, Any],
+        selector: str,
+    ) -> dict[str, Any]:
+        """Set the selector of a CSS rule.
+
+        Args:
+            style_sheet_id: Stylesheet ID.
+            range_start: Source range dict.
+            selector: New selector text.
+        """
+        return await self._call(
+            "CSS.setRuleSelector",
+            {
+                "styleSheetId": style_sheet_id,
+                "range": range_start,
+                "selector": selector,
+            },
+        )
+
+    async def create_style_sheet(
+        self,
+        frame_id: str,
+    ) -> dict[str, Any]:
+        """Create a new stylesheet in the given frame.
+
+        Args:
+            frame_id: Frame ID to create the stylesheet in.
+
+        Returns:
+            Dict with ``styleSheetId``.
+        """
+        return await self._call(
+            "CSS.createStyleSheet",
+            {"frameId": frame_id},
+        )
+
+    async def get_background_colors(
+        self,
+        node_id: int,
+    ) -> dict[str, Any]:
+        """Get background colors for a node.
+
+        Args:
+            node_id: DOM node ID.
+
+        Returns:
+            Dict with ``backgroundColors`` list.
+        """
+        return await self._call(
+            "CSS.getBackgroundColors",
+            {"nodeId": node_id},
+        )
+
+    async def force_pseudo_state(
+        self,
+        node_id: int,
+        pseudo_state: list[str],
+    ) -> dict[str, Any]:
+        """Force a pseudo state on a node.
+
+        Args:
+            node_id: DOM node ID.
+            pseudo_state: List of pseudo states (e.g. ``["hover"]``).
+        """
+        return await self._call(
+            "CSS.forcePseudoState",
+            {"nodeId": node_id, "forcedPseudoClasses": pseudo_state},
+        )

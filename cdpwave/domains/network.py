@@ -31,7 +31,14 @@ class NetworkDomain(BaseDomain):
         return await self._call("Network.enable", params or None)
 
     async def disable(self) -> dict[str, Any]:
-        """Disable Network domain events."""
+        """Disable Network domain events.
+
+        Stops reporting of network requests, responses, loading events,
+        and WebSocket activity.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Network.disable")
 
     async def set_user_agent_override(
@@ -69,11 +76,25 @@ class NetworkDomain(BaseDomain):
         )
 
     async def clear_browser_cookies(self) -> dict[str, Any]:
-        """Clear all browser cookies."""
+        """Clear all browser cookies.
+
+        Removes all cookies from the browser's cookie jar, including
+        cookies for all domains and all contexts.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Network.clearBrowserCookies")
 
     async def clear_browser_cache(self) -> dict[str, Any]:
-        """Clear the browser cache."""
+        """Clear the browser cache.
+
+        Removes all entries from the browser's HTTP cache, forcing
+        all subsequent requests to hit the network.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Network.clearBrowserCache")
 
     async def get_cookies(
@@ -217,4 +238,71 @@ class NetworkDomain(BaseDomain):
                 "downloadThroughput": download_throughput,
                 "uploadThroughput": upload_throughput,
             },
+        )
+
+    async def get_all_cookies(self) -> dict[str, Any]:
+        """Get all cookies from the browser.
+
+        Unlike ``get_cookies``, this returns cookies from all contexts.
+
+        Returns:
+            Dict with ``cookies`` list.
+        """
+        return await self._call("Network.getAllCookies")
+
+    async def set_blocked_urls(self, urls: list[str]) -> dict[str, Any]:
+        """Block specific URLs from loading.
+
+        Args:
+            urls: List of URL patterns to block (supports wildcards).
+        """
+        return await self._call(
+            "Network.setBlockedURLs",
+            {"urls": urls},
+        )
+
+    async def set_bypass_service_worker(self, bypass: bool) -> dict[str, Any]:
+        """Bypass the service worker for all network requests.
+
+        Args:
+            bypass: Whether to bypass service workers.
+        """
+        return await self._call(
+            "Network.setBypassServiceWorker",
+            {"bypass": bypass},
+        )
+
+    async def load_network_resource(
+        self,
+        frame_id: str,
+        url: str,
+        options: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Load a network resource directly.
+
+        Args:
+            frame_id: Frame ID to load the resource for.
+            url: URL of the resource to load.
+            options: Optional resource load options dict.
+
+        Returns:
+            Dict with ``resource`` containing ``headers`` and ``statusCode``.
+        """
+        params: dict[str, Any] = {"frameId": frame_id, "url": url}
+        if options is not None:
+            params["options"] = options
+        return await self._call("Network.loadNetworkResource", params)
+
+    async def get_request_post_data(self, request_id: str) -> dict[str, Any]:
+        """Get the POST data of a request.
+
+        Args:
+            request_id: Request ID from a network event.
+
+        Returns:
+            Dict with ``postData`` string.
+        """
+        return await self._call(
+            "Network.getRequestPostData",
+            {"requestId": request_id},
         )

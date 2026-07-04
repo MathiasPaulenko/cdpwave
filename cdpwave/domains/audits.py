@@ -13,11 +13,24 @@ class AuditsDomain(BaseDomain):
     """
 
     async def enable(self) -> dict[str, Any]:
-        """Enable the Audits domain."""
+        """Enable the Audits domain.
+
+        Activates Audits domain events and reporting.
+        Must be called before using other methods in this domain.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Audits.enable")
 
     async def disable(self) -> dict[str, Any]:
-        """Disable the Audits domain."""
+        """Disable the Audits domain.
+
+        Deactivates Audits domain events and reporting.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Audits.disable")
 
     async def check_contrast(self) -> dict[str, Any]:

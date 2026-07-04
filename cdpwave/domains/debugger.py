@@ -13,11 +13,26 @@ class DebuggerDomain(BaseDomain):
     """
 
     async def enable(self) -> dict[str, Any]:
-        """Enable the Debugger domain."""
+        """Enable the Debugger domain.
+
+        Activates JavaScript debugging, which allows setting breakpoints,
+        stepping through code, and inspecting call frames. Must be called
+        before using any other Debugger method.
+
+        Returns:
+            Response dict from the CDP. May contain ``debuggerId``.
+        """
         return await self._call("Debugger.enable")
 
     async def disable(self) -> dict[str, Any]:
-        """Disable the Debugger domain."""
+        """Disable the Debugger domain.
+
+        Deactivates JavaScript debugging and removes all breakpoints.
+        Call frames will no longer be reported.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Debugger.disable")
 
     async def pause(self) -> dict[str, Any]:
@@ -25,19 +40,47 @@ class DebuggerDomain(BaseDomain):
         return await self._call("Debugger.pause")
 
     async def resume(self) -> dict[str, Any]:
-        """Resume script execution after a pause."""
+        """Resume script execution after a pause.
+
+        Continues execution from the current paused position until the
+        next breakpoint or the script completes.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Debugger.resume")
 
     async def step_over(self) -> dict[str, Any]:
-        """Step over the next function call."""
+        """Step over the next function call.
+
+        Advances to the next line in the current function, skipping over
+        any function calls rather than stepping into them.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Debugger.stepOver")
 
     async def step_into(self) -> dict[str, Any]:
-        """Step into the next function call."""
+        """Step into the next function call.
+
+        Advances to the first line inside the next function call,
+        allowing line-by-line inspection of called functions.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Debugger.stepInto")
 
     async def step_out(self) -> dict[str, Any]:
-        """Step out of the current function."""
+        """Step out of the current function.
+
+        Continues execution until the current function returns, then
+        pauses at the statement after the calling function.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Debugger.stepOut")
 
     async def set_breakpoint(
@@ -211,4 +254,115 @@ class DebuggerDomain(BaseDomain):
         return await self._call(
             "Debugger.setSkipAllPauses",
             {"skip": skip},
+        )
+
+    async def set_breakpoints_active(self, active: bool) -> dict[str, Any]:
+        """Enable or disable all breakpoints.
+
+        Args:
+            active: Whether breakpoints should be active.
+        """
+        return await self._call(
+            "Debugger.setBreakpointsActive",
+            {"active": active},
+        )
+
+    async def set_breakpoint_on_function_call(
+        self,
+        object_id: str,
+        condition: str | None = None,
+    ) -> dict[str, Any]:
+        """Set a breakpoint on a function call.
+
+        Args:
+            object_id: Object ID of the function.
+            condition: Optional breakpoint condition.
+
+        Returns:
+            Dict with ``breakpointId``.
+        """
+        params: dict[str, Any] = {"objectId": object_id}
+        if condition is not None:
+            params["condition"] = condition
+        return await self._call("Debugger.setBreakpointOnFunctionCall", params)
+
+    async def search_in_content(
+        self,
+        script_id: str,
+        query: str,
+        case_sensitive: bool = False,
+        is_regex: bool = False,
+    ) -> dict[str, Any]:
+        """Search for a string in a script's content.
+
+        Args:
+            script_id: Script ID to search in.
+            query: Search query.
+            case_sensitive: Whether the search is case sensitive.
+            is_regex: Whether the query is a regex.
+
+        Returns:
+            Dict with ``result`` list of matches.
+        """
+        params: dict[str, Any] = {
+            "scriptId": script_id,
+            "query": query,
+            "caseSensitive": case_sensitive,
+            "isRegex": is_regex,
+        }
+        return await self._call("Debugger.searchInContent", params)
+
+    async def set_blackbox_patterns(
+        self,
+        patterns: list[str],
+    ) -> dict[str, Any]:
+        """Set patterns to blackbox scripts (skip stepping into).
+
+        Args:
+            patterns: List of regex patterns to blackbox.
+        """
+        return await self._call(
+            "Debugger.setBlackboxPatterns",
+            {"patterns": patterns},
+        )
+
+    async def set_variable_value(
+        self,
+        call_frame_id: str,
+        scope_number: int,
+        variable_name: str,
+        new_value: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Set the value of a variable in a call frame.
+
+        Args:
+            call_frame_id: Call frame ID from the paused state.
+            scope_number: Scope number (0-based).
+            variable_name: Variable name to set.
+            new_value: New value as a remote object call argument.
+        """
+        return await self._call(
+            "Debugger.setVariableValue",
+            {
+                "callFrameId": call_frame_id,
+                "scopeNumber": scope_number,
+                "variableName": variable_name,
+                "newValue": new_value,
+            },
+        )
+
+    async def set_return_value(
+        self,
+        new_value: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Set the return value of the current function.
+
+        Only valid when paused at a return statement.
+
+        Args:
+            new_value: New return value as a call argument dict.
+        """
+        return await self._call(
+            "Debugger.setReturnValue",
+            {"newValue": new_value},
         )

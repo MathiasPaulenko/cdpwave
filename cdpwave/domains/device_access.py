@@ -13,11 +13,24 @@ class DeviceAccessDomain(BaseDomain):
     """
 
     async def enable(self) -> dict[str, Any]:
-        """Enable the DeviceAccess domain."""
+        """Enable the DeviceAccess domain.
+
+        Activates DeviceAccess domain events and reporting.
+        Must be called before using other methods in this domain.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("DeviceAccess.enable")
 
     async def disable(self) -> dict[str, Any]:
-        """Disable the DeviceAccess domain."""
+        """Disable the DeviceAccess domain.
+
+        Deactivates DeviceAccess domain events and reporting.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("DeviceAccess.disable")
 
     async def select_bluetooth_device(

@@ -14,11 +14,24 @@ class MediaDomain(BaseDomain):
     """
 
     async def enable(self) -> dict[str, Any]:
-        """Enable the Media domain."""
+        """Enable the Media domain.
+
+        Activates Media domain events and reporting.
+        Must be called before using other methods in this domain.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Media.enable")
 
     async def disable(self) -> dict[str, Any]:
-        """Disable the Media domain."""
+        """Disable the Media domain.
+
+        Deactivates Media domain events and reporting.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Media.disable")
 
     async def get_player_properties(

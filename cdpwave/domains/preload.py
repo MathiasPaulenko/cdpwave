@@ -13,11 +13,24 @@ class PreloadDomain(BaseDomain):
     """
 
     async def enable(self) -> dict[str, Any]:
-        """Enable the Preload domain."""
+        """Enable the Preload domain.
+
+        Activates Preload domain events and reporting.
+        Must be called before using other methods in this domain.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Preload.enable")
 
     async def disable(self) -> dict[str, Any]:
-        """Disable the Preload domain."""
+        """Disable the Preload domain.
+
+        Deactivates Preload domain events and reporting.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Preload.disable")
 
     async def get_preload_policy(self) -> dict[str, Any]:

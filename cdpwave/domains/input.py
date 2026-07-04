@@ -241,7 +241,14 @@ class InputDomain(BaseDomain):
         return await self._call("Input.imeSetComposition", params)
 
     async def cancel_dragging(self) -> dict[str, Any]:
-        """Cancel any ongoing drag operation on the page."""
+        """Cancel any ongoing drag operation on the page.
+
+        Aborts the current drag-and-drop sequence, releasing any
+        held elements and resetting the drag state.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Input.cancelDragging")
 
     async def set_intercept_drags(self, enabled: bool) -> dict[str, Any]:

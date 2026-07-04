@@ -179,3 +179,15 @@
 ## EventBreakpoints
 
 ::: cdpwave.domains.event_breakpoints.EventBreakpointsDomain
+
+## HeapProfiler
+
+::: cdpwave.domains.heap_profiler.HeapProfilerDomain
+
+## LayerTree
+
+::: cdpwave.domains.layer_tree.LayerTreeDomain
+
+## PerformanceTimeline
+
+::: cdpwave.domains.performance_timeline.PerformanceTimelineDomain

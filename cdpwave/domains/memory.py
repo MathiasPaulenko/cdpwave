@@ -25,7 +25,14 @@ class MemoryDomain(BaseDomain):
         return await self._call("Memory.prepareForLeakDetection")
 
     async def for_force_garbage_collection(self) -> dict[str, Any]:
-        """Force a garbage collection cycle."""
+        """Force a garbage collection cycle.
+
+        Triggers a full GC cycle in the browser process,
+        reclaiming unreachable objects across all V8 isolates.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Memory.forceGarbageCollection")
 
     async def set_pressure_notifications_suppressed(
@@ -75,7 +82,14 @@ class MemoryDomain(BaseDomain):
         return await self._call("Memory.startSampling", params)
 
     async def stop_sampling(self) -> dict[str, Any]:
-        """Stop memory sampling."""
+        """Stop memory sampling.
+
+        Stops the memory sampling that was started by
+        ``start_sampling``.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Memory.stopSampling")
 
     async def get_sampling_profile(self) -> dict[str, Any]:

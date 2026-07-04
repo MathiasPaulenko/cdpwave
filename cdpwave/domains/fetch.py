@@ -35,7 +35,14 @@ class FetchDomain(BaseDomain):
         return await self._call("Fetch.enable", params)
 
     async def disable(self) -> dict[str, Any]:
-        """Disable Fetch domain request interception."""
+        """Disable Fetch domain request interception.
+
+        Stops intercepting network requests. All pending paused
+        requests will be automatically resumed.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Fetch.disable")
 
     async def continue_request(
@@ -215,5 +222,19 @@ class FetchDomain(BaseDomain):
         """
         return await self._call(
             "Fetch.takeResponseBodyAsStream",
+            {"requestId": request_id},
+        )
+
+    async def get_request_post_data(self, request_id: str) -> dict[str, Any]:
+        """Get the POST data of an intercepted request.
+
+        Args:
+            request_id: The ID of the intercepted request.
+
+        Returns:
+            Dict with ``postData`` string.
+        """
+        return await self._call(
+            "Fetch.getRequestPostData",
             {"requestId": request_id},
         )

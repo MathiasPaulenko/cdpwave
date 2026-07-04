@@ -14,11 +14,24 @@ class PerformanceDomain(BaseDomain):
     """
 
     async def enable(self) -> dict[str, Any]:
-        """Enable collecting performance metrics."""
+        """Enable collecting performance metrics.
+
+        Activates periodic reporting of runtime performance metrics
+        such as JS heap size, DOM nodes, and event listeners.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Performance.enable")
 
     async def disable(self) -> dict[str, Any]:
-        """Disable collecting performance metrics."""
+        """Disable collecting performance metrics.
+
+        Stops periodic reporting of runtime performance metrics.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Performance.disable")
 
     async def get_metrics(self) -> dict[str, Any]:

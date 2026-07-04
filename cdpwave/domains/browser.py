@@ -39,7 +39,14 @@ class BrowserDomain:
         return await self._call("Browser.getVersion")
 
     async def close(self) -> dict[str, Any]:
-        """Close the browser gracefully."""
+        """Close the browser gracefully.
+
+        Terminates the browser process and all associated tabs.
+        Equivalent to quitting the browser application.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Browser.close")
 
     async def get_window_for_target(

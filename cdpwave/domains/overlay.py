@@ -14,11 +14,25 @@ class OverlayDomain(BaseDomain):
     """
 
     async def enable(self) -> dict[str, Any]:
-        """Enable the Overlay domain."""
+        """Enable the Overlay domain.
+
+        Activates visual debugging overlays such as paint rectangles,
+        debug borders, FPS counter, and node highlighting.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Overlay.enable")
 
     async def disable(self) -> dict[str, Any]:
-        """Disable the Overlay domain."""
+        """Disable the Overlay domain.
+
+        Removes all visual debugging overlays and stops reporting
+        overlay-related events.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Overlay.disable")
 
     async def set_show_paint_rects(self, show: bool) -> dict[str, Any]:
@@ -130,7 +144,14 @@ class OverlayDomain(BaseDomain):
         return await self._call("Overlay.highlightNode", params)
 
     async def hide_highlight(self) -> dict[str, Any]:
-        """Hide any active node highlight overlay."""
+        """Hide any active node highlight overlay.
+
+        Removes the highlighting set by ``highlight_node`` or
+        ``highlight_frame``.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Overlay.hideHighlight")
 
     async def set_inspect_mode(
@@ -149,3 +170,56 @@ class OverlayDomain(BaseDomain):
         if highlight_config is not None:
             params["highlightConfig"] = highlight_config
         return await self._call("Overlay.setInspectMode", params)
+
+    async def set_paused_in_debugger_message(
+        self,
+        message: str | None = None,
+    ) -> dict[str, Any]:
+        """Show a paused-in-debugger message overlay.
+
+        Args:
+            message: Message to display (None to clear).
+        """
+        params: dict[str, Any] = {}
+        if message is not None:
+            params["message"] = message
+        return await self._call("Overlay.setPausedInDebuggerMessage", params)
+
+    async def set_show_viewport_size_on_resize(self, show: bool) -> dict[str, Any]:
+        """Show viewport size on resize.
+
+        Args:
+            show: Whether to show the viewport size.
+        """
+        return await self._call(
+            "Overlay.setShowViewportSizeOnResize",
+            {"show": show},
+        )
+
+    async def set_show_window_controls(
+        self,
+        window_controls: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Show window controls overlay.
+
+        Args:
+            window_controls: Window controls config dict.
+        """
+        return await self._call(
+            "Overlay.setShowWindowControls",
+            {"windowControls": window_controls},
+        )
+
+    async def set_show_isolated_elements(
+        self,
+        isolated_element_highlight_configs: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Highlight isolated elements.
+
+        Args:
+            isolated_element_highlight_configs: List of highlight configs.
+        """
+        return await self._call(
+            "Overlay.setShowIsolatedElements",
+            {"isolatedElementHighlightConfigs": isolated_element_highlight_configs},
+        )

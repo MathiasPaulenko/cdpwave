@@ -110,5 +110,11 @@ Even if an exception occurs inside the `async with` block, cleanup is guaranteed
 
 - [Guide: Browser Launch](guide/browser-launch.md) — launch options, connecting to existing browsers
 - [Guide: Events](guide/events.md) — handler isolation, subscriptions, common events
-- [Cookbook: Escape Hatch](cookbook/escape-hatch.md) — send raw CDP commands for uncovered domains
-- [API Reference](api/client.md) — full auto-generated API docs
+- [Guide: Emulation & Input](guide/emulation-input.md) — device metrics, keyboard, mouse, touch
+- [Guide: Fetch & Network Interception](guide/fetch-network.md) — intercept, mock, block requests
+- [Guide: Performance & Profiling](guide/performance-profiling.md) — CPU profiling, heap snapshots, tracing
+- [Guide: Debugging](guide/debugging.md) — breakpoints, stepping, variable inspection
+- [Guide: Storage & Cache](guide/storage-cache.md) — cookies, IndexedDB, Cache API
+- [Guide: Advanced Domains](guide/advanced-domains.md) — Accessibility, CSS, Overlay, Security, WebAuthn
+- [Cookbook: Escape Hatch](cookbook/escape-hatch.md) — send raw CDP commands
+- [API Reference](api/client.md) — full auto-generated API docs for all 48 domains

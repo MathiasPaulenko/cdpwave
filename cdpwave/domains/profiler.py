@@ -14,11 +14,24 @@ class ProfilerDomain(BaseDomain):
     """
 
     async def enable(self) -> dict[str, Any]:
-        """Enable the Profiler domain."""
+        """Enable the Profiler domain.
+
+        Activates Profiler domain events and reporting.
+        Must be called before using other methods in this domain.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Profiler.enable")
 
     async def disable(self) -> dict[str, Any]:
-        """Disable the Profiler domain."""
+        """Disable the Profiler domain.
+
+        Deactivates Profiler domain events and reporting.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Profiler.disable")
 
     async def start(self) -> dict[str, Any]:

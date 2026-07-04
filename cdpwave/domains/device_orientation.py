@@ -32,7 +32,15 @@ class DeviceOrientationDomain(BaseDomain):
         )
 
     async def clear_device_orientation_override(self) -> dict[str, Any]:
-        """Clear the device orientation override."""
+        """Clear the device orientation override.
+
+        Removes the sensor override set by
+        ``set_device_orientation_override``, restoring the real
+        device orientation sensor data.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call(
             "DeviceOrientation.clearDeviceOrientationOverride"
         )

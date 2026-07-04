@@ -45,6 +45,12 @@ nav:
       - DOM: guide/dom.md
       - Screenshots & PDF: guide/screenshots.md
       - Multi-Tab: guide/multi-tab.md
+      - Emulation & Input: guide/emulation-input.md
+      - Fetch & Network Interception: guide/fetch-network.md
+      - Performance & Profiling: guide/performance-profiling.md
+      - Debugging: guide/debugging.md
+      - Storage & Cache: guide/storage-cache.md
+      - Advanced Domains: guide/advanced-domains.md
   - Cookbook:
       - Connect to Existing Browser: cookbook/connect-existing.md
       - Headless & Docker: cookbook/headless.md

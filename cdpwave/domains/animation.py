@@ -14,11 +14,24 @@ class AnimationDomain(BaseDomain):
     """
 
     async def enable(self) -> dict[str, Any]:
-        """Enable the Animation domain."""
+        """Enable the Animation domain.
+
+        Activates Animation domain events and reporting.
+        Must be called before using other methods in this domain.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Animation.enable")
 
     async def disable(self) -> dict[str, Any]:
-        """Disable the Animation domain."""
+        """Disable the Animation domain.
+
+        Deactivates Animation domain events and reporting.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Animation.disable")
 
     async def get_current_time(

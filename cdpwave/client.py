@@ -27,10 +27,12 @@ from cdpwave.domains.event_breakpoints import EventBreakpointsDomain
 from cdpwave.domains.extensions import ExtensionsDomain
 from cdpwave.domains.fetch import FetchDomain
 from cdpwave.domains.headless_experimental import HeadlessExperimentalDomain
+from cdpwave.domains.heap_profiler import HeapProfilerDomain
 from cdpwave.domains.indexed_db import IndexedDBDomain
 from cdpwave.domains.input import InputDomain
 from cdpwave.domains.inspector import InspectorDomain
 from cdpwave.domains.io import IODomain
+from cdpwave.domains.layer_tree import LayerTreeDomain
 from cdpwave.domains.log import LogDomain
 from cdpwave.domains.media import MediaDomain
 from cdpwave.domains.memory import MemoryDomain
@@ -38,6 +40,7 @@ from cdpwave.domains.network import NetworkDomain
 from cdpwave.domains.overlay import OverlayDomain
 from cdpwave.domains.page import PageDomain
 from cdpwave.domains.performance import PerformanceDomain
+from cdpwave.domains.performance_timeline import PerformanceTimelineDomain
 from cdpwave.domains.preload import PreloadDomain
 from cdpwave.domains.profiler import ProfilerDomain
 from cdpwave.domains.pwa import PWADomain
@@ -143,6 +146,9 @@ class CDPSession:
         self._css = CSSDomain(self._sender)
         self._dom_debugger = DOMDebuggerDomain(self._sender)
         self._event_breakpoints = EventBreakpointsDomain(self._sender)
+        self._heap_profiler = HeapProfilerDomain(self._sender)
+        self._layer_tree = LayerTreeDomain(self._sender)
+        self._performance_timeline = PerformanceTimelineDomain(self._sender)
 
     @property
     def page(self) -> PageDomain:
@@ -363,6 +369,21 @@ class CDPSession:
     def event_breakpoints(self) -> EventBreakpointsDomain:
         """EventBreakpoints domain wrapper for instrumentation breakpoints."""
         return self._event_breakpoints
+
+    @property
+    def heap_profiler(self) -> HeapProfilerDomain:
+        """HeapProfiler domain wrapper for heap snapshots and allocation profiling."""
+        return self._heap_profiler
+
+    @property
+    def layer_tree(self) -> LayerTreeDomain:
+        """LayerTree domain wrapper for compositing layer inspection."""
+        return self._layer_tree
+
+    @property
+    def performance_timeline(self) -> PerformanceTimelineDomain:
+        """PerformanceTimeline domain wrapper for timeline events."""
+        return self._performance_timeline
 
     @property
     def session_id(self) -> str:

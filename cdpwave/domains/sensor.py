@@ -14,11 +14,24 @@ class SensorDomain(BaseDomain):
     """
 
     async def enable(self) -> dict[str, Any]:
-        """Enable the Sensor domain."""
+        """Enable the Sensor domain.
+
+        Activates Sensor domain events and reporting.
+        Must be called before using other methods in this domain.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Sensor.enable")
 
     async def disable(self) -> dict[str, Any]:
-        """Disable the Sensor domain."""
+        """Disable the Sensor domain.
+
+        Deactivates Sensor domain events and reporting.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Sensor.disable")
 
     async def set_sensor_override(

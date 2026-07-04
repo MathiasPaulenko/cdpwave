@@ -13,11 +13,24 @@ class SecurityDomain(BaseDomain):
     """
 
     async def enable(self) -> dict[str, Any]:
-        """Enable the Security domain."""
+        """Enable the Security domain.
+
+        Activates Security domain events and reporting.
+        Must be called before using other methods in this domain.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Security.enable")
 
     async def disable(self) -> dict[str, Any]:
-        """Disable the Security domain."""
+        """Disable the Security domain.
+
+        Deactivates Security domain events and reporting.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Security.disable")
 
     async def handle_certificate_error(

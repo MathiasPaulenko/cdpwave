@@ -14,11 +14,24 @@ class IndexedDBDomain(BaseDomain):
     """
 
     async def enable(self) -> dict[str, Any]:
-        """Enable the IndexedDB domain."""
+        """Enable the IndexedDB domain.
+
+        Activates IndexedDB domain events and reporting.
+        Must be called before using other methods in this domain.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("IndexedDB.enable")
 
     async def disable(self) -> dict[str, Any]:
-        """Disable the IndexedDB domain."""
+        """Disable the IndexedDB domain.
+
+        Deactivates IndexedDB domain events and reporting.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("IndexedDB.disable")
 
     async def request_database_names(

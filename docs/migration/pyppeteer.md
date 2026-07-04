@@ -1,15 +1,16 @@
 # Migrating from pyppeteer
 
-pyppeteer is unmaintained (last release: Feb 2024 alpha). cdpwave is a modern, typed, async-first replacement.
+pyppeteer is unmaintained (last release: Feb 2024 alpha). cdpwave is a modern, typed, async-first replacement with full CDP coverage.
 
 ## Key differences
 
 | Aspect | pyppeteer | cdpwave |
-|---|---|
+|---|---|---|
 | Maintenance | Dead | Active |
 | Browser | Downloads Chromium (~150MB) | Detects existing browser |
 | API style | Puppeteer port (camelCase) | Pythonic (snake_case, type hints) |
 | Typing | No type hints | mypy --strict |
+| CDP coverage | 7 domains | All 48 domains, 386 methods |
 | Sessions | One WebSocket per tab | Flatten (one WebSocket for all) |
 | CDP access | Not exposed | Typed domains + escape hatch |
 | Context manager | Yes | Yes |
@@ -75,7 +76,9 @@ asyncio.run(main())
 ## Key migration notes
 
 1. **No auto-wait** — pyppeteer auto-waits for navigation. In cdpwave, use `Page.loadEventFired` with `asyncio.Event`.
-2. **No high-level API** — `page.click()`, `page.type()` don't exist in v1. Use DOM + escape hatch (`Input.dispatchKeyEvent`).
-3. **Domain access** — CDP domains are properties: `session.page`, `session.runtime`, `session.network`, `session.dom`.
-4. **Event names** — Use raw CDP event names: `"Page.loadEventFired"` not `"load"`.
-5. **Flatten sessions** — All tabs share one WebSocket. No per-tab connection overhead.
+2. **Full CDP access** — all 48 domains are available as typed properties: `session.page`, `session.runtime`, `session.network`, `session.dom`, `session.debugger`, `session.fetch`, `session.emulation`, `session.input`, etc.
+3. **Event names** — Use raw CDP event names: `"Page.loadEventFired"` not `"load"`.
+4. **Flatten sessions** — All tabs share one WebSocket. No per-tab connection overhead.
+5. **Input simulation** — use `session.input.dispatch_key_event()` and `session.input.dispatch_mouse_event()` instead of `page.click()` / `page.type()`.
+6. **Request interception** — use `session.fetch` domain instead of `page.setRequestInterception()`.
+7. **Device emulation** — use `session.emulation.set_device_metrics_override()` instead of `page.emulate()`.
