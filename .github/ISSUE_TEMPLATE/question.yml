@@ -1,0 +1,19 @@
+name: Question
+description: Ask a question about usage or documentation
+title: "[question]: "
+labels: ["question"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What would you like to know?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Any relevant code, configuration, or context.
+      render: python

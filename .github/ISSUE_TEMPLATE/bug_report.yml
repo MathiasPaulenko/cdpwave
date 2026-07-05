@@ -1,0 +1,91 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+title: "[bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the information below.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Minimal steps to reproduce the behavior.
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened.
+    validations:
+      required: true
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Code Example
+      description: Minimal reproducible code snippet.
+      render: python
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python Version
+      placeholder: "3.12.3"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      placeholder: "Windows 11 / Ubuntu 22.04 / macOS 14"
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      placeholder: "Chrome 125 / Edge 125 / Brave 1.67"
+    validations:
+      required: true
+
+  - type: input
+    id: cdpwave-version
+    attributes:
+      label: cdpwave Version
+      placeholder: "2.0.1"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Traceback
+      description: Any relevant error output or traceback.
+      render: shell
