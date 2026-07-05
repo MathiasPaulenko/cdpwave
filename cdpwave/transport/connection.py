@@ -51,7 +51,12 @@ class Connection:
 
     async def connect(self) -> None:
         """Open the WebSocket connection and start the receive loop."""
-        self._ws = await websockets.connect(self._url, max_size=None)
+        self._ws = await websockets.connect(
+            self._url,
+            max_size=None,
+            ping_interval=20,
+            ping_timeout=20,
+        )
         self._receive_task = asyncio.create_task(self._receive_loop())
         logger.info("Connected to %s", self._url)
 

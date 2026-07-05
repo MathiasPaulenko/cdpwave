@@ -686,21 +686,31 @@ class CDPClient:
         cls,
         host: str = "localhost",
         port: int = 9222,
+        ws_url: str | None = None,
     ) -> CDPClient:
         """Connect to an existing browser's CDP endpoint.
+
+        If ``ws_url`` is provided, connects directly to that WebSocket
+        URL without HTTP discovery. Otherwise, discovers the WebSocket
+        URL via ``http://host:port/json/version``.
 
         Args:
             host: Host where the browser is running.
             port: Remote debugging port.
+            ws_url: Optional direct WebSocket URL (skips discovery).
 
         Returns:
             A connected CDPClient instance.
         """
         discovery = TargetDiscovery(host=host, port=port)
-        version = await discovery.get_version()
+        if ws_url is not None:
+            socket_url = ws_url
+        else:
+            version = await discovery.get_version()
+            socket_url = version.web_socket_debugger_url
         client = cls.__new__(cls)
         client._connection = Connection(
-            version.web_socket_debugger_url,
+            socket_url,
             event_callback=client._event_callback,
         )
         await client._connection.connect()
@@ -794,6 +804,11 @@ class CDPClient:
     def is_connected(self) -> bool:
         """Whether the WebSocket connection is still open."""
         return not self._connection.is_closed
+
+    @property
+    def sessions(self) -> list[CDPSession]:
+        """List of currently active sessions."""
+        return list(self._sessions.values())
 
     async def __aenter__(self) -> CDPClient:
         """Enter async context manager."""
