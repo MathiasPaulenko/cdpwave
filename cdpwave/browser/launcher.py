@@ -93,6 +93,7 @@ class BrowserLauncher:
             self._browser_path,
             f"--remote-debugging-port={port}",
             f"--user-data-dir={user_data_dir}",
+            "--remote-allow-origins=*",
             *_DEFAULT_FLAGS,
         ]
 
@@ -135,7 +136,7 @@ class BrowserLauncher:
         self._process = await asyncio.create_subprocess_exec(
             *args,
             stdout=asyncio.subprocess.DEVNULL,
-            stderr=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.PIPE,
         )
 
         self._info = await self._wait_for_endpoint(timeout=timeout)
@@ -149,8 +150,13 @@ class BrowserLauncher:
 
         while elapsed < timeout:
             if self._process is not None and self._process.returncode is not None:
+                stderr_data = b""
+                if self._process.stderr is not None:
+                    stderr_data = await self._process.stderr.read()
+                stderr_text = stderr_data.decode("utf-8", errors="replace").strip()
                 raise LaunchError(
                     f"Browser process exited with code {self._process.returncode}"
+                    + (f": {stderr_text}" if stderr_text else "")
                 )
 
             try:

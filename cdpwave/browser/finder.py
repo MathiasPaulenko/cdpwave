@@ -4,6 +4,8 @@ import os
 import shutil
 import sys
 
+from collections.abc import Callable
+
 from cdpwave.exceptions import BrowserNotFoundError
 from cdpwave.types import BrowserType
 
@@ -106,11 +108,11 @@ def find_chromium() -> str | None:
     return _find_on_linux(_LINUX_NAMES["chromium"])
 
 
-_FINDER_NAMES: dict[BrowserType, str] = {
-    "chrome": "find_chrome",
-    "edge": "find_edge",
-    "brave": "find_brave",
-    "chromium": "find_chromium",
+_FINDER_NAMES: dict[BrowserType, Callable[[], str | None]] = {
+    "chrome": find_chrome,
+    "edge": find_edge,
+    "brave": find_brave,
+    "chromium": find_chromium,
 }
 
 _SEARCH_ORDER: list[BrowserType] = ["chrome", "edge", "brave", "chromium"]
@@ -141,8 +143,7 @@ def find_browser(preferred: BrowserType | None = None) -> str:
     search_order.extend([b for b in _SEARCH_ORDER if b != preferred])
 
     for browser_type in search_order:
-        finder = globals()[_FINDER_NAMES[browser_type]]
-        path: str | None = finder()
+        path = _FINDER_NAMES[browser_type]()
         if path:
             return path
 

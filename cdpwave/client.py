@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import logging
 from typing import Any
@@ -424,7 +425,13 @@ class CDPSession:
         return await self._sender(method, params)
 
     async def close(self) -> None:
-        """Close the session and detach from the target."""
+        """Close the session and detach from the target.
+
+        If the session's target was created by this client (via
+        ``new_page()``), the target is also closed. If the session
+        was attached to an existing target (via ``connect_to_page()``),
+        only the session is detached.
+        """
         if self._closed:
             return
         self._closed = True
@@ -436,6 +443,13 @@ class CDPSession:
                 "Target.detachFromTarget",
                 {"sessionId": self._session_id},
             )
+        if self._client is not None and self._target_id in self._client._managed_targets:
+            with contextlib.suppress(Exception):
+                await self._connection.send_command(
+                    "Target.closeTarget",
+                    {"targetId": self._target_id},
+                )
+            self._client._managed_targets.discard(self._target_id)
         logger.info("Session %s closed", self._session_id)
 
     def on(self, event_name: str, handler: EventHandler) -> Subscription:
@@ -458,6 +472,41 @@ class CDPSession:
             handler: The handler to remove.
         """
         self._dispatcher.off(event_name, handler)
+
+    async def wait_for_event(
+        self,
+        event_name: str,
+        timeout: float = 30.0,
+    ) -> dict[str, Any]:
+        """Wait for a single CDP event and return its params.
+
+        Registers a one-shot handler that resolves when the event fires.
+        The handler is automatically removed after the event is received
+        or on timeout.
+
+        Args:
+            event_name: CDP event name (e.g. ``"Page.loadEventFired"``).
+            timeout: Maximum seconds to wait.
+
+        Returns:
+            The event params dict.
+
+        Raises:
+            TimeoutError: If the event does not fire within ``timeout``.
+        """
+        event = asyncio.Event()
+        captured: list[dict[str, Any]] = []
+
+        async def _handler(params: dict[str, Any]) -> None:
+            captured.append(params)
+            event.set()
+
+        sub = self.on(event_name, _handler)
+        try:
+            await asyncio.wait_for(event.wait(), timeout=timeout)
+            return captured[0]
+        finally:
+            sub.unsubscribe()
 
     async def __aenter__(self) -> CDPSession:
         """Enter async context manager."""
@@ -494,6 +543,7 @@ class CDPClient:
         self._dispatcher = EventDispatcher()
         self._session_dispatchers: dict[str, EventDispatcher] = {}
         self._sessions: dict[str, CDPSession] = {}
+        self._managed_targets: set[str] = set()
         self._closed = False
         self._browser = BrowserDomain(self.send)
 
@@ -626,6 +676,7 @@ class CDPClient:
         client._dispatcher = EventDispatcher()
         client._session_dispatchers = {}
         client._sessions = {}
+        client._managed_targets = set()
         client._closed = False
         client._browser = BrowserDomain(client.send)
         return client
@@ -659,6 +710,7 @@ class CDPClient:
         client._dispatcher = EventDispatcher()
         client._session_dispatchers = {}
         client._sessions = {}
+        client._managed_targets = set()
         client._closed = False
         client._browser = BrowserDomain(client.send)
         return client
@@ -674,6 +726,7 @@ class CDPClient:
         """
         target_id = await self._session_manager.create_target(url)
         session_id = await self._session_manager.attach_to_target(target_id)
+        self._managed_targets.add(target_id)
         session = CDPSession(
             connection=self._connection,
             session_id=session_id,

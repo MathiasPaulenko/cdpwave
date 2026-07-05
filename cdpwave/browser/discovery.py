@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from typing import Any
@@ -95,7 +96,7 @@ class TargetDiscovery:
     async def new_tab(self, url: str = "about:blank") -> TargetInfo:
         """Create a new tab and return its target info."""
         data: dict[str, Any] = await asyncio.to_thread(
-            _http_put, f"{self._base_url}/json/new?{url}"
+            _http_put, f"{self._base_url}/json/new?{urllib.parse.quote(url, safe='')}"
         )
         return TargetInfo(
             target_id=str(data.get("id", "")),
