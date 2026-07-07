@@ -1,5 +1,6 @@
-"""Event dispatcher for routing CDP events to registered async handlers."""
+"""Event dispatcher for routing CDP events to registered handlers."""
 
+import inspect
 import logging
 from typing import Any
 
@@ -60,7 +61,9 @@ class EventDispatcher:
         handlers = list(self._handlers.get(event_name, []))
         for handler in handlers:
             try:
-                await handler(params)
+                result = handler(params)
+                if inspect.isawaitable(result):
+                    await result
             except Exception:
                 logger.exception(
                     "Handler error for event %s",
