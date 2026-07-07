@@ -66,7 +66,7 @@ class TestNetworkDomain:
         domain = NetworkDomain(fake)
         await domain.set_extra_request_headers({"X-Custom": "value"})
         assert fake.last_call == (
-            "Network.setExtraRequestHeaders",
+            "Network.setExtraHTTPHeaders",
             {"headers": {"X-Custom": "value"}},
         )
 
