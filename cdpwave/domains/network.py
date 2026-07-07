@@ -71,7 +71,7 @@ class NetworkDomain(BaseDomain):
             headers: Dict of header name to value.
         """
         return await self._call(
-            "Network.setExtraRequestHeaders",
+            "Network.setExtraHTTPHeaders",
             {"headers": headers},
         )
 
