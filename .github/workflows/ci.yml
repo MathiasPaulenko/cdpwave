@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
-      - run: pytest tests/unit/ -v --cov=cdpwave --cov-report=term-missing
+      - run: pytest tests/unit/ -v --cov=cdpwave --cov-report=term-missing --cov-fail-under=70
 
   integration-tests:
     runs-on: ubuntu-latest
