@@ -1,1421 +1,1404 @@
-# Manual Test Scenarios — Functional User Tests
+# Test Plan — cdpwave
 
-Step-by-step functional test scenarios for cdpwave. These are manual tests that you perform by following the instructions and verifying results visually or through browser DevTools.
+Comprehensive test plan covering all 386 methods across 48 CDP domains.
 
-## Prerequisites
+## Test Coverage Summary
 
-- Chrome/Edge/Brave/Chromium installed
-- Python 3.11+ installed
-- cdpwave installed: `pip install cdpwave`
-- Terminal or IDE for running scripts
-- Basic understanding of Python async/await
-
----
-
-# SECTION 1: Core Browser Launch
-
-## Test 1.1: Basic Browser Launch
-
-**Objective:** Verify that cdpwave can launch a browser successfully.
-
-**Steps:**
-1. Create a new Python file `test_launch.py`
-2. Add the following code:
-```python
-import asyncio
-from cdpwave import CDPClient
-
-async def main():
-    async with await CDPClient.launch(headless=True) as client:
-        print("Browser launched successfully!")
-        await asyncio.sleep(2)
-
-asyncio.run(main())
-```
-3. Run the script: `python test_launch.py`
-4. Verify that the script prints "Browser launched successfully!"
-5. Verify that no error occurs
-
-**Expected Result:** Script runs without errors and prints success message.
+| Domain | Methods | Test Cases | Priority |
+|--------|---------|------------|----------|
+| Page | 27 | 27 | P0 |
+| Runtime | 20 | 20 | P0 |
+| Target | 12 | 12 | P0 |
+| Network | 17 | 17 | P0 |
+| DOM | 26 | 26 | P0 |
+| Browser | 9 | 9 | P0 |
+| Emulation | 26 | 26 | P1 |
+| Input | 11 | 11 | P1 |
+| Fetch | 10 | 10 | P1 |
+| Storage | 13 | 13 | P1 |
+| CSS | 14 | 14 | P1 |
+| Overlay | 15 | 15 | P1 |
+| Debugger | 22 | 22 | P1 |
+| Log | 5 | 5 | P2 |
+| Performance | 4 | 4 | P2 |
+| Profiler | 9 | 9 | P2 |
+| HeapProfiler | 10 | 10 | P2 |
+| Security | 4 | 4 | P2 |
+| Accessibility | 7 | 7 | P2 |
+| Animation | 9 | 9 | P2 |
+| IndexedDB | 7 | 7 | P2 |
+| ServiceWorker | 11 | 11 | P2 |
+| WebAuthn | 4 | 4 | P2 |
+| Tier 3 Other | 80 | 80 | P3 |
+| **Total** | **386** | **386** | - |
 
 ---
 
-## Test 1.2: Browser Detection
+# PAGE DOMAIN (P0)
 
-**Objective:** Verify that cdpwave can detect and launch different browsers.
+## TC-PAGE-001: enable/disable
+**Preconditions:** Browser launched
+**Steps:** 
+1. Call session.page.enable()
+2. Call session.page.disable()
+**Expected:** No errors, domain enabled/disabled
 
-**Steps:**
-1. Create `test_browser_detection.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-PAGE-002: navigate
+**Preconditions:** Page enabled
+**Steps:** Navigate to https://example.com
+**Expected:** Navigation completes, page loads
 
-async def test_chrome():
-    async with await CDPClient.launch(headless=True, browser_type="chrome") as client:
-        print(f"Launched: {client.browser_type}")
+## TC-PAGE-003: navigate with referrer
+**Steps:** Navigate with referrer parameter
+**Expected:** Referrer sent in request
 
-async def test_edge():
-    async with await CDPClient.launch(headless=True, browser_type="edge") as client:
-        print(f"Launched: {client.browser_type}")
+## TC-PAGE-004: navigate with transition_type
+**Steps:** Navigate with transition_type="typed"
+**Expected:** Transition type applied
 
-asyncio.run(test_chrome())
-asyncio.run(test_edge())
-```
-2. Run the script
-3. Verify it detects and launches Chrome (if installed)
-4. Verify it detects and launches Edge (if installed)
+## TC-PAGE-005: reload
+**Steps:** Call session.page.reload()
+**Expected:** Page reloads
 
-**Expected Result:** Browser type is correctly identified and launched.
+## TC-PAGE-006: goBack
+**Steps:** Navigate twice, call goBack()
+**Expected:** Returns to previous page
 
----
+## TC-PAGE-007: goForward
+**Steps:** Navigate back, call goForward()
+**Expected:** Returns to next page
 
-## Test 1.3: Direct WebSocket Connection
+## TC-PAGE-008: captureScreenshot PNG
+**Steps:** Call capture_screenshot()
+**Expected:** Returns PNG data
 
-**Objective:** Verify that cdpwave can connect to an existing browser via WebSocket.
+## TC-PAGE-009: captureScreenshot JPEG
+**Steps:** Call capture_screenshot(format="jpeg")
+**Expected:** Returns JPEG data
 
-**Steps:**
-1. Launch Chrome with remote debugging:
-   - Windows: `chrome.exe --remote-debugging-port=9222`
-   - Linux/Mac: `google-chrome --remote-debugging-port=9222`
-2. Create `test_connect.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-PAGE-010: captureScreenshot with clip
+**Steps:** Call with clip parameter
+**Expected:** Returns clipped screenshot
 
-async def main():
-    async with await CDPClient.connect("ws://localhost:9222") as client:
-        targets = await client.get_pages()
-        print(f"Connected to {len(targets)} pages")
+## TC-PAGE-011: printToPDF basic
+**Steps:** Call print_to_pdf()
+**Expected:** Returns PDF data
 
-asyncio.run(main())
-```
-3. Run the script
-4. Verify it connects and lists pages
+## TC-PAGE-012: printToPDF landscape
+**Steps:** Call with landscape=True
+**Expected:** Returns landscape PDF
 
-**Expected Result:** Successfully connects and lists existing browser pages.
+## TC-PAGE-013: printToPDF background
+**Steps:** Call with print_background=True
+**Expected:** PDF includes background
 
----
+## TC-PAGE-014: printToPDF margins
+**Steps:** Call with margin parameters
+**Expected:** PDF with custom margins
 
-# SECTION 2: Page Navigation
+## TC-PAGE-015: printToPDF pageRanges
+**Steps:** Call with page_ranges="1-3"
+**Expected:** PDF with specified pages
 
-## Test 2.1: Navigate to URL
+## TC-PAGE-016: getLayoutMetrics
+**Steps:** Call get_layout_metrics()
+**Expected:** Returns layout metrics
 
-**Objective:** Verify that cdpwave can navigate to a URL.
+## TC-PAGE-017: getNavigationHistory
+**Steps:** Navigate twice, call get_navigation_history()
+**Expected:** Returns history with 2 entries
 
-**Steps:**
-1. Create `test_navigate.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-PAGE-018: setDocumentContent
+**Steps:** Call with HTML string
+**Expected:** Document content updated
 
-async def main():
-    async with await CDPClient.launch(headless=True) as client:
-        session = await client.new_page()
-        await session.page.navigate("https://example.com")
-        print("Navigated to example.com")
-        await asyncio.sleep(2)
+## TC-PAGE-019: getFrameTree
+**Steps:** Call get_frame_tree()
+**Expected:** Returns frame tree
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify no errors occur
+## TC-PAGE-020: setBypassCSP
+**Steps:** Call set_bypass_csp(True)
+**Expected:** CSP bypassed
 
-**Expected Result:** Navigation completes without errors.
+## TC-PAGE-021: crash
+**Steps:** Call crash()
+**Expected:** Page crashes
 
----
+## TC-PAGE-022: close
+**Steps:** Call close()
+**Expected:** Page closed
 
-## Test 2.2: Navigate with Wait for Load
+## TC-PAGE-023: bringToFront
+**Steps:** Create 2 pages, call bring_to_front()
+**Expected:** Page brought to front
 
-**Objective:** Verify that cdpwave can wait for page load event.
+## TC-PAGE-024: handleJavaScriptDialog
+**Steps:** Trigger alert, call handle_javascript_dialog(True)
+**Expected:** Dialog accepted
 
-**Steps:**
-1. Create `test_navigate_wait.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-PAGE-025: createIsolatedWorld
+**Steps:** Call create_isolated_world("test")
+**Expected:** Isolated world created
 
-async def main():
-    async with await CDPClient.launch(headless=True) as client:
-        session = await client.new_page()
-        await session.page.navigate("https://example.com")
-        await session.wait_for_event("Page.loadEventFired")
-        print("Page loaded successfully")
+## TC-PAGE-026: captureSnapshot
+**Steps:** Call capture_snapshot()
+**Expected:** Snapshot captured
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it waits for load event
-
-**Expected Result:** Script waits for page load before continuing.
-
----
-
-## Test 2.3: Navigate Back and Forward
-
-**Objective:** Verify browser history navigation.
-
-**Steps:**
-1. Create `test_history.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
-
-async def main():
-    async with await CDPClient.launch(headless=True) as client:
-        session = await client.new_page()
-        await session.page.navigate("https://example.com")
-        await session.page.navigate("https://example.org")
-        await session.page.go_back()
-        print("Navigated back")
-        await session.page.go_forward()
-        print("Navigated forward")
-
-asyncio.run(main())
-```
-2. Run the script
-3. Verify both back and forward work
-
-**Expected Result:** History navigation works correctly.
+## TC-PAGE-027: addScriptToEvaluateOnNewDocument
+**Steps:** Call add_script_to_evaluate_on_new_document()
+**Expected:** Script added
 
 ---
 
-# SECTION 3: JavaScript Evaluation
+# RUNTIME DOMAIN (P0)
 
-## Test 3.1: Simple Expression
+## TC-RUNTIME-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
 
-**Objective:** Verify JavaScript evaluation works.
+## TC-RUNTIME-002: evaluate basic
+**Steps:** Evaluate "1+1", return_by_value=True
+**Expected:** Returns 2
 
-**Steps:**
-1. Create `test_eval.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-RUNTIME-003: evaluate async
+**Steps:** Evaluate Promise, await_promise=True
+**Expected:** Returns resolved value
 
-async def main():
-    async with await CDPClient.launch(headless=True) as client:
-        session = await client.new_page("https://example.com")
-        result = await session.runtime.evaluate("1 + 1", return_by_value=True)
-        print(f"1 + 1 = {result['result']['value']}")
+## TC-RUNTIME-004: evaluate with context
+**Steps:** Set variable, evaluate variable
+**Expected:** Returns variable value
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it prints "1 + 1 = 2"
+## TC-RUNTIME-005: callFunctionOn
+**Steps:** Get object, call function on it
+**Expected:** Returns function result
 
-**Expected Result:** JavaScript evaluates correctly and returns expected value.
+## TC-RUNTIME-006: releaseObject
+**Steps:** Get object, release it
+**Expected:** Object released
 
----
+## TC-RUNTIME-007: getProperties
+**Steps:** Get window properties
+**Expected:** Returns properties
 
-## Test 3.2: Get Page Title
+## TC-RUNTIME-008: compileScript
+**Steps:** Compile script
+**Expected:** Returns script ID
 
-**Objective:** Verify that cdpwave can read page content.
+## TC-RUNTIME-009: runScript
+**Steps:** Run compiled script
+**Expected:** Script executes
 
-**Steps:**
-1. Create `test_title.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-RUNTIME-010: queryObjects
+**Steps:** Query objects by prototype
+**Expected:** Returns matching objects
 
-async def main():
-    async with await CDPClient.launch(headless=True) as client:
-        session = await client.new_page("https://example.com")
-        title = await session.runtime.evaluate("document.title", return_by_value=True)
-        print(f"Page title: {title['result']['value']}")
+## TC-RUNTIME-011: globalLexicalScopeNames
+**Steps:** Call global_lexical_scope_names()
+**Expected:** Returns scope names
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it prints the correct page title
+## TC-RUNTIME-012: addBinding
+**Steps:** Call add_binding("test")
+**Expected:** Binding added
 
-**Expected Result:** Page title is retrieved correctly.
+## TC-RUNTIME-013: removeBinding
+**Steps:** Call remove_binding("test")
+**Expected:** Binding removed
 
----
+## TC-RUNTIME-014: getHeapUsage
+**Steps:** Call get_heap_usage()
+**Expected:** Returns heap usage
 
-## Test 3.3: Async JavaScript
+## TC-RUNTIME-015: getIsolateId
+**Steps:** Call get_isolate_id()
+**Expected:** Returns isolate ID
 
-**Objective:** Verify that cdpwave can handle async JavaScript.
+## TC-RUNTIME-016: collectGarbage
+**Steps:** Call collect_garbage()
+**Expected:** Garbage collected
 
-**Steps:**
-1. Create `test_async.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-RUNTIME-017: terminateExecution
+**Steps:** Call terminate_execution()
+**Expected:** Execution terminated
 
-async def main():
-    async with await CDPClient.launch(headless=True) as client:
-        session = await client.new_page()
-        result = await session.runtime.evaluate(
-            "new Promise(r => setTimeout(() => r(42), 100))",
-            return_by_value=True,
-            await_promise=True
-        )
-        print(f"Async result: {result['result']['value']}")
+## TC-RUNTIME-018: setCustomObjectFormatterEnabled
+**Steps:** Call set_custom_object_formatter_enabled(True)
+**Expected:** Formatter enabled
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it prints "Async result: 42"
+## TC-RUNTIME-019: getExceptionDetails
+**Steps:** Throw error, get details
+**Expected:** Returns exception details
 
-**Expected Result:** Async JavaScript executes correctly.
-
----
-
-# SECTION 4: Screenshots
-
-## Test 4.1: PNG Screenshot
-
-**Objective:** Verify that cdpwave can capture PNG screenshots.
-
-**Steps:**
-1. Create `test_screenshot.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
-
-async def main():
-    async with await CDPClient.launch(headless=True) as client:
-        session = await client.new_page("https://example.com")
-        png = await session.page.capture_screenshot()
-        with open("screenshot.png", "wb") as f:
-            f.write(png)
-        print(f"Screenshot saved: {len(png)} bytes")
-
-asyncio.run(main())
-```
-2. Run the script
-3. Open `screenshot.png` and verify it shows the page
-
-**Expected Result:** PNG screenshot is created and shows the page content.
+## TC-RUNTIME-020: awaitPromise timeout
+**Steps:** Evaluate never-resolving promise with timeout
+**Expected:** Timeout error
 
 ---
 
-## Test 4.2: JPEG Screenshot
+# TARGET DOMAIN (P0)
 
-**Objective:** Verify that cdpwave can capture JPEG screenshots.
+## TC-TARGET-001: createTarget
+**Steps:** Call create_target("https://example.com")
+**Expected:** Target created
 
-**Steps:**
-1. Create `test_screenshot_jpeg.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-TARGET-002: attachToTarget
+**Steps:** Attach to created target
+**Expected:** Attached, returns session ID
 
-async def main():
-    async with await CDPClient.launch(headless=True) as client:
-        session = await client.new_page("https://example.com")
-        jpeg = await session.page.capture_screenshot(format="jpeg")
-        with open("screenshot.jpg", "wb") as f:
-            f.write(jpeg)
-        print(f"JPEG screenshot saved: {len(jpeg)} bytes")
+## TC-TARGET-003: detachFromTarget
+**Steps:** Detach from target
+**Expected:** Detached
 
-asyncio.run(main())
-```
-2. Run the script
-3. Open `screenshot.jpg` and verify it shows the page
+## TC-TARGET-004: closeTarget
+**Steps:** Close target
+**Expected:** Target closed
 
-**Expected Result:** JPEG screenshot is created and shows the page content.
+## TC-TARGET-005: getTargets
+**Steps:** Call get_targets()
+**Expected:** Returns all targets
 
----
+## TC-TARGET-006: activateTarget
+**Steps:** Activate target
+**Expected:** Target activated
 
-# SECTION 5: PDF Generation
+## TC-TARGET-007: setAutoAttach
+**Steps:** Call set_auto_attach(True, True, True)
+**Expected:** Auto attach enabled
 
-## Test 5.1: Basic PDF
+## TC-TARGET-008: sendMessageToTarget
+**Steps:** Send message to target
+**Expected:** Message sent
 
-**Objective:** Verify that cdpwave can generate PDF.
+## TC-TARGET-009: setDiscoverTargets
+**Steps:** Call set_discover_targets(True)
+**Expected:** Discovery enabled
 
-**Steps:**
-1. Create `test_pdf.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-TARGET-010: setRemoteLocations
+**Steps:** Set remote locations
+**Expected:** Locations set
 
-async def main():
-    async with await CDPClient.launch(headless=True) as client:
-        session = await client.new_page("https://example.com")
-        pdf = await session.page.print_to_pdf()
-        with open("page.pdf", "wb") as f:
-            f.write(pdf)
-        print(f"PDF saved: {len(pdf)} bytes")
+## TC-TARGET-011: getTargetInfo
+**Steps:** Get target info
+**Expected:** Returns target info
 
-asyncio.run(main())
-```
-2. Run the script
-3. Open `page.pdf` and verify it contains the page content
-
-**Expected Result:** PDF is created and contains the page content.
+## TC-TARGET-012: initiateTargetShutdown
+**Steps:** Initiate shutdown
+**Expected:** Target shuts down
 
 ---
 
-## Test 5.2: PDF with Background
+# NETWORK DOMAIN (P0)
 
-**Objective:** Verify that cdpwave can generate PDF with background graphics.
+## TC-NETWORK-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
 
-**Steps:**
-1. Create `test_pdf_bg.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-NETWORK-002: setCacheDisabled
+**Steps:** Call set_cache_disabled(True)
+**Expected:** Cache disabled
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page("https://example.com")
-        pdf = await session.page.print_to_pdf(print_background=True)
-        with open("page_bg.pdf", "wb") as f:
-            f.write(pdf)
-        print("PDF with background saved")
+## TC-NETWORK-003: setUserAgentOverride
+**Steps:** Call set_user_agent_override("TestBot")
+**Expected:** UA overridden
 
-asyncio.run(main())
-```
-2. Run the script
-3. Open `page_bg.pdf` and verify it includes background graphics
+## TC-NETWORK-004: clearBrowserCookies
+**Steps:** Call clear_browser_cookies()
+**Expected:** Cookies cleared
 
-**Expected Result:** PDF includes background graphics.
+## TC-NETWORK-005: clearBrowserCache
+**Steps:** Call clear_browser_cache()
+**Expected:** Cache cleared
 
----
+## TC-NETWORK-006: getAllCookies
+**Steps:** Call get_all_cookies()
+**Expected:** Returns all cookies
 
-# SECTION 6: Multi-Tab Management
+## TC-NETWORK-007: setCookies
+**Steps:** Call set_cookies([cookie])
+**Expected:** Cookie set
 
-## Test 6.1: Create Multiple Tabs
+## TC-NETWORK-008: getCookies
+**Steps:** Call get_cookies([url])
+**Expected:** Returns cookies for URL
 
-**Objective:** Verify that cdpwave can manage multiple tabs.
+## TC-NETWORK-009: deleteCookies
+**Steps:** Call delete_cookies(name, url)
+**Expected:** Cookie deleted
 
-**Steps:**
-1. Create `test_multitab.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-NETWORK-010: setExtraHTTPHeaders
+**Steps:** Call set_extra_http_headers({header: value})
+**Expected:** Headers set
 
-async def main():
-    async with await CDPClient.launch(headless=True) as client:
-        tab1 = await client.new_page("https://example.com")
-        tab2 = await client.new_page("https://example.org")
-        tab3 = await client.new_page("https://example.net")
-        print(f"Created {len(client.sessions)} tabs")
-        await asyncio.sleep(2)
+## TC-NETWORK-011: canEmulateNetworkConditions
+**Steps:** Call can_emulate_network_conditions()
+**Expected:** Returns capability
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it prints "Created 3 tabs"
+## TC-NETWORK-012: emulateNetworkConditions
+**Steps:** Call emulate_network_conditions(params)
+**Expected:** Conditions emulated
 
-**Expected Result:** Multiple tabs are created successfully.
+## TC-NETWORK-013: getResponseBody
+**Steps:** Get response body for request
+**Expected:** Returns body
 
----
+## TC-NETWORK-014: continueInterceptedRequest
+**Steps:** Continue intercepted request
+**Expected:** Request continued
 
-## Test 6.2: Close Specific Tab
+## TC-NETWORK-015: getPostData
+**Steps:** Get POST data
+**Expected:** Returns POST data
 
-**Objective:** Verify that cdpwave can close individual tabs.
+## TC-NETWORK-016: replayXHR
+**Steps:** Replay XHR
+**Expected:** XHR replayed
 
-**Steps:**
-1. Create `test_close_tab.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
-
-async def main():
-    async with await CDPClient.launch(headless=True) as client:
-        tab1 = await client.new_page("https://example.com")
-        tab2 = await client.new_page("https://example.org")
-        await tab2.close()
-        print(f"Tabs remaining: {len(client.sessions)}")
-
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it prints "Tabs remaining: 1"
-
-**Expected Result:** Individual tab is closed successfully.
+## TC-NETWORK-017: getResponseBodyForInterception
+**Steps:** Get intercepted response body
+**Expected:** Returns body
 
 ---
 
-# SECTION 7: Network Monitoring
+# DOM DOMAIN (P0)
 
-## Test 7.1: Monitor Network Requests
+## TC-DOM-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
 
-**Objective:** Verify that cdpwave can monitor network requests.
+## TC-DOM-002: getDocument
+**Steps:** Call get_document()
+**Expected:** Returns document
 
-**Steps:**
-1. Create `test_network.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-DOM-003: getFlattenedDocument
+**Steps:** Call get_flattened_document()
+**Expected:** Returns flattened doc
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        await session.network.enable()
-        
-        requests = []
-        async def on_request(params):
-            requests.append(params["request"]["url"])
-        
-        session.on("Network.requestWillBeSent", on_request)
-        await session.page.navigate("https://example.com")
-        
-        print(f"Captured {len(requests)} network requests")
-        for url in requests[:3]:
-            print(f"  - {url}")
+## TC-DOM-004: collectClassNamesFromSubtree
+**Steps:** Call collect_class_names_from_subtree(nodeId)
+**Expected:** Returns class names
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it lists network requests
+## TC-DOM-005: querySelector
+**Steps:** Call query_selector(nodeId, "h1")
+**Expected:** Returns h1 node
 
-**Expected Result:** Network requests are captured and listed.
+## TC-DOM-006: querySelectorAll
+**Steps:** Call query_selector_all(nodeId, "p")
+**Expected:** Returns all p nodes
 
----
+## TC-DOM-007: removeNode
+**Steps:** Call remove_node(nodeId)
+**Expected:** Node removed
 
-## Test 7.2: Cookie Management
+## TC-DOM-008: setAttributeValue
+**Steps:** Call set_attribute_value(nodeId, "data-test", "value")
+**Expected:** Attribute set
 
-**Objective:** Verify that cdpwave can manage cookies.
+## TC-DOM-009: setAttributesAsText
+**Steps:** Call set_attributes_as_text(nodeId, "class='test'")
+**Expected:** Attributes set
 
-**Steps:**
-1. Create `test_cookies.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-DOM-010: removeAttribute
+**Steps:** Call remove_attribute(nodeId, "class")
+**Expected:** Attribute removed
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page("https://example.com")
-        await session.network.enable()
-        
-        # Get cookies
-        cookies = await session.network.get_cookies()
-        print(f"Found {len(cookies)} cookies")
-        
-        # Set cookie
-        await session.network.set_cookies([{
-            "name": "test",
-            "value": "value",
-            "domain": "example.com"
-        }])
-        
-        # Verify
-        cookies = await session.network.get_cookies()
-        assert any(c["name"] == "test" for c in cookies)
-        print("Cookie set and verified")
-        
-        # Delete cookie
-        await session.network.delete_cookies("test", "https://example.com")
-        print("Cookie deleted")
+## TC-DOM-011: setTextContent
+**Steps:** Call set_text_content(nodeId, "text")
+**Expected:** Text set
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify cookie operations complete successfully
+## TC-DOM-012: getBoxModel
+**Steps:** Call get_box_model(nodeId)
+**Expected:** Returns box model
 
-**Expected Result:** All cookie operations work correctly.
+## TC-DOM-013: getContentQuads
+**Steps:** Call get_content_quads(nodeId)
+**Expected:** Returns quads
 
----
+## TC-DOM-014: describeNode
+**Steps:** Call describe_node(nodeId)
+**Expected:** Returns node description
 
-# SECTION 8: DOM Manipulation
+## TC-DOM-015: focus
+**Steps:** Call focus(nodeId)
+**Expected:** Element focused
 
-## Test 8.1: Query Selector
+## TC-DOM-016: scrollIntoViewIfNeeded
+**Steps:** Call scroll_into_view_if_needed(nodeId)
+**Expected:** Element scrolled
 
-**Objective:** Verify that cdpwave can query DOM elements.
+## TC-DOM-017: setFileInputFiles
+**Steps:** Call set_file_input_files(nodeId, [file])
+**Expected:** Files set
 
-**Steps:**
-1. Create `test_dom_query.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-DOM-018: performSearch
+**Steps:** Call perform_search("query")
+**Expected:** Returns search ID
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page("https://example.com")
-        await session.dom.enable()
-        
-        h1 = await session.dom.query_selector("h1")
-        print(f"Found h1: {h1['nodeId']}")
-        
-        paragraphs = await session.dom.query_selector_all("p")
-        print(f"Found {len(paragraphs.get('nodeIds', []))} paragraphs")
+## TC-DOM-019: getSearchResults
+**Steps:** Call get_search_results(searchId, 0, 10)
+**Expected:** Returns results
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it finds elements
+## TC-DOM-020: discardSearchResults
+**Steps:** Call discard_search_results(searchId)
+**Expected:** Results discarded
 
-**Expected Result:** DOM elements are queried successfully.
+## TC-DOM-021: requestChildNodes
+**Steps:** Call request_child_nodes(nodeId)
+**Expected:** Child nodes requested
+
+## TC-DOM-022: requestNode
+**Steps:** Call request_node(nodeId)
+**Expected:** Node requested
+
+## TC-DOM-023: getOuterHTML
+**Steps:** Call get_outer_html(nodeId)
+**Expected:** Returns outer HTML
+
+## TC-DOM-024: setOuterHTML
+**Steps:** Call set_outer_html(nodeId, "<html>")
+**Expected:** Outer HTML set
+
+## TC-DOM-025: getHighlightObjectForTest
+**Steps:** Call get_highlight_object_for_test(nodeId)
+**Expected:** Returns highlight object
+
+## TC-DOM-026: setChildNodes
+**Steps:** Call set_child_nodes(parentId, nodes)
+**Expected:** Child nodes set
 
 ---
 
-## Test 8.2: Set Text Content
+# BROWSER DOMAIN (P0)
 
-**Objective:** Verify that cdpwave can modify DOM text.
+## TC-BROWSER-001: getVersion
+**Steps:** Call get_version()
+**Expected:** Returns version info
 
-**Steps:**
-1. Create `test_dom_text.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-BROWSER-002: getCommandLine
+**Steps:** Call get_command_line()
+**Expected:** Returns command line
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page("https://example.com")
-        await session.dom.enable()
-        
-        h1 = await session.dom.query_selector("h1")
-        await session.dom.set_text_content(h1["nodeId"], "New Title")
-        print("Text content set")
+## TC-BROWSER-003: getHistogram
+**Steps:** Call get_histogram("V8.ExecuteJS")
+**Expected:** Returns histogram
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify no errors occur
+## TC-BROWSER-004: getHistograms
+**Steps:** Call get_histograms()
+**Expected:** Returns all histograms
 
-**Expected Result:** Text content is modified successfully.
+## TC-BROWSER-005: getCPUProfile
+**Steps:** Call get_cpu_profile()
+**Expected:** Returns CPU profile
 
----
+## TC-BROWSER-006: getHeapProfile
+**Steps:** Call get_heap_profile()
+**Expected:** Returns heap profile
 
-# SECTION 9: Device Emulation
+## TC-BROWSER-007: resetHistograms
+**Steps:** Call reset_histograms()
+**Expected:** Histograms reset
 
-## Test 9.1: Mobile Viewport
+## TC-BROWSER-008: getBrowserCommandLine
+**Steps:** Call get_browser_command_line()
+**Expected:** Returns command line
 
-**Objective:** Verify that cdpwave can emulate mobile devices.
-
-**Steps:**
-1. Create `test_mobile.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
-
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        
-        await session.emulation.set_device_metrics_override(
-            width=375,
-            height=667,
-            device_scale_factor=2,
-            mobile=True
-        )
-        print("Mobile viewport emulated")
-        
-        await session.page.navigate("https://example.com")
-        print("Navigated with mobile viewport")
-
-asyncio.run(main())
-```
-2. Run the script
-3. Verify no errors occur
-
-**Expected Result:** Mobile viewport is emulated successfully.
+## TC-BROWSER-009: getBounds
+**Steps:** Call get_bounds()
+**Expected:** Returns bounds
 
 ---
 
-## Test 9.2: Geolocation Override
+# EMULATION DOMAIN (P1)
 
-**Objective:** Verify that cdpwave can override geolocation.
+## TC-EMULATION-001: setDeviceMetricsOverride
+**Steps:** Call set_device_metrics_override(375, 667, 2, True)
+**Expected:** Metrics overridden
 
-**Steps:**
-1. Create `test_geolocation.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-EMULATION-002: clearDeviceMetricsOverride
+**Steps:** Call clear_device_metrics_override()
+**Expected:** Metrics cleared
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        
-        await session.emulation.set_geolocation_override(
-            latitude=40.7128,
-            longitude=-74.0060
-        )
-        print("Geolocation set to New York")
-        
-        await session.send("Browser.grantPermissions", {
-            "permissions": ["geolocation"],
-            "origin": "https://example.com"
-        })
-        
-        await session.page.navigate("https://example.com")
-        print("Navigated with geolocation")
+## TC-EMULATION-003: setGeolocationOverride
+**Steps:** Call set_geolocation_override(40.7, -74.0)
+**Expected:** Geolocation overridden
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify geolocation is set
+## TC-EMULATION-004: clearGeolocationOverride
+**Steps:** Call clear_geolocation_override()
+**Expected:** Geolocation cleared
 
-**Expected Result:** Geolocation override is applied.
+## TC-EMULATION-005: setCPUThrottlingRate
+**Steps:** Call set_cpu_throttling_rate(4)
+**Expected:** CPU throttled
 
----
+## TC-EMULATION-006: setUserAgentOverride
+**Steps:** Call set_user_agent_override("TestBot")
+**Expected:** UA overridden
 
-## Test 9.3: Dark Mode
+## TC-EMULATION-007: setTouchEmulationEnabled
+**Steps:** Call set_touch_emulation_enabled(True)
+**Expected:** Touch emulation enabled
 
-**Objective:** Verify that cdpwave can emulate dark mode.
+## TC-EMULATION-008: setEmulatedMedia
+**Steps:** Call set_emulated_media("prefers-color-scheme", "dark")
+**Expected:** Media emulated
 
-**Steps:**
-1. Create `test_dark_mode.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-EMULATION-009: clearEmulatedMedia
+**Steps:** Call clear_emulated_media()
+**Expected:** Media cleared
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        
-        await session.emulation.set_emulated_media("prefers-color-scheme", "dark")
-        print("Dark mode emulated")
-        
-        await session.page.navigate("https://example.com")
-        print("Navigated with dark mode")
+## TC-EMULATION-010: setTimezoneOverride
+**Steps:** Call set_timezone_override("America/New_York")
+**Expected:** Timezone overridden
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify no errors occur
+## TC-EMULATION-011: clearTimezoneOverride
+**Steps:** Call clear_timezone_override()
+**Expected:** Timezone cleared
 
-**Expected Result:** Dark mode is emulated.
+## TC-EMULATION-012: setIdleOverride
+**Steps:** Call set_idle_override(False, False)
+**Expected:** Idle overridden
 
----
+## TC-EMULATION-013: clearIdleOverride
+**Steps:** Call clear_idle_override()
+**Expected:** Idle cleared
 
-# SECTION 10: Input Simulation
+## TC-EMULATION-014: setNavigatorOverrides
+**Steps:** Call set_navigator_overrides("Win32")
+**Expected:** Navigator overridden
 
-## Test 10.1: Text Input
+## TC-EMULATION-015: setPageScaleFactor
+**Steps:** Call set_page_scale_factor(2)
+**Expected:** Scale factor set
 
-**Objective:** Verify that cdpwave can type text into input fields.
+## TC-EMULATION-016: setScriptExecutionDisabled
+**Steps:** Call set_script_execution_disabled(True)
+**Expected:** Script execution disabled
 
-**Steps:**
-1. Create `test_input_text.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-EMULATION-017: setDefaultBackgroundColorOverride
+**Steps:** Call set_default_background_color_override(color)
+**Expected:** Background color overridden
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        await session.page.navigate("data:text/html,<input id='q' type='text'>")
-        
-        await session.input.insert_text("Hello World")
-        print("Text inserted")
-        
-        # Verify
-        value = await session.runtime.evaluate(
-            "document.getElementById('q').value",
-            return_by_value=True
-        )
-        print(f"Input value: {value['result']['value']}")
+## TC-EMULATION-018: clearDefaultBackgroundColorOverride
+**Steps:** Call clear_default_background_color_override()
+**Expected:** Background color cleared
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it prints "Input value: Hello World"
+## TC-EMULATION-019: setVirtualTimePolicy
+**Steps:** Call set_virtual_time_policy("pause")
+**Expected:** Virtual time policy set
 
-**Expected Result:** Text is inserted correctly.
+## TC-EMULATION-020: setLocale
+**Steps:** Call set_locale("es-ES")
+**Expected:** Locale set
 
----
+## TC-EMULATION-021: setScrollPosition
+**Steps:** Call set_scroll_position({x: 100, y: 100})
+**Expected:** Scroll position set
 
-## Test 10.2: Keyboard Events
+## TC-EMULATION-022: setFocusEmulationEnabled
+**Steps:** Call set_focus_emulation_enabled(True)
+**Expected:** Focus emulation enabled
 
-**Objective:** Verify that cdpwave can send keyboard events.
+## TC-EMULATION-023: setEmulatedVisionDeficiency
+**Steps:** Call set_emulated_vision_deficiency("achromatopsia")
+**Expected:** Vision deficiency emulated
 
-**Steps:**
-1. Create `test_keyboard.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-EMULATION-024: clearEmulatedVisionDeficiency
+**Steps:** Call clear_emulated_vision_deficiency()
+**Expected:** Vision deficiency cleared
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        await session.page.navigate("data:text/html,<input id='q' type='text'>")
-        
-        await session.input.dispatch_key_event("char", "H")
-        await session.input.dispatch_key_event("char", "i")
-        print("Keyboard events sent")
+## TC-EMULATION-025: setAutoDarkModeOverride
+**Steps:** Call set_auto_dark_mode_override(True)
+**Expected:** Auto dark mode set
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify no errors occur
-
-**Expected Result:** Keyboard events are sent successfully.
+## TC-EMULATION-026: clearAutoDarkModeOverride
+**Steps:** Call clear_auto_dark_mode_override()
+**Expected:** Auto dark mode cleared
 
 ---
 
-## Test 10.3: Mouse Click
+# INPUT DOMAIN (P1)
 
-**Objective:** Verify that cdpwave can simulate mouse clicks.
+## TC-INPUT-001: dispatchKeyEvent char
+**Steps:** Call dispatch_key_event("char", "H")
+**Expected:** Key event sent
 
-**Steps:**
-1. Create `test_mouse.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-INPUT-002: dispatchKeyEvent keyDown
+**Steps:** Call dispatch_key_event("keyDown", "Enter")
+**Expected:** Key down sent
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        await session.page.navigate("data:text/html,<button id='btn'>Click</button>")
-        
-        # Get element position
-        rect = await session.runtime.evaluate("""
-            const el = document.getElementById('btn');
-            const r = el.getBoundingClientRect();
-            return {x: r.left + 5, y: r.top + 5};
-        """, return_by_value=True)
-        
-        # Click
-        await session.input.dispatch_mouse_event("mousePressed", "left", 
-            rect["result"]["value"]["x"], rect["result"]["value"]["y"])
-        await session.input.dispatch_mouse_event("mouseReleased", "left",
-            rect["result"]["value"]["x"], rect["result"]["value"]["y"])
-        print("Mouse click sent")
+## TC-INPUT-003: dispatchMouseEvent
+**Steps:** Call dispatch_mouse_event("mousePressed", "left", 100, 100)
+**Expected:** Mouse event sent
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify no errors occur
+## TC-INPUT-004: dispatchTouchEvent
+**Steps:** Call dispatch_touch_event("touchStart", [{x: 100, y: 100}])
+**Expected:** Touch event sent
 
-**Expected Result:** Mouse click is sent successfully.
+## TC-INPUT-005: emulateTouchFromMouseEvent
+**Steps:** Call emulate_touch_from_mouse_event("touchStart", 100, 100)
+**Expected:** Touch emulated
 
----
+## TC-INPUT-006: synthesizePinchGesture
+**Steps:** Call synthesize_pinch_gesture(100, 100, 2)
+**Expected:** Pinch gesture sent
 
-# SECTION 11: Event Handling
+## TC-INPUT-007: synthesizeScrollGesture
+**Steps:** Call synthesize_scroll_gesture(100, 100, 0, 100)
+**Expected:** Scroll gesture sent
 
-## Test 11.1: Wait for Event
+## TC-INPUT-008: synthesizeTapGesture
+**Steps:** Call synthesize_tap_gesture(100, 100)
+**Expected:** Tap gesture sent
 
-**Objective:** Verify that cdpwave can wait for specific events.
+## TC-INPUT-009: insertText
+**Steps:** Call insert_text("Hello World")
+**Expected:** Text inserted
 
-**Steps:**
-1. Create `test_wait_event.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-INPUT-010: setIgnoreInputEvents
+**Steps:** Call set_ignore_input_events(True)
+**Expected:** Input events ignored
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        
-        await session.page.navigate("https://example.com")
-        await session.wait_for_event("Page.loadEventFired")
-        print("Page loaded event received")
-
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it waits for the event
-
-**Expected Result:** Script waits for event before continuing.
+## TC-INPUT-011: cancelDragging
+**Steps:** Call cancel_dragging()
+**Expected:** Dragging cancelled
 
 ---
 
-## Test 11.2: Event Listeners
+# FETCH DOMAIN (P1)
 
-**Objective:** Verify that cdpwave can register event listeners.
+## TC-FETCH-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
 
-**Steps:**
-1. Create `test_event_listener.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-FETCH-002: failRequest
+**Steps:** Fail intercepted request
+**Expected:** Request failed
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        await session.runtime.enable()
-        
-        messages = []
-        async def on_console(params):
-            messages.append(params)
-        
-        session.on("Runtime.consoleAPICalled", on_console)
-        
-        await session.runtime.evaluate("console.log('msg1')")
-        await session.runtime.evaluate("console.log('msg2')")
-        
-        print(f"Received {len(messages)} console messages")
+## TC-FETCH-003: fulfillRequest
+**Steps:** Fulfill intercepted request
+**Expected:** Request fulfilled
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it prints "Received 2 console messages"
+## TC-FETCH-004: continueRequest
+**Steps:** Continue intercepted request
+**Expected:** Request continued
 
-**Expected Result:** Event listeners work correctly.
+## TC-FETCH-005: continueWithAuth
+**Steps:** Continue with auth
+**Expected:** Auth continued
 
----
+## TC-FETCH-006: getResponseBody
+**Steps:** Get response body
+**Expected:** Returns body
 
-# SECTION 12: Performance
+## TC-FETCH-007: takeResponseBodyAsStream
+**Steps:** Take as stream
+**Expected:** Stream created
 
-## Test 12.1: Performance Metrics
+## TC-FETCH-008: continueResponse
+**Steps:** Continue response
+**Expected:** Response continued
 
-**Objective:** Verify that cdpwave can collect performance metrics.
+## TC-FETCH-009: pause/resume
+**Steps:** Call pause(), resume()
+**Expected:** Paused/resumed
 
-**Steps:**
-1. Create `test_performance.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
-
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        await session.performance.enable()
-        
-        await session.page.navigate("https://example.com")
-        metrics = await session.performance.get_metrics()
-        
-        print(f"Collected {len(metrics)} metrics")
-        for metric in metrics[:3]:
-            print(f"  - {metric['name']}: {metric.get('value', 'N/A')}")
-
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it lists performance metrics
-
-**Expected Result:** Performance metrics are collected.
+## TC-FETCH-010: fail
+**Steps:** Call fail()
+**Expected:** Failed
 
 ---
 
-## Test 12.2: CPU Profiling
+# STORAGE DOMAIN (P1)
 
-**Objective:** Verify that cdpwave can capture CPU profiles.
+## TC-STORAGE-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
 
-**Steps:**
-1. Create `test_profiler.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-STORAGE-002: getDOMStorageItems
+**Steps:** Call get_dom_storage_items()
+**Expected:** Returns items
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        await session.profiler.enable()
-        
-        await session.profiler.start()
-        await session.runtime.evaluate("for(let i=0;i<1000;i++) Math.sqrt(i)")
-        profile = await session.profiler.stop()
-        
-        nodes = profile.get("profile", {}).get("nodes", [])
-        print(f"CPU profile: {len(nodes)} nodes")
+## TC-STORAGE-003: setDOMStorageItem
+**Steps:** Call set_dom_storage_item("key", "value")
+**Expected:** Item set
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it prints the number of nodes
+## TC-STORAGE-004: removeDOMStorageItem
+**Steps:** Call remove_dom_storage_item("key")
+**Expected:** Item removed
 
-**Expected Result:** CPU profile is captured.
+## TC-STORAGE-005: clearDOMStorageItems
+**Steps:** Call clear_dom_storage_items()
+**Expected:** Items cleared
 
----
+## TC-STORAGE-006: getUsageAndQuota
+**Steps:** Call get_usage_and_quota()
+**Expected:** Returns usage
 
-# SECTION 13: Error Handling
+## TC-STORAGE-007: trackCacheStorageForOrigin
+**Steps:** Call track_cache_storage_for_origin(url)
+**Expected:** Cache tracked
 
-## Test 13.1: Invalid URL
+## TC-STORAGE-008: trackIndexedDBForOrigin
+**Steps:** Call track_indexed_db_for_origin(url)
+**Expected:** IndexedDB tracked
 
-**Objective:** Verify that cdpwave handles invalid URLs gracefully.
+## TC-STORAGE-009: untrackCacheStorageForOrigin
+**Steps:** Call untrack_cache_storage_for_origin(url)
+**Expected:** Cache untracked
 
-**Steps:**
-1. Create `test_error_url.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
-from cdpwave.exceptions import CommandError
+## TC-STORAGE-010: untrackIndexedDBForOrigin
+**Steps:** Call untrack_indexed_db_for_origin(url)
+**Expected:** IndexedDB untracked
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        
-        try:
-            await session.page.navigate("not-a-url")
-        except CommandError as e:
-            print(f"Caught expected error: {e.message}")
+## TC-STORAGE-011: getCacheStorageForOrigin
+**Steps:** Call get_cache_storage_for_origin(url)
+**Expected:** Returns cache storage
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it catches the error
+## TC-STORAGE-012: getIndexedDBForOrigin
+**Steps:** Call get_indexed_db_for_origin(url)
+**Expected:** Returns IndexedDB
 
-**Expected Result:** Error is caught and handled gracefully.
+## TC-STORAGE-013: getCookies
+**Steps:** Call get_cookies([url])
+**Expected:** Returns cookies
 
 ---
 
-## Test 13.2: Invalid JavaScript
+# CSS DOMAIN (P1)
 
-**Objective:** Verify that cdpwave handles invalid JavaScript gracefully.
+## TC-CSS-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
 
-**Steps:**
-1. Create `test_error_js.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
-from cdpwave.exceptions import CommandError
+## TC-CSS-002: getComputedStyle
+**Steps:** Call get_computed_style(nodeId)
+**Expected:** Returns computed style
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        
-        try:
-            await session.runtime.evaluate("invalid javascript syntax")
-        except CommandError as e:
-            print(f"Caught expected error: {e.message}")
+## TC-CSS-003: getInlineStylesForNode
+**Steps:** Call get_inline_styles_for_node(nodeId)
+**Expected:** Returns inline styles
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it catches the error
+## TC-CSS-004: getMatchedStylesForNode
+**Steps:** Call get_matched_styles_for_node(nodeId)
+**Expected:** Returns matched styles
 
-**Expected Result:** Error is caught and handled gracefully.
+## TC-CSS-005: getMediaQueries
+**Steps:** Call get_media_queries()
+**Expected:** Returns media queries
 
----
+## TC-CSS-006: getPlatformFontsForNode
+**Steps:** Call get_platform_fonts_for_node(nodeId)
+**Expected:** Returns fonts
 
-## Test 13.3: Timeout
+## TC-CSS-007: getStyleSheetText
+**Steps:** Call get_style_sheet_text(sheetId)
+**Expected:** Returns CSS text
 
-**Objective:** Verify that cdpwave handles timeouts gracefully.
+## TC-CSS-008: setStyleSheetText
+**Steps:** Call set_style_sheet_text(sheetId, text)
+**Expected:** CSS text set
 
-**Steps:**
-1. Create `test_error_timeout.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
-from cdpwave.exceptions import CommandTimeoutError
+## TC-CSS-009: setRuleStyle
+**Steps:** Call set_rule_style(sheetId, ruleId, text)
+**Expected:** Rule style set
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        
-        try:
-            await session.runtime.evaluate("new Promise(() => {})", timeout=1)
-        except CommandTimeoutError:
-            print("Caught timeout error")
+## TC-CSS-010: addRule
+**Steps:** Call add_rule(sheetId, rule, location)
+**Expected:** Rule added
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it catches the timeout
+## TC-CSS-011: forcePseudoState
+**Steps:** Call force_pseudo_state(nodeId, ["hover"])
+**Expected:** Pseudo state forced
 
-**Expected Result:** Timeout is caught and handled.
+## TC-CSS-012: getBackgroundColors
+**Steps:** Call get_background_colors(nodeId)
+**Expected:** Returns background colors
 
----
+## TC-CSS-013: setEffectiveCompositeForNode
+**Steps:** Call set_effective_composite_for_node(nodeId, name)
+**Expected:** Composite set
 
-# SECTION 14: Cleanup
-
-## Test 14.1: Target Cleanup
-
-**Objective:** Verify that cdpwave cleans up targets when sessions are closed.
-
-**Steps:**
-1. Create `test_cleanup_target.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
-
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        target_id = session.target_id
-        
-        targets_before = await client.get_pages()
-        count_before = sum(1 for t in targets_before if t.target_id == target_id)
-        
-        await session.close()
-        
-        targets_after = await client.get_pages()
-        count_after = sum(1 for t in targets_after if t.target_id == target_id)
-        
-        assert count_after == 0, f"Target still open: {count_after}"
-        print("Target cleaned up successfully")
-
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it prints "Target cleaned up successfully"
-
-**Expected Result:** Target is removed after session close.
+## TC-CSS-014: takeCoverageDelta
+**Steps:** Call take_coverage_delta()
+**Expected:** Returns coverage delta
 
 ---
 
-## Test 14.2: Resource Cleanup
+# OVERLAY DOMAIN (P1)
 
-**Objective:** Verify that cdpwave doesn't leak resources over multiple iterations.
+## TC-OVERLAY-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
 
-**Steps:**
-1. Create `test_cleanup_resources.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-OVERLAY-002: setShowDevTools
+**Steps:** Call set_show_dev_tools(True)
+**Expected:** Dev tools shown
 
-async def main():
-    for i in range(5):
-        async with await CDPClient.launch(headless=True) = client:
-            session = await client.new_page()
-            await session.page.navigate("https://example.com")
-    
-    print("No resource leaks after 5 iterations")
+## TC-OVERLAY-003: setPausedInOverlayMessage
+**Steps:** Call set_paused_in_overlay_message("Paused")
+**Expected:** Message set
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it completes without errors
+## TC-OVERLAY-004: highlightNode
+**Steps:** Call highlight_node(nodeId)
+**Expected:** Node highlighted
 
-**Expected Result:** No resource leaks occur.
+## TC-OVERLAY-005: highlightFrame
+**Steps:** Call highlight_frame(frameId)
+**Expected:** Frame highlighted
 
----
+## TC-OVERLAY-006: highlightQuad
+**Steps:** Call highlight_quad(quad)
+**Expected:** Quad highlighted
 
-# SECTION 15: Integration Scenarios
+## TC-OVERLAY-007: highlightRect
+**Steps:** Call highlight_rect(x, y, w, h)
+**Expected:** Rect highlighted
 
-## Test 15.1: Complete User Flow
+## TC-OVERLAY-008: highlightShape
+**Steps:** Call highlight_shape(shapes)
+**Expected:** Shape highlighted
 
-**Objective:** Verify a complete user workflow from launch to cleanup.
+## TC-OVERLAY-009: setShowGridOverlays
+**Steps:** Call set_show_grid_overlays(True)
+**Expected:** Grid overlays shown
 
-**Steps:**
-1. Create `test_complete_flow.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-OVERLAY-010: setShowPaintRects
+**Steps:** Call set_show_paint_rects(True)
+**Expected:** Paint rects shown
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        # Launch browser
-        print("1. Browser launched")
-        
-        # Create page and navigate
-        session = await client.new_page()
-        await session.page.navigate("https://example.com")
-        print("2. Page navigated")
-        
-        # Evaluate JavaScript
-        title = await session.runtime.evaluate("document.title", return_by_value=True)
-        print(f"3. Page title: {title['result']['value']}")
-        
-        # Take screenshot
-        screenshot = await session.page.capture_screenshot()
-        print(f"4. Screenshot captured: {len(screenshot)} bytes")
-        
-        # Generate PDF
-        pdf = await session.page.print_to_pdf()
-        print(f"5. PDF generated: {len(pdf)} bytes")
-        
-        # Close page
-        await session.close()
-        print("6. Page closed")
-    
-    print("7. Browser closed")
+## TC-OVERLAY-011: setShowLayoutRects
+**Steps:** Call set_show_layout_rects(True)
+**Expected:** Layout rects shown
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify all steps complete successfully
+## TC-OVERLAY-012: setShowScrollBottleneckRects
+**Steps:** Call set_show_scroll_bottleneck_rects(True)
+**Expected:** Scroll rects shown
 
-**Expected Result:** Complete workflow executes without errors.
+## TC-OVERLAY-013: setShowHitTestRects
+**Steps:** Call set_show_hit_test_rects(True)
+**Expected:** Hit test rects shown
+
+## TC-OVERLAY-014: setShowWebVitals
+**Steps:** Call set_show_web_vitals(True)
+**Expected:** Web vitals shown
+
+## TC-OVERLAY-015: setShowViewportSizeOnResize
+**Steps:** Call set_show_viewport_size_on_resize(True)
+**Expected:** Viewport size shown
 
 ---
 
-## Test 15.2: Multi-Tab Workflow
+# DEBUGGER DOMAIN (P1)
 
-**Objective:** Verify workflow with multiple tabs.
+## TC-DEBUGGER-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
 
-**Steps:**
-1. Create `test_multitab_flow.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-DEBUGGER-002: setBreakpointsByUrl
+**Steps:** Call set_breakpoints_by_url(url, line)
+**Expected:** Breakpoints set
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        # Create multiple tabs
-        tab1 = await client.new_page("https://example.com")
-        print("1. Tab 1 created")
-        
-        tab2 = await client.new_page("https://example.org")
-        print("2. Tab 2 created")
-        
-        # Work with both tabs
-        title1 = await tab1.runtime.evaluate("document.title", return_by_value=True)
-        title2 = await tab2.runtime.evaluate("document.title", return_by_value=True)
-        
-        print(f"3. Tab 1: {title1['result']['value']}")
-        print(f"4. Tab 2: {title2['result']['value']}")
-        
-        # Close one tab
-        await tab2.close()
-        print(f"5. Tabs remaining: {len(client.sessions)}")
+## TC-DEBUGGER-003: removeBreakpoint
+**Steps:** Call remove_breakpoint(breakpointId)
+**Expected:** Breakpoint removed
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify multi-tab workflow works
+## TC-DEBUGGER-004: getPossibleBreakpoints
+**Steps:** Call get_possible_breakpoints(locations)
+**Expected:** Returns possible breakpoints
 
-**Expected Result:** Multi-tab workflow executes successfully.
+## TC-DEBUGGER-005: setBreakpointByScriptId
+**Steps:** Call set_breakpoint_by_script_id(scriptId, line)
+**Expected:** Breakpoint set
 
----
+## TC-DEBUGGER-006: setBreakpointActive
+**Steps:** Call set_breakpoint_active(breakpointId, True)
+**Expected:** Breakpoint activated
 
-# SECTION 16: Advanced Features
+## TC-DEBUGGER-007: setBreakpointsActive
+**Steps:** Call set_breakpoints_active(True)
+**Expected:** All breakpoints activated
 
-## Test 16.1: Request Interception
+## TC-DEBUGGER-008: stepInto
+**Steps:** Call step_into()
+**Expected:** Stepped into
 
-**Objective:** Verify that cdpwave can intercept and modify requests.
+## TC-DEBUGGER-009: stepOver
+**Steps:** Call step_over()
+**Expected:** Stepped over
 
-**Steps:**
-1. Create `test_interception.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-DEBUGGER-010: stepOut
+**Steps:** Call step_out()
+**Expected:** Stepped out
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        await session.fetch.enable(patterns=[{"urlPattern": "*"}])
-        
-        intercepted = []
-        async def on_paused(params):
-            intercepted.append(params["requestId"])
-            await session.fetch.continue_request(requestId=params["requestId"])
-        
-        session.on("Fetch.requestPaused", on_paused)
-        await session.page.navigate("https://example.com")
-        
-        print(f"Intercepted {len(intercepted)} requests")
+## TC-DEBUGGER-011: pause
+**Steps:** Call pause()
+**Expected:** Paused
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify requests are intercepted
+## TC-DEBUGGER-012: resume
+**Steps:** Call resume()
+**Expected:** Resumed
 
-**Expected Result:** Requests are intercepted and continued.
+## TC-DEBUGGER-013: searchInContent
+**Steps:** Call search_in_content(scriptId, "query")
+**Expected:** Returns search results
 
----
+## TC-DEBUGGER-014: setScriptSource
+**Steps:** Call set_script_source(scriptId, source)
+**Expected:** Script source set
 
-## Test 16.2: Network Throttling
+## TC-DEBUGGER-015: restartFrame
+**Steps:** Call restart_frame(frameId)
+**Expected:** Frame restarted
 
-**Objective:** Verify that cdpwave can emulate slow network.
+## TC-DEBUGGER-016: getScriptSource
+**Steps:** Call get_script_source(scriptId)
+**Expected:** Returns script source
 
-**Steps:**
-1. Create `test_throttling.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-DEBUGGER-017: setPauseOnExceptions
+**Steps:** Call set_pause_on_exceptions("all")
+**Expected:** Pause on exceptions set
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        
-        await session.network.emulate_network_conditions(
-            offline=False,
-            download_throughput=500000,
-            upload_throughput=500000,
-            latency=100
-        )
-        print("Network throttled to 500 KB/s")
-        
-        await session.page.navigate("https://example.com")
-        print("Navigated with throttling")
+## TC-DEBUGGER-018: evaluateOnCallFrame
+**Steps:** Call evaluate_on_call_frame(frameId, "expression")
+**Expected:** Returns evaluation result
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify throttling is applied
+## TC-DEBUGGER-019: setVariableValue
+**Steps:** Call set_variable_value(frameId, scope, var, value)
+**Expected:** Variable value set
 
-**Expected Result:** Network throttling is applied.
+## TC-DEBUGGER-020: setAsyncStackTrace
+**Steps:** Call set_async_stack_trace(parentId)
+**Expected:** Stack trace set
+
+## TC-DEBUGGER-021: setBlackboxPatterns
+**Steps:** Call set_blackbox_patterns(["pattern"])
+**Expected:** Patterns set
+
+## TC-DEBUGGER-022: getProperties
+**Steps:** Call get_properties(objectId)
+**Expected:** Returns properties
 
 ---
 
-## Test 16.3: Shadow DOM
+# LOG DOMAIN (P2)
 
-**Objective:** Verify that cdpwave can access Shadow DOM.
+## TC-LOG-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
 
-**Steps:**
-1. Create `test_shadow_dom.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-LOG-002: clear
+**Steps:** Call clear()
+**Expected:** Log cleared
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        session = await client.new_page()
-        await session.dom.enable()
-        
-        await session.page.navigate("data:text/html,<div id='host'></div>")
-        await session.runtime.evaluate("""
-            const host = document.getElementById('host');
-            const shadow = host.attachShadow({mode: 'open'});
-            shadow.innerHTML = '<p>Shadow content</p>';
-        """)
-        
-        result = await session.dom.describe_node(
-            (await session.dom.query_selector("#host"))["nodeId"],
-            depth=2
-        )
-        print("Shadow DOM accessed")
+## TC-LOG-003: startViolationsReport
+**Steps:** Call start_violations_report(["longTask"])
+**Expected:** Report started
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify no errors occur
+## TC-LOG-004: stopViolationsReport
+**Steps:** Call stop_violations_report()
+**Expected:** Report stopped
 
-**Expected Result:** Shadow DOM is accessed successfully.
+## TC-LOG-005: getViolationsReport
+**Steps:** Call get_violations_report()
+**Expected:** Returns violations
 
 ---
 
-# SECTION 17: Browser Info
+# PERFORMANCE DOMAIN (P2)
 
-## Test 17.1: Browser Version
+## TC-PERF-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
 
-**Objective:** Verify that cdpwave can get browser version information.
+## TC-PERF-002: getMetrics
+**Steps:** Call get_metrics()
+**Expected:** Returns metrics
 
-**Steps:**
-1. Create `test_version.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-PERF-003: setTimeDomain
+**Steps:** Call set_time_domain("timeStamp")
+**Expected:** Time domain set
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        version = await client.browser.get_version()
-        print(f"Browser: {version.get('product')}")
-        print(f"User Agent: {version.get('userAgent')}")
-        print(f"JavaScript: {version.get('javascriptVersion')}")
-
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it prints browser information
-
-**Expected Result:** Browser version information is retrieved.
+## TC-PERF-004: setDisableMetrics
+**Steps:** Call set_disable_metrics(["metric"])
+**Expected:** Metrics disabled
 
 ---
 
-## Test 17.2: Command Line Arguments
+# PROFILER DOMAIN (P2)
 
-**Objective:** Verify that cdpwave can get browser command line.
+## TC-PROFILER-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
 
-**Steps:**
-1. Create `test_cmdline.py`:
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-PROFILER-002: start
+**Steps:** Call start()
+**Expected:** Profiler started
 
-async def main():
-    async with await CDPClient.launch(headless=True) = client:
-        cmdline = await client.browser.get_command_line()
-        print(f"Command line arguments: {len(cmdline.get('arguments', []))}")
+## TC-PROFILER-003: stop
+**Steps:** Call stop()
+**Expected:** Profiler stopped, returns profile
 
-asyncio.run(main())
-```
-2. Run the script
-3. Verify it prints the number of arguments
+## TC-PROFILER-004: setSamplingInterval
+**Steps:** Call set_sampling_interval(100)
+**Expected:** Interval set
 
-**Expected Result:** Command line arguments are retrieved.
+## TC-PROFILER-005: setPreciseCoverage
+**Steps:** Call set_precise_coverage(True, False, True)
+**Expected:** Precise coverage set
 
----
+## TC-PROFILER-006: takePreciseCoverage
+**Steps:** Call take_precise_coverage()
+**Expected:** Returns coverage
 
-# Test Summary Checklist
+## TC-PROFILER-007: getBestEffortCoverage
+**Steps:** Call get_best_effort_coverage()
+**Expected:** Returns coverage
 
-Use this checklist to track which manual tests you've completed:
+## TC-PROFILER-008: startTypeProfile
+**Steps:** Call start_type_profile()
+**Expected:** Type profile started
 
-## Core Browser Launch
-- [ ] 1.1: Basic Browser Launch
-- [ ] 1.2: Browser Detection
-- [ ] 1.3: Direct WebSocket Connection
-
-## Page Navigation
-- [ ] 2.1: Navigate to URL
-- [ ] 2.2: Navigate with Wait for Load
-- [ ] 2.3: Navigate Back and Forward
-
-## JavaScript Evaluation
-- [ ] 3.1: Simple Expression
-- [ ] 3.2: Get Page Title
-- [ ] 3.3: Async JavaScript
-
-## Screenshots
-- [ ] 4.1: PNG Screenshot
-- [ ] 4.2: JPEG Screenshot
-
-## PDF Generation
-- [ ] 5.1: Basic PDF
-- [ ] 5.2: PDF with Background
-
-## Multi-Tab Management
-- [ ] 6.1: Create Multiple Tabs
-- [ ] 6.2: Close Specific Tab
-
-## Network Monitoring
-- [ ] 7.1: Monitor Network Requests
-- [ ] 7.2: Cookie Management
-
-## DOM Manipulation
-- [ ] 8.1: Query Selector
-- [ ] 8.2: Set Text Content
-
-## Device Emulation
-- [ ] 9.1: Mobile Viewport
-- [ ] 9.2: Geolocation Override
-- [ ] 9.3: Dark Mode
-
-## Input Simulation
-- [ ] 10.1: Text Input
-- [ ] 10.2: Keyboard Events
-- [ ] 10.3: Mouse Click
-
-## Event Handling
-- [ ] 11.1: Wait for Event
-- [ ] 11.2: Event Listeners
-
-## Performance
-- [ ] 12.1: Performance Metrics
-- [ ] 12.2: CPU Profiling
-
-## Error Handling
-- [ ] 13.1: Invalid URL
-- [ ] 13.2: Invalid JavaScript
-- [ ] 13.3: Timeout
-
-## Cleanup
-- [ ] 14.1: Target Cleanup
-- [ ] 14.2: Resource Cleanup
-
-## Integration Scenarios
-- [ ] 15.1: Complete User Flow
-- [ ] 15.2: Multi-Tab Workflow
-
-## Advanced Features
-- [ ] 16.1: Request Interception
-- [ ] 16.2: Network Throttling
-- [ ] 16.3: Shadow DOM
-
-## Browser Info
-- [ ] 17.1: Browser Version
-- [ ] 17.2: Command Line Arguments
+## TC-PROFILER-009: stopTypeProfile
+**Steps:** Call stop_type_profile()
+**Expected:** Type profile stopped
 
 ---
 
-## Running All Tests
+# HEAP PROFILER DOMAIN (P2)
 
-To run all manual tests sequentially, create `run_all_tests.py`:
+## TC-HEAP-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
 
-```python
-import asyncio
-from cdpwave import CDPClient
+## TC-HEAP-002: startSampling
+**Steps:** Call start_sampling(64)
+**Expected:** Sampling started
 
-async def main():
-    print("=== Running Manual Test Suite ===\n")
-    
-    # Add all test functions from above
-    # ...
-    
-    print("\n=== Test Suite Complete ===")
+## TC-HEAP-003: stopSampling
+**Steps:** Call stop_sampling()
+**Expected:** Sampling stopped
 
-asyncio.run(main())
-```
+## TC-HEAP-004: startTrackingHeapObjects
+**Steps:** Call start_tracking_heap_objects()
+**Expected:** Tracking started
+
+## TC-HEAP-005: stopTrackingHeapObjects
+**Steps:** Call stop_tracking_heap_objects()
+**Expected:** Tracking stopped
+
+## TC-HEAP-006: takeHeapSnapshot
+**Steps:** Call take_heap_snapshot()
+**Expected:** Snapshot taken
+
+## TC-HEAP-007: collectGarbage
+**Steps:** Call collect_garbage()
+**Expected:** Garbage collected
+
+## TC-HEAP-008: getObjectByHeapObjectId
+**Steps:** Call get_object_by_heap_object_id(objId)
+**Expected:** Returns object
+
+## TC-HEAP-009: addHeapSnapshotChunk
+**Steps:** Call add_heap_snapshot_chunk(chunk)
+**Expected:** Chunk added
+
+## TC-HEAP-010: getLastSeenObjectID
+**Steps:** Call get_last_seen_object_id()
+**Expected:** Returns object ID
 
 ---
 
-## Expected Results Summary
+# SECURITY DOMAIN (P2)
 
-- All 35 test scenarios should run without errors
-- Browser should launch and close cleanly
-- No resource leaks after multiple iterations
-- All error cases should be handled gracefully
-- Integration workflows should complete successfully
+## TC-SECURITY-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
+
+## TC-SECURITY-002: setIgnoreCertificateErrors
+**Steps:** Call set_ignore_certificate_errors(True)
+**Expected:** Certificate errors ignored
+
+## TC-SECURITY-003: handleCertificateError
+**Steps:** Call handle_certificate_error(eventId, True)
+**Expected:** Certificate error handled
+
+## TC-SECURITY-004: getVisibleSecurityState
+**Steps:** Call get_visible_security_state()
+**Expected:** Returns security state
 
 ---
 
-## Notes
+# ACCESSIBILITY DOMAIN (P2)
 
-- Some tests require specific browser features (Shadow DOM, WebAuthn, etc.)
-- File upload tests require creating temporary files
-- Network tests may behave differently depending on network conditions
-- Geolocation tests require permission granting
-- Shadow DOM tests require modern browser support (Chrome 80+)
+## TC-A11Y-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
+
+## TC-A11Y-002: getPartialAXTree
+**Steps:** Call get_partial_ax_tree(nodeId)
+**Expected:** Returns partial tree
+
+## TC-A11Y-003: getFullAXTree
+**Steps:** Call get_full_ax_tree(nodeId)
+**Expected:** Returns full tree
+
+## TC-A11Y-004: getRootAXNode
+**Steps:** Call get_root_ax_node()
+**Expected:** Returns root node
+
+## TC-A11Y-005: getAXNodeAndAncestors
+**Steps:** Call get_ax_node_and_ancestors(nodeId)
+**Expected:** Returns node and ancestors
+
+## TC-A11Y-006: getAXNode
+**Steps:** Call get_ax_node(nodeId)
+**Expected:** Returns node
+
+## TC-A11Y-007: getImageData
+**Steps:** Call get_image_data(nodeId)
+**Expected:** Returns image data
+
+---
+
+# ANIMATION DOMAIN (P2)
+
+## TC-ANIM-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
+
+## TC-ANIM-002: getPlayState
+**Steps:** Call get_play_state(nodeId)
+**Expected:** Returns play state
+
+## TC-ANIM-003: getCurrentTime
+**Steps:** Call get_current_time(nodeId)
+**Expected:** Returns current time
+
+## TC-ANIM-004: setPlaybackRate
+**Steps:** Call set_playback_rate(nodeId, 2)
+**Expected:** Playback rate set
+
+## TC-ANIM-005: setTiming
+**Steps:** Call set_timing(nodeId, timing)
+**Expected:** Timing set
+
+## TC-ANIM-006: seekAnimations
+**Steps:** Call seek_animations(animations, time)
+**Expected:** Animations sought
+
+## TC-ANIM-007: pause
+**Steps:** Call pause(animations)
+**Expected:** Animations paused
+
+## TC-ANIM-008: resume
+**Steps:** Call resume(animations)
+**Expected:** Animations resumed
+
+## TC-ANIM-009: releaseAnimations
+**Steps:** Call release_animations(animations)
+**Expected:** Animations released
+
+---
+
+# INDEXEDDB DOMAIN (P2)
+
+## TC-IDB-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
+
+## TC-IDB-002: requestDatabaseNames
+**Steps:** Call request_database_names()
+**Expected:** Returns database names
+
+## TC-IDB-003: requestDatabase
+**Steps:** Call request_database(name)
+**Expected:** Returns database
+
+## TC-IDB-004: deleteDatabase
+**Steps:** Call delete_database(name)
+**Expected:** Database deleted
+
+## TC-IDB-005: requestData
+**Steps:** Call request_data(db, store, index, skip, count)
+**Expected:** Returns data
+
+## TC-IDB-006: deleteObjectStore
+**Steps:** Call delete_object_store(db, store)
+**Expected:** Object store deleted
+
+## TC-IDB-007: clearObjectStore
+**Steps:** Call clear_object_store(db, store)
+**Expected:** Object store cleared
+
+---
+
+# SERVICE WORKER DOMAIN (P2)
+
+## TC-SW-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
+
+## TC-SW-002: unregister
+**Steps:** Call unregister(scope)
+**Expected:** Service worker unregistered
+
+## TC-SW-003: updateRegistration
+**Steps:** Call update_registration(scope)
+**Expected:** Registration updated
+
+## TC-SW-004: startWorker
+**Steps:** Call start_worker(scope)
+**Expected:** Worker started
+
+## TC-SW-005: skipWaiting
+**Steps:** Call skip_waiting(scope)
+**Expected:** Skipped waiting
+
+## TC-SW-006: stopWorker
+**Steps:** Call stop_worker(scope)
+**Expected:** Worker stopped
+
+## TC-SW-007: stopAllWorkers
+**Steps:** Call stop_all_workers()
+**Expected:** All workers stopped
+
+## TC-SW-008: dispatchSyncEvent
+**Steps:** Call dispatch_sync_event(origin, id, tag, data)
+**Expected:** Sync event dispatched
+
+## TC-SW-009: inspectWorker
+**Steps:** Call inspect_worker(versionId)
+**Expected:** Worker inspected
+
+## TC-SW-010: getWorkers
+**Steps:** Call get_workers()
+**Expected:** Returns workers
+
+## TC-SW-011: getVersion
+**Steps:** Call get_version()
+**Expected:** Returns version
+
+---
+
+# WEBAUTHN DOMAIN (P2)
+
+## TC-WA-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
+
+## TC-WA-002: addVirtualAuthenticator
+**Steps:** Call add_virtual_authenticator(config)
+**Expected:** Authenticator added
+
+## TC-WA-003: removeVirtualAuthenticator
+**Steps:** Call remove_virtual_authenticator(id)
+**Expected:** Authenticator removed
+
+## TC-WA-004: getCredentials
+**Steps:** Call get_credentials(authenticatorId)
+**Expected:** Returns credentials
+
+---
+
+# TIER 3 DOMAINS (P3)
+
+## Quick Coverage Tests
+
+### Accessibility, Animation, Audits, BackgroundService, CacheStorage, Cast, Console, DeviceAccess, DeviceOrientation, DOMDebugger, Extensions, HeadlessExperimental, Inspector, IO, LayerTree, Media, Memory, PerformanceTimeline, Preload, PWA, Schema, Sensor, SystemInfo, Tethering, Tracing, Worker
+
+**Strategy:** For each Tier 3 domain, run:
+1. enable/disable test
+2. One primary functional test
+3. Verify no errors
+
+**Expected:** All domains respond correctly to basic commands.
+
+---
+
+# INTEGRATION TESTS
+
+## TC-INT-001: Network + Runtime
+**Steps:** Enable network, navigate, evaluate JS
+**Expected:** Requests captured, JS executes
+
+## TC-INT-002: DOM + Input
+**Steps:** Query element, click it
+**Expected:** Element clicked
+
+## TC-INT-003: Emulation + Runtime
+**Steps:** Set timezone, verify with JS
+**Expected:** Timezone applied
+
+## TC-INT-004: Storage + Runtime
+**Steps:** Set localStorage, verify with JS
+**Expected:** Storage works
+
+## TC-INT-005: Fetch + Network
+**Steps:** Intercept request, continue
+**Expected:** Request intercepted
+
+## TC-INT-006: Page + Performance
+**Steps:** Navigate, get metrics
+**Expected:** Metrics collected
+
+## TC-INT-007: Profiler + Runtime
+**Steps:** Profile execution
+**Expected:** Profile captured
+
+---
+
+# ERROR HANDLING TESTS
+
+## TC-ERR-001: Invalid URL
+**Steps:** Navigate to invalid URL
+**Expected:** CommandError caught
+
+## TC-ERR-002: Invalid JavaScript
+**Steps:** Evaluate invalid JS
+**Expected:** CommandError caught
+
+## TC-ERR-003: Timeout
+**Steps:** Evaluate with timeout
+**Expected:** CommandTimeoutError caught
+
+## TC-ERR-004: Closed Session
+**Steps:** Use closed session
+**Expected:** SessionClosedError caught
+
+## TC-ERR-005: Non-existent Element
+**Steps:** Query non-existent element
+**Expected:** CommandError caught
+
+---
+
+# CLEANUP TESTS
+
+## TC-CLN-001: Target Cleanup
+**Steps:** Close session, verify target removed
+**Expected:** Target cleaned up
+
+## TC-CLN-002: Resource Cleanup
+**Steps:** Launch/close 5 times
+**Expected:** No resource leaks
+
+---
+
+# Test Execution
+
+## Priority Order
+1. P0 (Critical): 111 test cases
+2. P1 (High-Value): 119 test cases
+3. P2 (Supporting): 82 test cases
+4. P3 (Low): 80 test cases
+5. Integration: 7 test cases
+6. Error Handling: 5 test cases
+7. Cleanup: 2 test cases
+
+**Total: 386 test cases**
+
+## Success Criteria
+- All P0 tests pass (100%)
+- All P1 tests pass (100%)
+- P2 tests pass (≥95%)
+- P3 tests pass (≥90%)
+- Integration tests pass (100%)
+- Error handling tests pass (100%)
+- Cleanup tests pass (100%)
