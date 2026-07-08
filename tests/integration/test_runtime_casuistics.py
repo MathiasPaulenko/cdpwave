@@ -1,3 +1,5 @@
+import contextlib
+
 import pytest
 
 from cdpwave import CDPSession
@@ -19,13 +21,11 @@ class TestRuntimeCasuistics:
     async def test_get_exception_details(self, page: CDPSession) -> None:
         await page.runtime.enable()
         # First create an exception
-        try:
+        with contextlib.suppress(Exception):
             await page.runtime.evaluate("throw new Error('test')")
-        except Exception:
-            pass
         # Note: This requires an exception object ID which is complex to obtain
         # For now, we'll just test the method exists
-        result = await page.runtime.get_exception_details("error_id")
+        await page.runtime.get_exception_details("error_id")
         # May fail if error_id is invalid, but that's expected
         assert True
 
@@ -55,7 +55,9 @@ class TestRuntimeCasuistics:
 
     async def test_await_promise_with_timeout(self, page: CDPSession) -> None:
         await page.runtime.enable()
-        result = await page.runtime.evaluate("new Promise(resolve => setTimeout(() => resolve('test'), 100))")
+        result = await page.runtime.evaluate(
+            "new Promise(resolve => setTimeout(() => resolve('test'), 100))"
+        )
         promise_id = result.get("result", {}).get("objectId")
         if promise_id:
             await page.runtime.await_promise(promise_id, timeout=1000)
