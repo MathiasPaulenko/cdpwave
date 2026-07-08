@@ -133,7 +133,7 @@ class EmulationDomain(BaseDomain):
         """
         return await self._call(
             "Emulation.setScriptExecutionDisabled",
-            {"value": disabled},
+            {"disabled": disabled},
         )
 
     async def set_geolocation_override(
@@ -227,7 +227,7 @@ class EmulationDomain(BaseDomain):
         Returns:
             Response dict from the CDP.
         """
-        return await self._call("Emulation.setDefaultBackgroundColorOverride")
+        return await self._call("Emulation.clearDefaultBackgroundColorOverride")
 
     async def set_idle_override(
         self,

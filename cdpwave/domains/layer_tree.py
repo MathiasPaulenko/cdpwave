@@ -48,7 +48,7 @@ class LayerTreeDomain(BaseDomain):
         params: dict[str, Any] = {}
         if root_id is not None:
             params["rootId"] = root_id
-        return await self._call("LayerTree.compositingReasons", params)
+        return await self._call("LayerTree.getLayers", params)
 
     async def compositing_reasons(
         self,

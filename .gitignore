@@ -23,3 +23,5 @@ htmlcov/
 site/
 CONTEXT.md
 spike.py
+FIX-ROADMAP.md
+TEST-ROADMAP.md

@@ -24,7 +24,7 @@ class MemoryDomain(BaseDomain):
         """Prepare the browser for leak detection by clearing caches."""
         return await self._call("Memory.prepareForLeakDetection")
 
-    async def for_force_garbage_collection(self) -> dict[str, Any]:
+    async def force_garbage_collection(self) -> dict[str, Any]:
         """Force a garbage collection cycle.
 
         Triggers a full GC cycle in the browser process,

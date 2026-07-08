@@ -23,7 +23,7 @@ class TetheringDomain(BaseDomain):
         params: dict[str, Any] = {}
         if port is not None:
             params["port"] = port
-        return await self._call("Tethering.bind", params)
+        return await self._call("Tethering.enable", params)
 
     async def disable(self, port: int | None = None) -> dict[str, Any]:
         """Disable tethering on a port.
@@ -34,4 +34,4 @@ class TetheringDomain(BaseDomain):
         params: dict[str, Any] = {}
         if port is not None:
             params["port"] = port
-        return await self._call("Tethering.unbind", params)
+        return await self._call("Tethering.disable", params)

@@ -147,13 +147,11 @@ class DOMDomain(BaseDomain):
     async def get_attribute(
         self,
         node_id: int,
-        name: str,
     ) -> dict[str, Any]:
         """Get attributes of a node.
 
         Args:
             node_id: The node ID to inspect.
-            name: Unused; CDP returns all attributes.
 
         Returns:
             Response dict containing ``attributes``.

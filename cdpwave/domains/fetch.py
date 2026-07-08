@@ -110,7 +110,6 @@ class FetchDomain(BaseDomain):
         response_code: int | None = None,
         response_headers: list[dict[str, str]] | None = None,
         binary_response_headers: str | None = None,
-        status_code: int | None = None,
         status_text: str | None = None,
     ) -> dict[str, Any]:
         """Continue an intercepted response with optional modifications.
@@ -121,7 +120,6 @@ class FetchDomain(BaseDomain):
             response_headers: Response headers as list of
                 ``{"name": ..., "value": ...}``.
             binary_response_headers: Base64-encoded response headers.
-            status_code: HTTP status code (alternative to response_code).
             status_text: HTTP status text.
 
         Returns:
@@ -134,8 +132,6 @@ class FetchDomain(BaseDomain):
             params["responseHeaders"] = response_headers
         if binary_response_headers is not None:
             params["binaryResponseHeaders"] = binary_response_headers
-        if status_code is not None:
-            params["statusCode"] = status_code
         if status_text is not None:
             params["statusText"] = status_text
         return await self._call("Fetch.continueResponse", params)

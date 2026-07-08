@@ -49,15 +49,14 @@ class RuntimeDomain(BaseDomain):
         Returns:
             Response dict containing ``result`` with the evaluation result.
         """
-        return await self._call(
-            "Runtime.evaluate",
-            {
-                "expression": expression,
-                "returnByValue": return_by_value,
-                "awaitPromise": await_promise,
-                "userGesture": user_gesture,
-            },
-        )
+        params: dict[str, Any] = {"expression": expression}
+        if return_by_value != True:
+            params["returnByValue"] = return_by_value
+        if await_promise != False:
+            params["awaitPromise"] = await_promise
+        if user_gesture != False:
+            params["userGesture"] = user_gesture
+        return await self._call("Runtime.evaluate", params)
 
     async def call_function_on(
         self,

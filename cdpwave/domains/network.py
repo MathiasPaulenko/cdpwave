@@ -28,7 +28,7 @@ class NetworkDomain(BaseDomain):
             params["maxResourceBufferSize"] = max_resource_buffer_size
         if max_post_data_size is not None:
             params["maxPostDataSize"] = max_post_data_size
-        return await self._call("Network.enable", params or None)
+        return await self._call("Network.enable", params if params else None)
 
     async def disable(self) -> dict[str, Any]:
         """Disable Network domain events.
@@ -112,7 +112,7 @@ class NetworkDomain(BaseDomain):
         params: dict[str, Any] = {}
         if urls is not None:
             params["urls"] = urls
-        return await self._call("Network.getCookies", params or None)
+        return await self._call("Network.getCookies", params if params else None)
 
     async def set_cookie(
         self,
