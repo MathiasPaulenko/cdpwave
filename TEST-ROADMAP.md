@@ -1298,18 +1298,431 @@ Comprehensive test plan covering all 386 methods across 48 CDP domains.
 
 ---
 
-# TIER 3 DOMAINS (P3)
+# AUDITS DOMAIN (P3)
 
-## Quick Coverage Tests
+## TC-AUDITS-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
 
-### Accessibility, Animation, Audits, BackgroundService, CacheStorage, Cast, Console, DeviceAccess, DeviceOrientation, DOMDebugger, Extensions, HeadlessExperimental, Inspector, IO, LayerTree, Media, Memory, PerformanceTimeline, Preload, PWA, Schema, Sensor, SystemInfo, Tethering, Tracing, Worker
+## TC-AUDITS-002: checkContrast
+**Steps:** Call check_contrast()
+**Expected:** Returns contrast issues
 
-**Strategy:** For each Tier 3 domain, run:
-1. enable/disable test
-2. One primary functional test
-3. Verify no errors
+## TC-AUDITS-003: getEncodedResponse
+**Steps:** Call get_encoded_response(requestId, "base64")
+**Expected:** Returns encoded response
 
-**Expected:** All domains respond correctly to basic commands.
+---
+
+# BACKGROUND SERVICE DOMAIN (P3)
+
+## TC-BGSRV-001: startObserving
+**Steps:** Call start_observing("backgroundFetch")
+**Expected:** Observing started
+
+## TC-BGSRV-002: stopObserving
+**Steps:** Call stop_observing("backgroundFetch")
+**Expected:** Observing stopped
+
+## TC-BGSRV-003: setRecording
+**Steps:** Call set_recording(True, "backgroundFetch")
+**Expected:** Recording enabled
+
+## TC-BGSRV-004: clearEvents
+**Steps:** Call clear_events("backgroundFetch")
+**Expected:** Events cleared
+
+---
+
+# CACHE STORAGE DOMAIN (P3)
+
+## TC-CACHE-001: deleteCache
+**Steps:** Call delete_cache(cacheId)
+**Expected:** Cache deleted
+
+## TC-CACHE-002: deleteEntry
+**Steps:** Call delete_entry(cacheId, request)
+**Expected:** Entry deleted
+
+## TC-CACHE-003: requestCacheNames
+**Steps:** Call request_cache_names(security_origin)
+**Expected:** Returns cache names
+
+## TC-CACHE-004: requestEntries
+**Steps:** Call request_entries(cacheId)
+**Expected:** Returns entries
+
+---
+
+# CAST DOMAIN (P3)
+
+## TC-CAST-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
+
+## TC-CAST-002: setSinkToUse
+**Steps:** Call set_sink_to_use(sinkName)
+**Expected:** Sink selected
+
+## TC-CAST-003: startTabMirroring
+**Steps:** Call start_tab_mirroring(sinkName)
+**Expected:** Mirroring started
+
+## TC-CAST-004: stopCasting
+**Steps:** Call stop_casting(sinkName)
+**Expected:** Casting stopped
+
+---
+
+# CONSOLE DOMAIN (P3)
+
+## TC-CONSOLE-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
+
+## TC-CONSOLE-002: clearMessages
+**Steps:** Call clear_messages()
+**Expected:** Messages cleared
+
+---
+
+# DEVICE ACCESS DOMAIN (P3)
+
+## TC-DEVACC-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
+
+## TC-DEVACC-002: selectBluetoothDevice
+**Steps:** Call select_bluetooth_device(requestId, device)
+**Expected:** Device selected
+
+## TC-DEVACC-003: cancelPrompt
+**Steps:** Call cancel_prompt(requestId)
+**Expected:** Prompt cancelled
+
+---
+
+# DEVICE ORIENTATION DOMAIN (P3)
+
+## TC-DEVORI-001: setDeviceOrientationOverride
+**Steps:** Call set_device_orientation_override(0, 0, 0)
+**Expected:** Orientation overridden
+
+## TC-DEVORI-002: clearDeviceOrientationOverride
+**Steps:** Call clear_device_orientation_override()
+**Expected:** Orientation cleared
+
+---
+
+# DOM DEBUGGER DOMAIN (P3)
+
+## TC-DOMDBG-001: setDOMBreakpoint
+**Steps:** Call set_dom_breakpoint(nodeId, "subtree-modified")
+**Expected:** Breakpoint set
+
+## TC-DOMDBG-002: removeDOMBreakpoint
+**Steps:** Call remove_dom_breakpoint(nodeId, "subtree-modified")
+**Expected:** Breakpoint removed
+
+## TC-DOMDBG-003: setEventListenerBreakpoint
+**Steps:** Call set_event_listener_breakpoint("click")
+**Expected:** Breakpoint set
+
+## TC-DOMDBG-004: removeEventListenerBreakpoint
+**Steps:** Call remove_event_listener_breakpoint("click")
+**Expected:** Breakpoint removed
+
+## TC-DOMDBG-005: setXHRBreakpoint
+**Steps:** Call set_xhr_breakpoint("api")
+**Expected:** XHR breakpoint set
+
+## TC-DOMDBG-006: removeXHRBreakpoint
+**Steps:** Call remove_xhr_breakpoint("api")
+**Expected:** XHR breakpoint removed
+
+---
+
+# EVENT BREAKPOINTS DOMAIN (P3)
+
+## TC-EVBRK-001: setInstrumentationBreakpoint
+**Steps:** Call set_instrumentation_breakpoint("scriptFirstStatement")
+**Expected:** Breakpoint set
+
+## TC-EVBRK-002: clearInstrumentationBreakpoint
+**Steps:** Call clear_instrumentation_breakpoint("scriptFirstStatement")
+**Expected:** Breakpoint cleared
+
+## TC-EVBRK-003: setBreakpointOnNativeEvent
+**Steps:** Call set_breakpoint_on_native_event("click")
+**Expected:** Breakpoint set
+
+## TC-EVBRK-004: clearBreakpointOnNativeEvent
+**Steps:** Call clear_breakpoint_on_native_event("click")
+**Expected:** Breakpoint cleared
+
+---
+
+# EXTENSIONS DOMAIN (P3)
+
+## TC-EXT-001: loadUnpacked
+**Steps:** Call load_unpacked(path)
+**Expected:** Extension loaded
+
+## TC-EXT-002: getStorageItems
+**Steps:** Call get_storage_items(id, "local")
+**Expected:** Returns storage items
+
+## TC-EXT-003: removeStorageItems
+**Steps:** Call remove_storage_items(id, "local", ["key"])
+**Expected:** Items removed
+
+## TC-EXT-004: clearStorageItems
+**Steps:** Call clear_storage_items(id, "local")
+**Expected:** Storage cleared
+
+---
+
+# HEADLESS EXPERIMENTAL DOMAIN (P3)
+
+## TC-HEAD-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
+
+## TC-HEAD-002: setWindowBounds
+**Steps:** Call set_window_bounds(bounds={width: 800, height: 600})
+**Expected:** Bounds set
+
+---
+
+# INSPECTOR DOMAIN (P3)
+
+## TC-INSP-001: Event Subscription
+**Steps:** Subscribe to Inspector.detached event
+**Expected:** Event received when detached
+
+---
+
+# IO DOMAIN (P3)
+
+## TC-IO-001: read
+**Steps:** Call read(handle)
+**Expected:** Returns data
+
+## TC-IO-002: close
+**Steps:** Call close(handle)
+**Expected:** Stream closed
+
+## TC-IO-003: resolveBlob
+**Steps:** Call resolve_blob(objectId)
+**Expected:** Returns blob UUID
+
+---
+
+# LAYER TREE DOMAIN (P3)
+
+## TC-LAYER-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
+
+## TC-LAYER-002: getLayers
+**Steps:** Call get_layers()
+**Expected:** Returns layers
+
+## TC-LAYER-003: compositingReasons
+**Steps:** Call compositing_reasons(layerId)
+**Expected:** Returns reasons
+
+## TC-LAYER-004: loadSnapshot
+**Steps:** Call load_snapshot(tiles)
+**Expected:** Snapshot loaded
+
+## TC-LAYER-005: releaseSnapshot
+**Steps:** Call release_snapshot(snapshotId)
+**Expected:** Snapshot released
+
+## TC-LAYER-006: profileSnapshot
+**Steps:** Call profile_snapshot(snapshotId)
+**Expected:** Returns timings
+
+---
+
+# MEDIA DOMAIN (P3)
+
+## TC-MEDIA-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
+
+## TC-MEDIA-002: getPlayerProperties
+**Steps:** Call get_player_properties(playerId)
+**Expected:** Returns properties
+
+## TC-MEDIA-003: getPlayers
+**Steps:** Call get_players()
+**Expected:** Returns players
+
+---
+
+# MEMORY DOMAIN (P3)
+
+## TC-MEM-001: getDOMCounters
+**Steps:** Call get_dom_counters()
+**Expected:** Returns counters
+
+## TC-MEM-002: prepareForLeakDetection
+**Steps:** Call prepare_for_leak_detection()
+**Expected:** Prepared for leak detection
+
+## TC-MEM-003: forceGarbageCollection
+**Steps:** Call for_force_garbage_collection()
+**Expected:** GC executed
+
+## TC-MEM-004: setPressureNotificationsSuppressed
+**Steps:** Call set_pressure_notifications_suppressed(True)
+**Expected:** Notifications suppressed
+
+## TC-MEM-005: simulatePressureNotification
+**Steps:** Call simulate_pressure_notification("moderate")
+**Expected:** Pressure simulated
+
+## TC-MEM-006: startSampling
+**Steps:** Call start_sampling()
+**Expected:** Sampling started
+
+## TC-MEM-007: stopSampling
+**Steps:** Call stop_sampling()
+**Expected:** Sampling stopped
+
+## TC-MEM-008: getSamplingProfile
+**Steps:** Call get_sampling_profile()
+**Expected:** Returns profile
+
+---
+
+# PERFORMANCE TIMELINE DOMAIN (P3)
+
+## TC-PERFTL-001: Event Subscription
+**Steps:** Subscribe to PerformanceTimeline.timelineEvent
+**Expected:** Events received during recording
+
+---
+
+# PRELOAD DOMAIN (P3)
+
+## TC-PRELOAD-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
+
+## TC-PRELOAD-002: getPreloadPolicy
+**Steps:** Call get_preload_policy()
+**Expected:** Returns policy
+
+## TC-PRELOAD-003: setPreloadPolicy
+**Steps:** Call set_preload_policy("always")
+**Expected:** Policy set
+
+---
+
+# PWA DOMAIN (P3)
+
+## TC-PWA-001: install
+**Steps:** Call install(manifestId)
+**Expected:** PWA installed
+
+## TC-PWA-002: uninstall
+**Steps:** Call uninstall(manifestId)
+**Expected:** PWA uninstalled
+
+## TC-PWA-003: getOsAppState
+**Steps:** Call get_os_app_state(manifestId)
+**Expected:** Returns app state
+
+---
+
+# SCHEMA DOMAIN (P3)
+
+## TC-SCHEMA-001: getDomains
+**Steps:** Call get_domains()
+**Expected:** Returns all domains
+
+---
+
+# SENSOR DOMAIN (P3)
+
+## TC-SENSOR-001: enable/disable
+**Steps:** Call enable(), disable()
+**Expected:** Domain enabled/disabled
+
+## TC-SENSOR-002: setSensorOverride
+**Steps:** Call set_sensor_override("accelerometer", reading)
+**Expected:** Sensor overridden
+
+## TC-SENSOR-003: clearSensorOverride
+**Steps:** Call clear_sensor_override("accelerometer")
+**Expected:** Override cleared
+
+---
+
+# SYSTEM INFO DOMAIN (P3)
+
+## TC-SYS-001: getInfo
+**Steps:** Call get_info()
+**Expected:** Returns system info
+
+## TC-SYS-002: getProcessInfo
+**Steps:** Call get_process_info()
+**Expected:** Returns process info
+
+## TC-SYS-003: getFeatureState
+**Steps:** Call get_feature_state(featureName)
+**Expected:** Returns feature state
+
+## TC-SYS-004: getGPUInfo
+**Steps:** Call get_gpu_info()
+**Expected:** Returns GPU info
+
+---
+
+# TETHERING DOMAIN (P3)
+
+## TC-TETHER-001: enable
+**Steps:** Call enable(port=8080)
+**Expected:** Tethering enabled
+
+## TC-TETHER-002: disable
+**Steps:** Call disable(port=8080)
+**Expected:** Tethering disabled
+
+---
+
+# TRACING DOMAIN (P3)
+
+## TC-TRACE-001: start
+**Steps:** Call start(categories="devtools.timeline")
+**Expected:** Tracing started
+
+## TC-TRACE-002: end
+**Steps:** Call end()
+**Expected:** Tracing ended
+
+## TC-TRACE-003: getCategories
+**Steps:** Call get_categories()
+**Expected:** Returns categories
+
+## TC-TRACE-004: recordClockSyncMarker
+**Steps:** Call record_clock_sync_marker(syncId)
+**Expected:** Marker recorded
+
+## TC-TRACE-005: requestClockSyncMarker
+**Steps:** Call request_clock_sync_marker()
+**Expected:** Returns sync ID
+
+---
+
+# WORKER DOMAIN (P3)
+
+## TC-WORKER-001: Event Subscription
+**Steps:** Subscribe to Worker.dedicatedWorkerStarted
+**Expected:** Event received when worker starts
 
 ---
 
@@ -1387,12 +1800,12 @@ Comprehensive test plan covering all 386 methods across 48 CDP domains.
 1. P0 (Critical): 111 test cases
 2. P1 (High-Value): 119 test cases
 3. P2 (Supporting): 82 test cases
-4. P3 (Low): 80 test cases
+4. P3 (Low): 82 test cases (Audits, BackgroundService, CacheStorage, Cast, Console, DeviceAccess, DeviceOrientation, DOMDebugger, EventBreakpoints, Extensions, HeadlessExperimental, Inspector, IO, LayerTree, Media, Memory, PerformanceTimeline, Preload, PWA, Schema, Sensor, SystemInfo, Tethering, Tracing, Worker)
 5. Integration: 7 test cases
 6. Error Handling: 5 test cases
 7. Cleanup: 2 test cases
 
-**Total: 386 test cases**
+**Total: 408 test cases**
 
 ## Success Criteria
 - All P0 tests pass (100%)
