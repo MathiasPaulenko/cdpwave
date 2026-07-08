@@ -26,7 +26,7 @@ class TestMemoryDomain:
     async def test_force_garbage_collection(self) -> None:
         fake = FakeSender({})
         domain = MemoryDomain(fake)
-        await domain.for_force_garbage_collection()
+        await domain.force_garbage_collection()
         assert fake.last_call == ("Memory.forceGarbageCollection", None)
 
     async def test_set_pressure_notifications_suppressed(self) -> None:

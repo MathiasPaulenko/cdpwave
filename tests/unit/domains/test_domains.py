@@ -186,9 +186,10 @@ class TestRuntimeDomain:
         assert method == "Runtime.evaluate"
         assert params is not None
         assert params["expression"] == "document.title"
-        assert params["returnByValue"] is True
-        assert params["awaitPromise"] is False
-        assert params["userGesture"] is False
+        # After fix: only expression is sent when using defaults
+        assert "returnByValue" not in params
+        assert "awaitPromise" not in params
+        assert "userGesture" not in params
 
     async def test_evaluate_await_promise(self) -> None:
         fake = FakeSender({"result": {"type": "number", "value": 42}})

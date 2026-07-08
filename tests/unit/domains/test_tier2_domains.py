@@ -222,7 +222,7 @@ class TestEmulationDomain:
         await domain.set_script_execution_disabled(True)
         assert fake.last_call == (
             "Emulation.setScriptExecutionDisabled",
-            {"value": True},
+            {"disabled": True},
         )
 
     async def test_set_geolocation_override(self) -> None:
@@ -286,7 +286,7 @@ class TestEmulationDomain:
         domain = EmulationDomain(fake)
         await domain.clear_default_background_color_override()
         assert fake.last_call == (
-            "Emulation.setDefaultBackgroundColorOverride",
+            "Emulation.clearDefaultBackgroundColorOverride",
             None,
         )
 

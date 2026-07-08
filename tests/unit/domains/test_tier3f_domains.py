@@ -48,25 +48,25 @@ class TestTetheringDomain:
         fake = FakeSender({})
         domain = TetheringDomain(fake)
         await domain.enable(port=8080)
-        assert fake.last_call == ("Tethering.bind", {"port": 8080})
+        assert fake.last_call == ("Tethering.enable", {"port": 8080})
 
     async def test_enable_no_port(self) -> None:
         fake = FakeSender({})
         domain = TetheringDomain(fake)
         await domain.enable()
-        assert fake.last_call == ("Tethering.bind", {})
+        assert fake.last_call == ("Tethering.enable", {})
 
     async def test_disable(self) -> None:
         fake = FakeSender({})
         domain = TetheringDomain(fake)
         await domain.disable(port=8080)
-        assert fake.last_call == ("Tethering.unbind", {"port": 8080})
+        assert fake.last_call == ("Tethering.disable", {"port": 8080})
 
     async def test_disable_no_port(self) -> None:
         fake = FakeSender({})
         domain = TetheringDomain(fake)
         await domain.disable()
-        assert fake.last_call == ("Tethering.unbind", {})
+        assert fake.last_call == ("Tethering.disable", {})
 
 
 @pytest.mark.unit

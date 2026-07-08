@@ -272,7 +272,7 @@ class TestDOMDomain:
     async def test_get_attribute(self) -> None:
         fake = FakeSender({"attributes": ["class", "highlight"]})
         domain = DOMDomain(fake)
-        await domain.get_attribute(42, "class")
+        await domain.get_attribute(42)
         assert fake.last_call == ("DOM.getAttributes", {"nodeId": 42})
 
     async def test_focus(self) -> None:
