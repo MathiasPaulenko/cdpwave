@@ -1,3 +1,5 @@
+import contextlib
+
 import pytest
 
 from cdpwave import CDPSession
@@ -30,24 +32,20 @@ class TestNetworkCasuistics:
         await page.page.navigate("https://example.com")
         # This requires a specific frameId and URL
         # For now, test that the method exists
-        try:
-            result = await page.network.load_network_resource("frame_id", "https://example.com")
-            assert True
-        except Exception:
-            # May fail with invalid frame_id, but that's expected
-            assert True
+        with contextlib.suppress(Exception):
+            await page.network.load_network_resource("frame_id", "https://example.com")
+        # May fail with invalid frame_id, but that's expected
+        assert True
 
     async def test_get_request_post_data(self, page: CDPSession) -> None:
         await page.network.enable()
         await page.page.navigate("https://example.com")
         # This requires a specific requestId from a POST request
         # For now, test that the method exists
-        try:
-            result = await page.network.get_request_post_data("request_id")
-            assert True
-        except Exception:
-            # May fail with invalid request_id, but that's expected
-            assert True
+        with contextlib.suppress(Exception):
+            await page.network.get_request_post_data("request_id")
+        # May fail with invalid request_id, but that's expected
+        assert True
 
     async def test_emulate_network_conditions_with_resource_types(self, page: CDPSession) -> None:
         await page.network.enable()
