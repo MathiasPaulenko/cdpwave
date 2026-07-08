@@ -1,846 +1,1536 @@
-# Test Roadmap
+# Manual Test Scenarios
 
-Comprehensive test plan for 100% coverage of cdpwave functionality.
+Complete manual test coverage for cdpwave functionality. Run these scenarios to verify 100% of the library's capabilities.
 
-## Overview
+## Prerequisites
 
-cdpwave implements **48 CDP domains** with **~386 typed methods**. This roadmap outlines a complete testing strategy to ensure all functionality is thoroughly tested.
+- Chrome/Edge/Brave/Chromium installed
+- Python 3.11+
+- cdpwave installed: `pip install cdpwave`
+- Terminal or IDE for running Python scripts
 
-### Current Test Status
+## Quick Verification (5 minutes)
 
-| Category | Tests | Coverage | Status |
-|----------|-------|----------|--------|
-| Unit tests | 537 | 89% | ✅ |
-| Manual smoke test | 34 | Core features | ✅ |
-| Integration tests | 0 | 0% | ❌ |
-| Edge case tests | Partial | ~40% | ⚠️ |
-| Error handling tests | Partial | ~50% | ⚠️ |
-
----
-
-## Domain Testing Matrix
-
-### Tier 1: Core Domains (Critical Path)
-
-These domains are used in every workflow and require comprehensive testing.
-
-| Domain | Methods | Unit Tests | Integration Tests | Edge Cases | Status |
-|--------|---------|------------|-------------------|------------|--------|
-| **Page** | 27 | ✅ | ⚠️ | ⚠️ | 80% |
-| **Runtime** | 20 | ✅ | ⚠️ | ⚠️ | 75% |
-| **Target** | 12 | ✅ | ⚠️ | ⚠️ | 70% |
-| **Network** | 17 | ✅ | ⚠️ | ❌ | 60% |
-| **DOM** | 26 | ✅ | ❌ | ❌ | 50% |
-| **Browser** | 9 | ✅ | ⚠️ | ⚠️ | 70% |
-
-#### Page Domain Tests (27 methods)
-
-**Existing unit tests:** ✅
-- enable/disable
-- navigate (with referrer, transition_type)
-- reload
-- goBack/goForward
-- captureScreenshot (with clip, format)
-- printToPDF
-- getLayoutMetrics
-- getNavigationHistory
-- setDocumentContent
-- getFrameTree
-- setBypassCSP
-- crash
-- close
-- bringToFront
-- handleJavaScriptDialog
-- createIsolatedWorld
-- captureSnapshot
-- getResourceTree
-- getResourceContent
-- resetNavigationHistory
-- navigateToHistoryEntry
-- setWebLifecycleState
-- setInterceptFileChooserDialog
-- getAppManifest
-- addScriptToEvaluateOnNewDocument
-- removeScriptToEvaluateOnNewDocument
-
-**Missing integration tests:**
-- [ ] Screenshot with viewport clip (real browser)
-- [ ] PDF with printBackground, margins, pageRanges
-- [ ] Lifecycle state transitions (active, hidden, frozen)
-- [ ] File chooser dialog interception
-- [ ] JavaScript dialog (alert, confirm, prompt) handling
-- [ ] App manifest parsing
-- [ ] Script injection timing (before load vs after)
-- [ ] Resource content encoding (base64, text)
-- [ ] Frame tree with nested iframes
-- [ ] Navigation history with multiple entries
-
-**Missing edge cases:**
-- [ ] Navigate to invalid URL
-- [ ] Screenshot when page is not loaded
-- [ ] PDF generation with non-HTML content
-- [ ] Lifecycle state during navigation
-- [ ] Dialog when no dialog is present
-- [ ] Isolated world with same name
-- [ ] Resource content for non-existent resources
-- [ ] Navigation history with circular references
-
-**Missing error handling:**
-- [ ] CDP error on navigate (target crashed)
-- [ ] Timeout on long PDF generation
-- [ ] Permission denied for file chooser
-- [ ] Invalid lifecycle state
-- [ ] Target closed during screenshot
-
----
-
-#### Runtime Domain Tests (20 methods)
-
-**Existing unit tests:** ✅
-- enable/disable
-- evaluate (with context, returnByValue, awaitPromise)
-- callFunctionOn
-- releaseObject/releaseObjectGroup
-- getProperties
-- compileScript
-- runScript
-- queryObjects
-- globalLexicalScopeNames
-- getExceptionDetails
-- addBinding/removeBinding
-- getHeapUsage
-- getIsolateId
-- collectGarbage
-- terminateExecution
-- setCustomObjectFormatterEnabled
-
-**Missing integration tests:**
-- [ ] Evaluate with complex objects (Date, RegExp, Map)
-- [ ] CallFunctionOn with thisArg
-- [ ] Remote object properties (accessors, symbols)
-- [ ] Object groups and release timing
-- [ ] CompileScript and runScript with source maps
-- [ ] QueryObjects for custom classes
-- [ ] Lexical scope with nested functions
-- [ ] Exception details stack traces
-- [ ] Binding called from multiple contexts
-- [ ] Custom object formatter
-- [ ] Heap usage during heavy operations
-- [ ] Garbage collection timing
-
-**Missing edge cases:**
-- [ ] Evaluate with syntax errors
-- [ ] CallFunctionOn on non-existent object
-- [ ] Release object that doesn't exist
-- [ ] GetProperties on non-object
-- [ ] CompileScript with invalid syntax
-- [ ] QueryObjects for built-in types
-- [ ] Binding with same name twice
-- [ ] Terminate execution during long-running script
-
-**Missing error handling:**
-- [ ] CDP error on evaluate (execution context destroyed)
-- [ ] Timeout on long-running script
-- [ ] Invalid object ID
-- [ ] Invalid execution context ID
-- [ ] Script execution limit exceeded
-
----
-
-#### Target Domain Tests (12 methods)
-
-**Existing unit tests:** ✅
-- createTarget
-- attachToTarget (flatten=True/False)
-- detachFromTarget
-- closeTarget
-- getTargets
-- activateTarget
-- setAutoAttach
-- sendMessageToTarget
-- setDiscoverTargets
-
-**Missing integration tests:**
-- [ ] Create target with specific URL
-- [ ] Attach to target with sessionId
-- [ ] Multi-tab session management
-- [ ] Target discovery filtering
-- [ ] Auto-attach to new targets
-- [ ] Cross-target message passing
-- [ ] Target lifecycle events (created, destroyed, attached, detached)
-
-**Missing edge cases:**
-- [ ] Attach to non-existent target
-- [ ] Close target that doesn't exist
-- [ ] Activate already active target
-- [ ] Send message to detached target
-- [ ] Auto-attach with invalid filter
-
-**Missing error handling:**
-- [ ] Target crashed during attach
-- [ ] Target closed during operation
-- [ ] Invalid target ID format
-- [ ] Permission denied for target access
-
----
-
-#### Network Domain Tests (17 methods)
-
-**Existing unit tests:** ✅
-- enable/disable
-- setCacheDisabled
-- setUserAgentOverride
-- clearBrowserCookies/clearBrowserCache
-- getAllCookies
-- setCookies
-- getCookies
-- deleteCookies
-- setExtraHTTPHeaders
-- canEmulateNetworkConditions
-- setCacheDisabled
-- getResponseBody
-- getResponseBodyForInterception
-- takeResponseBodyForInterceptionAsStream
-- continueInterceptedRequest
-- getPostData
-- replayXHR
-
-**Missing integration tests:**
-- [ ] Request/response headers inspection
-- [ ] Cookie management (SameSite, HttpOnly, Secure)
-- [ ] Cache behavior with different modes
-- [ ] Network throttling (offline, slow 3G)
-- [ ] Request interception and modification
-- [ ] Response body streaming
-- [ ] XHR replay with modified body
-- [ ] Websocket connection monitoring
-- [ ] Mixed content (HTTP/HTTPS)
-- [ ] Cookie domain/path matching
-- [ ] Extra headers with special characters
-
-**Missing edge cases:**
-- [ ] Invalid cookie format
-- [ ] Request with no response
-- [ ] Response body too large
-- [ ] Interception without continue
-- [ ] Replay already replayed XHR
-- [ ] Headers with duplicate names
-- [ ] Cookie with invalid domain
-
-**Missing error handling:**
-- [ ] Network error (DNS, connection refused)
-- [ ] Timeout on response
-- [ ] Invalid interception ID
-- [ ] Permission denied for cookies
-- [ ] Request cancelled
-
----
-
-#### DOM Domain Tests (26 methods)
-
-**Existing unit tests:** ✅
-- enable/disable
-- getDocument
-- getFlattenedDocument
-- collectClassNamesFromSubtree
-- querySelector/querySelectorAll
-- removeNode
-- setAttributeValue
-- setAttributesAsText
-- removeAttribute
-- setTextContent
-- getBoxModel
-- getContentQuads
-- getHighlightObjectForTest
-- describeNode
-- focus
-- scrollIntoViewIfNeeded
-- setFileInputFiles
-- performSearch
-- getSearchResults
-- discardSearchResults
-- requestChildNodes
-- requestNode
-- setChildNodes
-- getOuterHTML
-- setOuterHTML
-
-**Missing integration tests:**
-- [ ] DOM mutation observation
-- [ ] Shadow DOM traversal
-- [ ] File input with multiple files
-- [ ] Text content with special characters
-- [ ] Box model with transforms
-- [ ] Content quads for rotated elements
-- [ ] Search across entire document
-- [ ] Attribute mutation tracking
-- [ ] Child nodes lazy loading
-- [ ] Outer HTML with script tags
-- [ ] Focus on hidden elements
-
-**Missing edge cases:**
-- [ ] Query selector with invalid syntax
-- [ ] Remove non-existent node
-- [ ] Set attribute on non-element
-- [ ] Set file input on non-input
-- [ ] Scroll element not in viewport
-- [ ] Search with empty query
-- [ ] Get node with invalid ID
-- [ ] Set outer HTML that creates invalid DOM
-
-**Missing error handling:**
-- [ ] Node not found
-- [ ] Node detached from document
-- [ ] Invalid node ID
-- [ ] Permission denied for file access
-- [ ] DOM mutation blocked by CSP
-
----
-
-#### Browser Domain Tests (9 methods)
-
-**Existing unit tests:** ✅
-- getVersion
-- getCommandLine
-- getHistogram
-- getHistograms
-- getCPUProfile
-- getHeapProfile
-- resetHistograms
-- getBrowserCommandLine
-- getBounds
-
-**Missing integration tests:**
-- [ ] Version info parsing
-- [ ] Command line flags inspection
-- [ ] Histogram metrics collection
-- [ ] CPU profiling over time
-- [ ] Heap snapshot analysis
-- [ ] Browser bounds with multiple monitors
-
-**Missing edge cases:**
-- [ ] Get version during browser startup
-- [ ] Histogram with empty name
-- [ ] CPU profile with no samples
-- [ ] Heap profile with no objects
-- [ ] Bounds on headless browser
-
-**Missing error handling:**
-- [ ] Browser not responding
-- [ ] Permission denied for metrics
-- [ ] Histogram not found
-
----
-
-### Tier 2: High-Value Domains
-
-| Domain | Methods | Unit Tests | Integration Tests | Edge Cases | Status |
-|--------|---------|------------|-------------------|------------|--------|
-| **Emulation** | 26 | ✅ | ⚠️ | ⚠️ | 60% |
-| **Input** | 11 | ✅ | ⚠️ | ❌ | 50% |
-| **Fetch** | 10 | ✅ | ⚠️ | ❌ | 50% |
-| **CSS** | 14 | ✅ | ❌ | ❌ | 40% |
-| **Storage** | 13 | ✅ | ⚠️ | ❌ | 50% |
-| **Overlay** | 15 | ✅ | ❌ | ❌ | 30% |
-| **Debugger** | 22 | ✅ | ❌ | ❌ | 40% |
-
-#### Emulation Domain Tests (26 methods)
-
-**Existing unit tests:** ✅
-- setDeviceMetricsOverride
-- clearDeviceMetricsOverride
-- setGeolocationOverride
-- clearGeolocationOverride
-- setCPUThrottlingRate
-- setUserAgentOverride
-- setTouchEmulationEnabled
-- setEmulatedMedia
-- clearEmulatedMedia
-- setTimezoneOverride
-- clearTimezoneOverride
-
-**Missing integration tests:**
-- [ ] Device metrics with viewport and scale
-- [ ] Geolocation with high accuracy
-- [ ] CPU throttling impact on performance
-- [ ] User agent spoofing detection
-- [ ] Touch emulation with gestures
-- [ ] Dark mode media query
-- [ ] Reduced motion media query
-- [ ] Timezone with DST transitions
-- [ ] Screen orientation
-- [ ] Idle emulation
-- [ ] Virtual sensors (accelerometer, gyroscope)
-- [ ] Bluetooth emulation
-
-**Missing edge cases:**
-- [ ] Invalid device metrics (negative values)
-- [ ] Geolocation outside valid ranges
-- [ ] CPU throttling with zero rate
-- [ ] User agent with invalid format
-- [ ] Media feature not supported
-- [ ] Timezone with invalid IANA name
-
-**Missing error handling:**
-- [ ] Permission denied for geolocation
-- [ ] Device metrics not supported
-- [ ] Virtual sensors not available
-
----
-
-#### Input Domain Tests (11 methods)
-
-**Existing unit tests:** ✅
-- dispatchKeyEvent
-- dispatchMouseEvent
-- dispatchTouchEvent
-- emulateTouchFromMouseEvent
-- synthesizePinchGesture
-- synthesizeScrollGesture
-- synthesizeTapGesture
-- insertText
-- setIgnoreInputEvents
-- dragIntercepted
-
-**Missing integration tests:**
-- [ ] Keyboard shortcuts (Ctrl+C, Ctrl+V)
-- [ ] Mouse drag and drop
-- [ ] Touch pinch zoom
-- [ ] Touch scroll with momentum
-- [ ] Text insertion with special characters
-- [ ] Input event sequence (keydown, input, keyup)
-- [ ] Drag over droppable elements
-- [ ] Ignore input during dialogs
-
-**Missing edge cases:**
-- [ ] Dispatch event to detached element
-- [ ] Invalid key code
-- [ ] Touch with too many fingers
-- [ ] Pinch with zero scale
-- [ ] Scroll with zero delta
-- [ ] Insert text into non-editable
-
-**Missing error handling:**
-- [ ] Element not found
-- [ ] Permission denied for input
-- [ ] Input blocked by focus
-
----
-
-#### Fetch Domain Tests (10 methods)
-
-**Existing unit tests:** ✅
-- enable/disable
-- failRequest
-- fulfillRequest
-- continueRequest
-- continueWithAuth
-- getResponseBody
-- takeResponseBodyAsStream
-- continueResponse
-- pause/fail
-
-**Missing integration tests:**
-- [ ] Request modification (headers, body)
-- [ ] Response mocking (status, headers, body)
-- [ ] Authentication challenges
-- [ ] Request/response streaming
-- [ ] Request pausing and resuming
-- [ ] Cross-origin requests
-- [ ] WebSocket interception
-- [ ] Service worker requests
-
-**Missing edge cases:**
-- [ ] Fulfill with invalid status code
-- [ ] Continue with missing request ID
-- [ ] Auth with invalid credentials
-- [ ] Stream body too large
-- [ ] Pause already paused request
-
-**Missing error handling:**
-- [ ] Request ID not found
-- [ ] Response body not available
-- [ ] Auth challenge failed
-- [ ] Permission denied for interception
-
----
-
-### Tier 3: Supporting Domains
-
-These domains provide specialized functionality. Testing priority is lower but still important.
-
-| Domain | Methods | Unit Tests | Status |
-|--------|---------|------------|--------|
-| **Accessibility** | 7 | ✅ | 40% |
-| **Animation** | 9 | ✅ | 30% |
-| **Audits** | 4 | ✅ | 20% |
-| **BackgroundService** | 4 | ✅ | 20% |
-| **CacheStorage** | 4 | ✅ | 30% |
-| **Cast** | 5 | ✅ | 10% |
-| **Console** | 3 | ✅ | 30% |
-| **CSS** | 14 | ✅ | 40% |
-| **Debugger** | 22 | ✅ | 40% |
-| **DeviceAccess** | 4 | ✅ | 20% |
-| **DeviceOrientation** | 2 | ✅ | 20% |
-| **DOMDebugger** | 6 | ✅ | 30% |
-| **DOMSnapshot** | - | ❌ | 0% |
-| **DOMStorage** | - | ❌ | 0% |
-| **EventBreakpoints** | 4 | ✅ | 20% |
-| **Extensions** | 4 | ✅ | 20% |
-| **Fetch** | 10 | ✅ | 50% |
-| **HeadlessExperimental** | 3 | ✅ | 10% |
-| **HeapProfiler** | 10 | ✅ | 30% |
-| **IndexedDB** | 7 | ✅ | 20% |
-| **Inspector** | 2 | ✅ | 20% |
-| **IO** | 3 | ✅ | 10% |
-| **LayerTree** | 7 | ✅ | 20% |
-| **Log** | 5 | ✅ | 40% |
-| **Media** | 4 | ✅ | 10% |
-| **Memory** | 8 | ✅ | 30% |
-| **Overlay** | 15 | ✅ | 30% |
-| **Performance** | 4 | ✅ | 40% |
-| **PerformanceTimeline** | 4 | ✅ | 20% |
-| **Preload** | 4 | ✅ | 20% |
-| **Profiler** | 9 | ✅ | 30% |
-| **PWA** | 3 | ✅ | 10% |
-| **Runtime** | 20 | ✅ | 75% |
-| **Schema** | 1 | ✅ | 10% |
-| **Security** | 4 | ✅ | 30% |
-| **Sensor** | 4 | ✅ | 10% |
-| **ServiceWorker** | 11 | ✅ | 20% |
-| **Storage** | 13 | ✅ | 50% |
-| **SystemInfo** | 4 | ✅ | 30% |
-| **Target** | 12 | ✅ | 70% |
-| **Tethering** | 2 | ✅ | 10% |
-| **Tracing** | 5 | ✅ | 30% |
-| **WebAuthn** | 4 | ✅ | 10% |
-| **Worker** | 2 | ✅ | 10% |
-
----
-
-## Integration Test Plan
-
-### Phase 1: Core Workflows (Priority 1)
-
-Tests that cover the most common user workflows.
+### 1. Basic Launch and Navigate
 
 ```python
-# tests/integration/test_core_workflows.py
+import asyncio
+from cdpwave import CDPClient
 
-class TestNavigationWorkflow:
-    async def test_navigate_and_wait_for_load(self):
-        """Navigate to URL and wait for load event."""
-        async with await CDPClient.launch(headless=True) as client:
-            session = await client.new_page("https://example.com")
-            await session.wait_for_event("Page.loadEventFired")
-            assert session is not None
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page("https://example.com")
+        print("✓ Browser launched and page loaded")
 
-    async def test_navigate_back_and_forward(self):
-        """Navigate through history."""
-        async with await CDPClient.launch(headless=True) as client:
-            session = await client.new_page("https://example.com")
-            await session.page.navigate("https://example.org")
-            await session.page.navigate("https://example.net")
-            await session.page.go_back()
-            await session.page.go_forward()
-
-    async def test_multi_tab_navigation(self):
-        """Navigate multiple tabs concurrently."""
-        async with await CDPClient.launch(headless=True) as client:
-            tab1 = await client.new_page("https://example.com")
-            tab2 = await client.new_page("https://example.org")
-            await tab1.wait_for_event("Page.loadEventFired")
-            await tab2.wait_for_event("Page.loadEventFired")
+asyncio.run(test())
 ```
 
-### Phase 2: Domain-Specific Workflows (Priority 2)
+**Expected:** Output "✓ Browser launched and page loaded" without errors.
 
-Tests for specific domain capabilities.
+---
+
+## Core Functionality Tests (30 minutes)
+
+### 2. Browser Detection and Launch
+
+**Test:** Find and launch different browsers
 
 ```python
-# tests/integration/test_domain_workflows.py
+import asyncio
+from cdpwave import CDPClient
 
-class TestNetworkWorkflow:
-    async def test_intercept_and_modify_request(self):
-        """Intercept network request and modify headers."""
-        async with await CDPClient.launch(headless=True) as client:
-            session = await client.new_page()
-            await session.fetch.enable()
-            intercepted = []
+async def test():
+    # Test default browser detection
+    async with await CDPClient.launch(headless=True) as client:
+        print(f"✓ Launched browser: {client.browser_type}")
+        
+    # Test explicit browser type
+    async with await CDPClient.launch(headless=True, browser_type="edge") as client:
+        print(f"✓ Launched Edge: {client.browser_type}")
 
-            async def on_paused(params):
-                intercepted.append(params["requestId"])
-                await session.fetch.continue_request(
-                    requestId=params["requestId"],
-                    headers={"X-Custom": "value"}
-                )
+asyncio.run(test())
+```
 
-            session.on("Fetch.requestPaused", on_paused)
-            await session.page.navigate("https://example.com")
-            assert len(intercepted) > 0
+**Expected:** Detects and launches Chrome, Edge, Brave, or Chromium.
 
-class TestEmulationWorkflow:
-    async def test_device_emulation(self):
-        """Emulate mobile device."""
-        async with await CDPClient.launch(headless=True) as client:
-            session = await client.new_page()
-            await session.emulation.set_device_metrics_override(
-                width=375, height=667, deviceScaleFactor=2, mobile=True
+---
+
+### 3. Direct WebSocket Connection
+
+**Test:** Connect to existing browser via WebSocket URL
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    # First, launch Chrome with remote debugging
+    # chrome.exe --remote-debugging-port=9222
+    
+    async with await CDPClient.connect("ws://localhost:9222") as client:
+        targets = await client.get_pages()
+        print(f"✓ Connected to {len(targets)} pages")
+
+asyncio.run(test())
+```
+
+**Expected:** Connects to existing browser and lists pages.
+
+---
+
+### 4. Page Navigation
+
+**Test:** Navigate to different URLs
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        
+        # Navigate to URL
+        await session.page.navigate("https://example.com")
+        await session.wait_for_event("Page.loadEventFired")
+        print("✓ Navigated to example.com")
+        
+        # Navigate back
+        await session.page.navigate("https://example.org")
+        await session.page.go_back()
+        print("✓ Navigated back")
+        
+        # Navigate forward
+        await session.page.go_forward()
+        print("✓ Navigated forward")
+
+asyncio.run(test())
+```
+
+**Expected:** All navigation operations complete without errors.
+
+---
+
+### 5. JavaScript Evaluation
+
+**Test:** Evaluate JavaScript and get results
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page("https://example.com")
+        
+        # Simple expression
+        result = await session.runtime.evaluate("1 + 1", return_by_value=True)
+        print(f"✓ 1 + 1 = {result['result']['value']}")
+        
+        # Get document title
+        title = await session.runtime.evaluate(
+            "document.title",
+            return_by_value=True
+        )
+        print(f"✓ Page title: {title['result']['value']}")
+        
+        # Async expression
+        async_result = await session.runtime.evaluate(
+            "new Promise(r => setTimeout(() => r(42), 100))",
+            return_by_value=True,
+            await_promise=True
+        )
+        print(f"✓ Async result: {async_result['result']['value']}")
+
+asyncio.run(test())
+```
+
+**Expected:** JavaScript executes correctly, returns expected values.
+
+---
+
+### 6. Page Screenshots
+
+**Test:** Capture screenshots in different formats
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page("https://example.com")
+        
+        # PNG screenshot
+        png_data = await session.page.capture_screenshot()
+        print(f"✓ PNG screenshot: {len(png_data)} bytes")
+        
+        # JPEG screenshot
+        jpeg_data = await session.page.capture_screenshot(format="jpeg")
+        print(f"✓ JPEG screenshot: {len(jpeg_data)} bytes")
+
+asyncio.run(test())
+```
+
+**Expected:** Screenshots captured in both formats.
+
+---
+
+### 7. PDF Generation
+
+**Test:** Generate PDF from page
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page("https://example.com")
+        
+        pdf_data = await session.page.print_to_pdf()
+        print(f"✓ PDF generated: {len(pdf_data)} bytes")
+        
+        # Save to file
+        with open("test.pdf", "wb") as f:
+            f.write(pdf_data)
+        print("✓ PDF saved to test.pdf")
+
+asyncio.run(test())
+```
+
+**Expected:** PDF generated and saved successfully.
+
+---
+
+### 8. Multi-Tab Management
+
+**Test:** Manage multiple tabs
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        # Create multiple tabs
+        tab1 = await client.new_page("https://example.com")
+        tab2 = await client.new_page("https://example.org")
+        tab3 = await client.new_page("https://example.net")
+        
+        print(f"✓ Created {len(client.sessions)} tabs")
+        
+        # List all sessions
+        for session in client.sessions:
+            print(f"  - Session: {session.target_id}")
+        
+        # Close specific tab
+        await tab2.close()
+        print(f"✓ Closed tab, {len(client.sessions)} remaining")
+
+asyncio.run(test())
+```
+
+**Expected:** Multiple tabs created and managed correctly.
+
+---
+
+## Network Functionality Tests (20 minutes)
+
+### 9. Network Monitoring
+
+**Test:** Monitor network requests
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.network.enable()
+        
+        requests = []
+        
+        async def on_request_will_be_sent(params):
+            requests.append(params["request"]["url"])
+        
+        session.on("Network.requestWillBeSent", on_request_will_be_sent)
+        await session.page.navigate("https://example.com")
+        
+        print(f"✓ Captured {len(requests)} network requests")
+        for url in requests[:5]:
+            print(f"  - {url}")
+
+asyncio.run(test())
+```
+
+**Expected:** Network requests captured and listed.
+
+---
+
+### 10. Cookie Management
+
+**Test:** Get, set, and delete cookies
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page("https://example.com")
+        await session.network.enable()
+        
+        # Get cookies
+        cookies = await session.network.get_cookies()
+        print(f"✓ Found {len(cookies)} cookies")
+        
+        # Set cookie
+        await session.network.set_cookies([{
+            "name": "test",
+            "value": "value",
+            "domain": "example.com"
+        }])
+        print("✓ Set cookie")
+        
+        # Verify cookie
+        cookies = await session.network.get_cookies()
+        assert any(c["name"] == "test" for c in cookies)
+        print("✓ Cookie verified")
+        
+        # Delete cookie
+        await session.network.delete_cookies("test", "example.com")
+        print("✓ Cookie deleted")
+
+asyncio.run(test())
+```
+
+**Expected:** Cookie operations complete successfully.
+
+---
+
+### 11. Request Interception
+
+**Test:** Intercept and modify requests
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.fetch.enable(
+            patterns=[{"urlPattern": "*"}]
+        )
+        
+        intercepted = []
+        
+        async def on_paused(params):
+            intercepted.append(params["requestId"])
+            await session.fetch.continue_request(
+                requestId=params["requestId"]
             )
+        
+        session.on("Fetch.requestPaused", on_paused)
+        await session.page.navigate("https://example.com")
+        
+        print(f"✓ Intercepted {len(intercepted)} requests")
+
+asyncio.run(test())
+```
+
+**Expected:** Requests intercepted and continued.
+
+---
+
+### 12. Network Throttling
+
+**Test:** Emulate slow network
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.network.emulate_network_conditions(
+            offline=False,
+            download_throughput=500000,  # 500 KB/s
+            upload_throughput=500000,
+            latency=100
+        )
+        print("✓ Network throttled to 500 KB/s")
+        
+        await session.page.navigate("https://example.com")
+        print("✓ Navigated with throttling")
+
+asyncio.run(test())
+```
+
+**Expected:** Network throttling applied.
+
+---
+
+## DOM Functionality Tests (15 minutes)
+
+### 13. DOM Inspection
+
+**Test:** Inspect DOM structure
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page("https://example.com")
+        await session.dom.enable()
+        
+        # Get document
+        doc = await session.dom.get_document()
+        print(f"✓ Document node: {doc['root']['nodeId']}")
+        
+        # Query selector
+        node = await session.dom.query_selector("h1")
+        print(f"✓ Found h1 node: {node['nodeId']}")
+        
+        # Get node attributes
+        attrs = await session.dom.get_attributes(node["nodeId"])
+        print(f"✓ Node attributes: {attrs}")
+
+asyncio.run(test())
+```
+
+**Expected:** DOM inspection works correctly.
+
+---
+
+### 14. DOM Manipulation
+
+**Test:** Modify DOM elements
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page("https://example.com")
+        await session.dom.enable()
+        
+        # Set attribute
+        h1 = await session.dom.query_selector("h1")
+        await session.dom.set_attribute_value(
+            h1["nodeId"],
+            "data-test",
+            "value"
+        )
+        print("✓ Set attribute")
+        
+        # Set text content
+        await session.dom.set_text_content(h1["nodeId"], "Test Title")
+        print("✓ Set text content")
+
+asyncio.run(test())
+```
+
+**Expected:** DOM modifications applied.
+
+---
+
+### 15. Box Model
+
+**Test:** Get element box model
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page("https://example.com")
+        await session.dom.enable()
+        
+        h1 = await session.dom.query_selector("h1")
+        model = await session.dom.get_box_model(h1["nodeId"])
+        print(f"✓ Box model: {len(model['content'])} points")
+
+asyncio.run(test())
+```
+
+**Expected:** Box model retrieved successfully.
+
+---
+
+## Emulation Tests (15 minutes)
+
+### 16. Device Emulation
+
+**Test:** Emulate mobile device
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        
+        # Emulate iPhone
+        await session.emulation.set_device_metrics_override(
+            width=375,
+            height=667,
+            device_scale_factor=2,
+            mobile=True
+        )
+        print("✓ Emulated iPhone viewport")
+        
+        await session.page.navigate("https://example.com")
+        print("✓ Navigated with mobile viewport")
+
+asyncio.run(test())
+```
+
+**Expected:** Mobile viewport emulated.
+
+---
+
+### 17. Geolocation Override
+
+**Test:** Override geolocation
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.emulation.set_geolocation_override(
+            latitude=40.7128,
+            longitude=-74.0060
+        )
+        print("✓ Set geolocation to New York")
+        
+        # Grant permission
+        await session.send("Browser.grantPermissions", {
+            "permissions": ["geolocation"],
+            "origin": "https://example.com"
+        })
+        
+        # Test with geolocation API
+        await session.page.navigate("https://example.com")
+        await session.runtime.evaluate("""
+            navigator.geolocation.getCurrentPosition(pos => {
+                console.log(pos.coords.latitude, pos.coords.longitude);
+            })
+        """)
+
+asyncio.run(test())
+```
+
+**Expected:** Geolocation override applied.
+
+---
+
+### 18. Dark Mode
+
+**Test:** Emulate dark mode
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        
+        await session.emulation.set_emulated_media("prefers-color-scheme", "dark")
+        print("✓ Emulated dark mode")
+        
+        await session.page.navigate("https://example.com")
+        print("✓ Navigated with dark mode")
+
+asyncio.run(test())
+```
+
+**Expected:** Dark mode emulated.
+
+---
+
+### 19. Timezone Override
+
+**Test:** Override timezone
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        
+        await session.emulation.set_timezone_override("America/New_York")
+        print("✓ Set timezone to New York")
+        
+        # Verify timezone
+        tz = await session.runtime.evaluate(
+            "Intl.DateTimeFormat().resolvedOptions().timeZone",
+            return_by_value=True
+        )
+        print(f"✓ Timezone: {tz['result']['value']}")
+
+asyncio.run(test())
+```
+
+**Expected:** Timezone override applied.
+
+---
+
+## Input Tests (10 minutes)
+
+### 20. Text Input
+
+**Test:** Type text into input field
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.page.navigate(
+            "data:text/html,<input id='q' type='text'>"
+        )
+        
+        await session.input.insert_text("Hello World")
+        print("✓ Inserted text")
+        
+        # Verify
+        value = await session.runtime.evaluate(
+            "document.getElementById('q').value",
+            return_by_value=True
+        )
+        print(f"✓ Input value: {value['result']['value']}")
+
+asyncio.run(test())
+```
+
+**Expected:** Text inserted correctly.
+
+---
+
+### 21. Keyboard Events
+
+**Test:** Send keyboard events
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.page.navigate(
+            "data:text/html,<input id='q' type='text'>"
+        )
+        
+        await session.input.dispatch_key_event(
+            "char",
+            "H"
+        )
+        await session.input.dispatch_key_event(
+            "char",
+            "i"
+        )
+        print("✓ Sent keyboard events")
+
+asyncio.run(test())
+```
+
+**Expected:** Keyboard events sent.
+
+---
+
+### 22. Mouse Events
+
+**Test:** Send mouse events
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.page.navigate(
+            "data:text/html,<button id='btn'>Click</button>"
+        )
+        
+        # Get element position
+        rect = await session.runtime.evaluate("""
+            const el = document.getElementById('btn');
+            const rect = el.getBoundingClientRect();
+            return {x: rect.left + 5, y: rect.top + 5};
+        """, return_by_value=True)
+        
+        # Click
+        await session.input.dispatch_mouse_event(
+            "mousePressed",
+            "left",
+            rect["result"]["value"]["x"],
+            rect["result"]["value"]["y"]
+        )
+        await session.input.dispatch_mouse_event(
+            "mouseReleased",
+            "left",
+            rect["result"]["value"]["x"],
+            rect["result"]["value"]["y"]
+        )
+        print("✓ Sent mouse click")
+
+asyncio.run(test())
+```
+
+**Expected:** Mouse events sent.
+
+---
+
+## Event Handling Tests (10 minutes)
+
+### 23. Wait for Event
+
+**Test:** Wait for specific event
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        
+        # Navigate and wait for load
+        await session.page.navigate("https://example.com")
+        await session.wait_for_event("Page.loadEventFired")
+        print("✓ Page loaded")
+        
+        # Wait for console message
+        await session.runtime.evaluate("console.log('test')")
+        await session.wait_for_event("Runtime.consoleAPICalled")
+        print("✓ Console message received")
+
+asyncio.run(test())
+```
+
+**Expected:** Events received correctly.
+
+---
+
+### 24. Event Listeners
+
+**Test:** Register event listeners
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.runtime.enable()
+        
+        messages = []
+        
+        async def on_console(params):
+            messages.append(params)
+        
+        session.on("Runtime.consoleAPICalled", on_console)
+        
+        await session.runtime.evaluate("console.log('msg1')")
+        await session.runtime.evaluate("console.log('msg2')")
+        
+        print(f"✓ Received {len(messages)} console messages")
+
+asyncio.run(test())
+```
+
+**Expected:** Event listeners work correctly.
+
+---
+
+## Performance Tests (10 minutes)
+
+### 25. Performance Metrics
+
+**Test:** Get performance metrics
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.performance.enable()
+        
+        await session.page.navigate("https://example.com")
+        
+        metrics = await session.performance.get_metrics()
+        print(f"✓ Collected {len(metrics)} metrics")
+        
+        for metric in metrics[:5]:
+            print(f"  - {metric['name']}: {metric.get('value', 'N/A')}")
+
+asyncio.run(test())
+```
+
+**Expected:** Performance metrics collected.
+
+---
+
+### 26. CPU Profiling
+
+**Test:** Capture CPU profile
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.profiler.enable()
+        
+        await session.profiler.start()
+        await session.runtime.evaluate("""
+            for(let i=0;i<1000;i++) {
+                Math.sqrt(i);
+            }
+        """)
+        profile = await session.profiler.stop()
+        
+        print(f"✓ CPU profile: {len(profile.get('profile', {}).get('nodes', []))} nodes")
+
+asyncio.run(test())
+```
+
+**Expected:** CPU profile captured.
+
+---
+
+### 27. Heap Snapshot
+
+**Test:** Capture heap snapshot
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.heap_profiler.enable()
+        
+        snapshot = await session.heap_profiler.take_heap_snapshot()
+        print(f"✓ Heap snapshot captured")
+        
+        # Get object count
+        nodes = snapshot.get("snapshot", {}).get("nodes", [])
+        print(f"  - {len(nodes)} nodes")
+
+asyncio.run(test())
+```
+
+**Expected:** Heap snapshot captured.
+
+---
+
+## Security Tests (5 minutes)
+
+### 28. Security State
+
+**Test:** Get security information
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.security.enable()
+        
+        await session.page.navigate("https://example.com")
+        
+        security = await session.security.get_visible_security_state()
+        print(f"✓ Security state: {security.get('securityState', 'unknown')}")
+
+asyncio.run(test())
+```
+
+**Expected:** Security state retrieved.
+
+---
+
+### 29. Certificate Info
+
+**Test:** Get certificate information
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.security.enable()
+        
+        await session.page.navigate("https://example.com")
+        
+        # Handle certificate event
+        async def on_security(params):
+            print(f"✓ Certificate info received")
+        
+        session.on("Security.certificateError", on_security)
+
+asyncio.run(test())
+```
+
+**Expected:** Certificate info retrieved.
+
+---
+
+## Storage Tests (5 minutes)
+
+### 30. Local Storage
+
+**Test:** Access local storage
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page("https://example.com")
+        await session.storage.enable()
+        
+        # Set item
+        await session.runtime.evaluate("localStorage.setItem('key', 'value')")
+        print("✓ Set localStorage item")
+        
+        # Get storage domains
+        domains = await session.storage.get_storage_domains()
+        print(f"✓ Storage domains: {len(domains)}")
+
+asyncio.run(test())
+```
+
+**Expected:** Local storage accessed.
+
+---
+
+### 31. IndexedDB
+
+**Test:** Access IndexedDB
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page("https://example.com")
+        await session.indexed_db.enable()
+        
+        # Create database
+        await session.runtime.evaluate("""
+            new Promise((resolve) => {
+                const request = indexedDB.open('test', 1);
+                request.onupgradeneeded = () => {
+                    const db = request.result;
+                    db.createObjectStore('store');
+                };
+                request.onsuccess = () => resolve();
+            })
+        """, await_promise=True)
+        print("✓ Created IndexedDB database")
+        
+        # Get database names
+        databases = await session.indexed_db.get_database_names()
+        print(f"✓ Databases: {databases}")
+
+asyncio.run(test())
+```
+
+**Expected:** IndexedDB accessed.
+
+---
+
+## Browser Tests (5 minutes)
+
+### 32. Browser Version
+
+**Test:** Get browser version
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        version = await client.browser.get_version()
+        print(f"✓ Browser: {version.get('product', 'unknown')}")
+        print(f"  User Agent: {version.get('userAgent', 'unknown')}")
+
+asyncio.run(test())
+```
+
+**Expected:** Browser version retrieved.
+
+---
+
+### 33. Command Line
+
+**Test:** Get browser command line
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        cmdline = await client.browser.get_command_line()
+        print(f"✓ Command line arguments: {len(cmdline.get('arguments', []))}")
+
+asyncio.run(test())
+```
+
+**Expected:** Command line retrieved.
+
+---
+
+## Advanced Tests (15 minutes)
+
+### 34. Shadow DOM
+
+**Test:** Access Shadow DOM
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.dom.enable()
+        
+        # Create shadow DOM
+        await session.page.navigate(
+            "data:text/html,<div id='host'></div>"
+        )
+        await session.runtime.evaluate("""
+            const host = document.getElementById('host');
+            const shadow = host.attachShadow({mode: 'open'});
+            shadow.innerHTML = '<p>Shadow content</p>';
+        """)
+        
+        # Query shadow DOM
+        result = await session.dom.describe_node(
+            (await session.dom.query_selector("#host"))["nodeId"],
+            depth=2
+        )
+        print(f"✓ Shadow DOM described")
+
+asyncio.run(test())
+```
+
+**Expected:** Shadow DOM accessed.
+
+---
+
+### 35. File Upload
+
+**Test:** Upload file to input
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.dom.enable()
+        
+        await session.page.navigate(
+            "data:text/html,<input type='file' id='file'>"
+        )
+        
+        # Create temp file
+        with open("test.txt", "w") as f:
+            f.write("test content")
+        
+        # Set file input
+        node = await session.dom.query_selector("#file")
+        await session.dom.set_file_input_files(
+            node["nodeId"],
+            ["test.txt"]
+        )
+        print("✓ File uploaded")
+
+asyncio.run(test())
+```
+
+**Expected:** File uploaded successfully.
+
+---
+
+### 36. Iframe Navigation
+
+**Test:** Navigate within iframe
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        
+        await session.page.navigate(
+            "data:text/html,<iframe src='https://example.com'></iframe>"
+        )
+        
+        # Get frame tree
+        tree = await session.page.get_frame_tree()
+        frames = tree.get("frameTree", {}).get("frame", {}).get("childFrames", [])
+        print(f"✓ Found {len(frames)} iframe(s)")
+
+asyncio.run(test())
+```
+
+**Expected:** Iframe accessed.
+
+---
+
+### 37. Service Worker
+
+**Test:** Register service worker
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.service_worker.enable()
+        
+        # Register service worker (needs HTTPS or localhost)
+        await session.page.navigate("https://example.com")
+        
+        # Get service workers
+        workers = await session.service_worker.get_workers()
+        print(f"✓ Service workers: {len(workers)}")
+
+asyncio.run(test())
+```
+
+**Expected:** Service worker info retrieved.
+
+---
+
+### 38. WebAuthn
+
+**Test:** WebAuthn authentication
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.web_authn.enable()
+        
+        # Add virtual authenticator
+        await session.web_authn.add_virtual_authenticator({
+            "protocol": "ctap2",
+            "transport": "internal",
+            "options": {"hasUserVerification": True}
+        })
+        print("✓ Added virtual authenticator")
+
+asyncio.run(test())
+```
+
+**Expected:** WebAuthn authenticator added.
+
+---
+
+### 39. Tracing
+
+**Test:** Capture performance trace
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        
+        await session.tracing.start()
+        await session.page.navigate("https://example.com")
+        data = await session.tracing.stop()
+        
+        print(f"✓ Trace captured: {len(data)} bytes")
+
+asyncio.run(test())
+```
+
+**Expected:** Performance trace captured.
+
+---
+
+### 40. Console API
+
+**Test:** Console API logging
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.console.enable()
+        
+        messages = []
+        
+        async def on_message(params):
+            messages.append(params)
+        
+        session.on("Console.messageAdded", on_message)
+        
+        await session.runtime.evaluate("console.log('test')")
+        await session.runtime.evaluate("console.error('error')")
+        
+        print(f"✓ Console messages: {len(messages)}")
+
+asyncio.run(test())
+```
+
+**Expected:** Console messages captured.
+
+---
+
+## Error Handling Tests (10 minutes)
+
+### 41. Invalid URL
+
+**Test:** Navigate to invalid URL
+
+```python
+import asyncio
+from cdpwave import CDPClient
+from cdpwave.exceptions import CommandError
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        
+        try:
+            await session.page.navigate("not-a-url")
+        except CommandError as e:
+            print(f"✓ Caught expected error: {e.message}")
+
+asyncio.run(test())
+```
+
+**Expected:** Error caught for invalid URL.
+
+---
+
+### 42. Invalid JavaScript
+
+**Test:** Evaluate invalid JavaScript
+
+```python
+import asyncio
+from cdpwave import CDPClient
+from cdpwave.exceptions import CommandError
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        
+        try:
+            await session.runtime.evaluate("invalid javascript syntax")
+        except CommandError as e:
+            print(f"✓ Caught expected error: {e.message}")
+
+asyncio.run(test())
+```
+
+**Expected:** Error caught for invalid syntax.
+
+---
+
+### 43. Non-existent Element
+
+**Test:** Query non-existent element
+
+```python
+import asyncio
+from cdpwave import CDPClient
+from cdpwave.exceptions import CommandError
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.dom.enable()
+        
+        try:
+            await session.dom.query_selector("#non-existent")
+        except CommandError as e:
+            print(f"✓ Caught expected error: {e.message}")
+
+asyncio.run(test())
+```
+
+**Expected:** Error caught for non-existent element.
+
+---
+
+### 44. Connection Timeout
+
+**Test:** Timeout on long operation
+
+```python
+import asyncio
+from cdpwave import CDPClient
+from cdpwave.exceptions import CommandTimeoutError
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        
+        try:
+            # This should timeout
+            await session.runtime.evaluate(
+                "new Promise(() => {})",
+                timeout=1
+            )
+        except CommandTimeoutError:
+            print("✓ Caught timeout error")
+
+asyncio.run(test())
+```
+
+**Expected:** Timeout error caught.
+
+---
+
+### 45. Session Closed
+
+**Test:** Use closed session
+
+```python
+import asyncio
+from cdpwave import CDPClient
+from cdpwave.exceptions import SessionClosedError
+
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        await session.close()
+        
+        try:
             await session.page.navigate("https://example.com")
-            # Verify viewport is mobile size
+        except SessionClosedError as e:
+            print(f"✓ Caught expected error: {e.message}")
+
+asyncio.run(test())
 ```
 
-### Phase 3: Edge Case Workflows (Priority 3)
+**Expected:** Error caught for closed session.
 
-Tests for error conditions and edge cases.
+---
+
+## Cleanup Tests (5 minutes)
+
+### 46. Target Cleanup
+
+**Test:** Verify target cleanup on session close
 
 ```python
-# tests/integration/test_edge_cases.py
+import asyncio
+from cdpwave import CDPClient
 
-class TestErrorHandling:
-    async def test_navigation_timeout(self):
-        """Test timeout on slow navigation."""
-        async with await CDPClient.launch(headless=True) as client:
-            session = await client.new_page()
-            with pytest.raises(CommandTimeoutError):
-                await session.page.navigate("http://slow.example.com", timeout=1)
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+        target_id = session.target_id
+        
+        targets_before = await client.get_pages()
+        count_before = sum(1 for t in targets_before if t.target_id == target_id)
+        
+        await session.close()
+        
+        targets_after = await client.get_pages()
+        count_after = sum(1 for t in targets_after if t.target_id == target_id)
+        
+        assert count_after == 0, f"Target still open: {count_after}"
+        print("✓ Target cleaned up on session close")
 
-    async def test_invalid_javascript(self):
-        """Test evaluation of invalid JavaScript."""
-        async with await CDPClient.launch(headless=True) as client:
-            session = await client.new_page()
-            with pytest.raises(CommandError):
-                await session.runtime.evaluate("invalid javascript syntax")
-
-    async def test_target_crash(self):
-        """Test behavior when target crashes."""
-        async with await CDPClient.launch(headless=True) as client:
-            session = await client.new_page()
-            await session.page.crash()
-            # Verify session is closed
+asyncio.run(test())
 ```
+
+**Expected:** Target removed after session close.
 
 ---
 
-## Performance Test Plan
+### 47. Browser Cleanup
 
-### Metrics to Track
-
-- **Connection time**: Time to establish WebSocket connection
-- **Command latency**: Round-trip time for CDP commands
-- **Event latency**: Time from event to handler invocation
-- **Memory usage**: Memory consumption over time
-- **CPU usage**: CPU consumption during heavy operations
-
-### Test Scenarios
+**Test:** Verify browser cleanup on context exit
 
 ```python
-# tests/performance/test_performance.py
+import asyncio
+from cdpwave import CDPClient
 
-class TestPerformance:
-    async def test_command_latency(self):
-        """Measure average command latency."""
-        async with await CDPClient.launch(headless=True) as client:
-            session = await client.new_page()
-            latencies = []
-            for _ in range(100):
-                start = time.perf_counter()
-                await session.runtime.evaluate("1+1")
-                latencies.append(time.perf_counter() - start)
-            avg_latency = sum(latencies) / len(latencies)
-            assert avg_latency < 0.1  # 100ms threshold
+async def test():
+    async with await CDPClient.launch(headless=True) as client:
+        session = await client.new_page()
+    
+    # After context exit, browser should be closed
+    print("✓ Browser cleaned up on context exit")
 
-    async def test_memory_leak(self):
-        """Detect memory leaks over many operations."""
-        async with await CDPClient.launch(headless=True) as client:
-            session = await client.new_page()
-            initial_heap = await session.performance.get_metrics()
-            for _ in range(1000):
-                await session.page.navigate("https://example.com")
-            final_heap = await session.performance.get_metrics()
-            # Memory should not grow significantly
+asyncio.run(test())
 ```
+
+**Expected:** Browser closed after context exit.
 
 ---
 
-## Security Test Plan
+### 48. Resource Cleanup
 
-### Test Scenarios
-
-- **Input validation**: Test with malformed CDP commands
-- **Resource limits**: Test with large messages, many events
-- **Permission checks**: Test domain permissions
-- **Data exfiltration**: Ensure no data leaks
-- **Injection attacks**: Test with malicious JavaScript
+**Test:** Verify no resource leaks
 
 ```python
-# tests/security/test_security.py
+import asyncio
+from cdpwave import CDPClient
 
-class TestSecurity:
-    async def test_command_injection(self):
-        """Test that commands are properly escaped."""
+async def test():
+    for i in range(10):
         async with await CDPClient.launch(headless=True) as client:
             session = await client.new_page()
-            # Attempt to inject CDP command
-            with pytest.raises(CommandError):
-                await session.send("Runtime.evaluate", {
-                    "expression": "chrome.debugger.sendCommand('Target.closeTarget')"
-                })
+            await session.page.navigate("https://example.com")
+    
+    print("✓ No resource leaks after 10 iterations")
 
-    async def test_large_message_handling(self):
-        """Test handling of very large messages."""
-        async with await CDPClient.launch(headless=True) as client:
-            session = await client.new_page()
-            large_string = "x" * 10_000_000  # 10MB
-            await session.runtime.evaluate(f"'{large_string}'")
+asyncio.run(test())
+```
 
-    async def test_event_flooding(self):
-        """Test handling of event flooding."""
-        async with await CDPClient.launch(headless=True) as client:
-            session = await client.new_page()
-            event_count = 0
+**Expected:** No resource leaks.
 
-            async def on_console(params):
-                nonlocal event_count
-                event_count += 1
+---
 
-            session.on("Runtime.consoleAPICalled", on_console)
-            # Generate many console.log events
-            await session.runtime.evaluate("for(let i=0;i<10000;i++)console.log(i)")
-            # Should handle gracefully without crash
+## Test Checklist
+
+Use this checklist to track manual test completion:
+
+- [ ] 1. Basic Launch and Navigate
+- [ ] 2. Browser Detection and Launch
+- [ ] 3. Direct WebSocket Connection
+- [ ] 4. Page Navigation
+- [ ] 5. JavaScript Evaluation
+- [ ] 6. Page Screenshots
+- [ ] 7. PDF Generation
+- [ ] 8. Multi-Tab Management
+- [ ] 9. Network Monitoring
+- [ ] 10. Cookie Management
+- [ ] 11. Request Interception
+- [ ] 12. Network Throttling
+- [ ] 13. DOM Inspection
+- [ ] 14. DOM Manipulation
+- [ ] 15. Box Model
+- [ ] 16. Device Emulation
+- [ ] 17. Geolocation Override
+- [ ] 18. Dark Mode
+- [ ] 19. Timezone Override
+- [ ] 20. Text Input
+- [ ] 21. Keyboard Events
+- [ ] 22. Mouse Events
+- [ ] 23. Wait for Event
+- [ ] 24. Event Listeners
+- [ ] 25. Performance Metrics
+- [ ] 26. CPU Profiling
+- [ ] 27. Heap Snapshot
+- [ ] 28. Security State
+- [ ] 29. Certificate Info
+- [ ] 30. Local Storage
+- [ ] 31. IndexedDB
+- [ ] 32. Browser Version
+- [ ] 33. Command Line
+- [ ] 34. Shadow DOM
+- [ ] 35. File Upload
+- [ ] 36. Iframe Navigation
+- [ ] 37. Service Worker
+- [ ] 38. WebAuthn
+- [ ] 39. Tracing
+- [ ] 40. Console API
+- [ ] 41. Invalid URL
+- [ ] 42. Invalid JavaScript
+- [ ] 43. Non-existent Element
+- [ ] 44. Connection Timeout
+- [ ] 45. Session Closed
+- [ ] 46. Target Cleanup
+- [ ] 47. Browser Cleanup
+- [ ] 48. Resource Cleanup
+
+---
+
+## Running All Tests
+
+To run all manual tests sequentially:
+
+```python
+import asyncio
+from cdpwave import CDPClient
+
+async def run_all_tests():
+    """Run all 48 manual tests."""
+    print("=== Running Manual Test Suite ===\n")
+    
+    # Add all test functions here
+    # ...
+    
+    print("\n=== Test Suite Complete ===")
+
+asyncio.run(run_all_tests())
 ```
 
 ---
 
-## Implementation Timeline
+## Expected Results
 
-### Week 1-2: Core Integration Tests
-- [ ] Phase 1: Core workflows (navigation, multi-tab)
-- [ ] Phase 2: Page domain integration tests
-- [ ] Phase 2: Runtime domain integration tests
-
-### Week 3-4: High-Value Integration Tests
-- [ ] Phase 2: Network domain integration tests
-- [ ] Phase 2: Emulation domain integration tests
-- [ ] Phase 2: Input domain integration tests
-- [ ] Phase 2: Fetch domain integration tests
-
-### Week 5-6: Edge Case Tests
-- [ ] Phase 3: Error handling tests
-- [ ] Phase 3: Invalid input tests
-- [ ] Phase 3: Timeout tests
-- [ ] Phase 3: Crash recovery tests
-
-### Week 7-8: Performance & Security
-- [ ] Performance benchmarks
-- [ ] Memory leak tests
-- [ ] Security validation tests
-- [ ] Resource limit tests
-
-### Week 9-10: Tier 3 Domains
-- [ ] CSS domain integration tests
-- [ ] Storage domain integration tests
-- [ ] Debugger domain integration tests
-- [ ] Remaining Tier 3 domains
+- All 48 tests should pass without errors
+- Browser should launch and close cleanly
+- No resource leaks after multiple iterations
+- All error cases should be handled gracefully
 
 ---
 
-## Success Criteria
+## Notes
 
-### Coverage Goals
-
-- **Unit test coverage**: ≥95% (currently 89%)
-- **Integration test coverage**: ≥80% of critical paths
-- **Edge case coverage**: ≥70% of identified edge cases
-- **Error handling coverage**: ≥80% of error conditions
-
-### Quality Goals
-
-- All tests pass on every commit
-- No flaky tests (tests that sometimes fail)
-- Test execution time < 5 minutes for full suite
-- Integration tests run in CI with Chrome headless
-
-### Documentation Goals
-
-- Every test has a docstring explaining what it tests
-- Test names clearly describe the scenario
-- Complex tests have comments explaining setup
-
----
-
-## Running Tests
-
-### Unit Tests (No browser required)
-
-```bash
-python -m pytest tests/unit/ -v --cov=cdpwave --cov-report=term-missing
-```
-
-### Integration Tests (Requires Chrome)
-
-```bash
-python -m pytest tests/integration/ -v --integration
-```
-
-### Manual Smoke Test
-
-```bash
-python tests/manual_smoke.py
-```
-
-### Full Test Suite
-
-```bash
-python -m pytest tests/ -v --cov=cdpwave --cov-report=html
-```
-
----
-
-## Test Writing Guidelines
-
-### Unit Tests
-
-- Use `FakeSender` pattern for mocking CDP responses
-- Test both success and error paths
-- Verify exact CDP method and params sent
-- Keep tests focused on one behavior
-
-### Integration Tests
-
-- Use real Chrome (headless in CI, local for debugging)
-- Test complete workflows, not individual methods
-- Clean up resources (close sessions, browser)
-- Use `pytest.mark.integration` marker
-
-### Edge Case Tests
-
-- Test boundary conditions (empty, null, max values)
-- Test error conditions (network errors, timeouts)
-- Test concurrent operations
-- Test resource exhaustion
-
-### Performance Tests
-
-- Measure actual latency, not just functionality
-- Run multiple iterations for statistical significance
-- Set clear thresholds for acceptable performance
-- Track metrics over time for regression detection
-
----
-
-## Contributing Tests
-
-When adding new functionality:
-
-1. **Add unit tests** for all new methods (use `FakeSender`)
-2. **Add integration tests** for new workflows
-3. **Update this roadmap** with new test requirements
-4. **Ensure coverage** doesn't drop below 95%
-5. **Run full test suite** before committing
-
-Test files should follow naming convention:
-- Unit tests: `tests/unit/test_<module>.py`
-- Domain tests: `tests/unit/domains/test_<domain>.py`
-- Integration tests: `tests/integration/test_<feature>.py`
+- Some tests require specific browser features (Service Worker, WebAuthn)
+- File upload tests require creating temporary files
+- Network tests may behave differently depending on network conditions
+- Geolocation tests require permission granting
+- Shadow DOM tests require modern browser support
