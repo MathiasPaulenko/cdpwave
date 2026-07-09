@@ -57,8 +57,8 @@ from cdpwave.domains.system_info import SystemInfoDomain
 from cdpwave.domains.target import TargetDomain
 from cdpwave.domains.tethering import TetheringDomain
 from cdpwave.domains.tracing import TracingDomain
-from cdpwave.domains.web_authn import WebAuthnDomain
 from cdpwave.domains.web_audio import WebAudioDomain
+from cdpwave.domains.web_authn import WebAuthnDomain
 from cdpwave.domains.worker import WorkerDomain
 from cdpwave.events.dispatcher import EventDispatcher
 from cdpwave.events.handlers import EventHandler, Subscription
