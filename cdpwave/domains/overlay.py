@@ -208,7 +208,7 @@ class OverlayDomain(BaseDomain):
             window_controls: Window controls config dict.
         """
         return await self._call(
-            "Overlay.setShowWindowControls",
+            "Overlay.setShowWindowControlsOverlay",
             {"windowControls": window_controls},
         )
 

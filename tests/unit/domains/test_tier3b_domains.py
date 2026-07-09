@@ -301,7 +301,7 @@ class TestOverlayDomain:
         controls = {"show": True, "theme": "dark"}
         await domain.set_show_window_controls(controls)
         assert fake.last_call == (
-            "Overlay.setShowWindowControls",
+            "Overlay.setShowWindowControlsOverlay",
             {"windowControls": controls},
         )
 

@@ -23,6 +23,7 @@ from cdpwave.domains.device_access import DeviceAccessDomain
 from cdpwave.domains.device_orientation import DeviceOrientationDomain
 from cdpwave.domains.dom import DOMDomain
 from cdpwave.domains.dom_debugger import DOMDebuggerDomain
+from cdpwave.domains.dom_snapshot import DOMSnapshotDomain
 from cdpwave.domains.emulation import EmulationDomain
 from cdpwave.domains.event_breakpoints import EventBreakpointsDomain
 from cdpwave.domains.extensions import ExtensionsDomain
@@ -146,6 +147,7 @@ class CDPSession:
         self._cache_storage = CacheStorageDomain(self._sender)
         self._css = CSSDomain(self._sender)
         self._dom_debugger = DOMDebuggerDomain(self._sender)
+        self._dom_snapshot = DOMSnapshotDomain(self._sender)
         self._event_breakpoints = EventBreakpointsDomain(self._sender)
         self._heap_profiler = HeapProfilerDomain(self._sender)
         self._layer_tree = LayerTreeDomain(self._sender)
@@ -365,6 +367,11 @@ class CDPSession:
     def dom_debugger(self) -> DOMDebuggerDomain:
         """DOMDebugger domain wrapper for DOM and event breakpoints."""
         return self._dom_debugger
+
+    @property
+    def dom_snapshot(self) -> DOMSnapshotDomain:
+        """DOMSnapshot domain wrapper for efficient flattened DOM capture."""
+        return self._dom_snapshot
 
     @property
     def event_breakpoints(self) -> EventBreakpointsDomain:

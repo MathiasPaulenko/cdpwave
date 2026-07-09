@@ -28,6 +28,15 @@ EventCallback = Callable[
 """Async callback for CDP events: (method, params, session_id)."""
 
 
+def _log_task_exception(task: asyncio.Future[None]) -> None:
+    """Log exceptions from completed event dispatch tasks."""
+    if task.cancelled():
+        return
+    exc = task.exception()
+    if exc is not None:
+        logger.error("Unhandled exception in event dispatch task: %s", exc, exc_info=exc)
+
+
 class Connection:
     """WebSocket connection to a CDP endpoint.
 
@@ -168,9 +177,10 @@ class Connection:
                     params = data.get("params", {})
                     session = data.get("sessionId")
                     if self._event_callback is not None:
-                        asyncio.ensure_future(
+                        task = asyncio.ensure_future(
                             self._event_callback(method, params, session)
                         )
+                        task.add_done_callback(_log_task_exception)
                     else:
                         logger.debug("← event: %s (session=%s)", method, session)
         except websockets.ConnectionClosedOK:
