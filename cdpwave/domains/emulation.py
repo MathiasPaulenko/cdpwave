@@ -70,11 +70,12 @@ class EmulationDomain(BaseDomain):
         if viewport is not None:
             params["viewport"] = viewport
         if display_feature is not None:
+            df = display_feature
             params["displayFeature"] = {
-                "orientation": display_feature.get("orientation", display_feature.get("Orientation", "")),
-                "offset": display_feature.get("offset", display_feature.get("Offset", 0)),
-                "maskLength": display_feature.get("maskLength", display_feature.get("mask_length", 0)),
-                "maskThickness": display_feature.get("maskThickness", display_feature.get("mask_thickness", 0)),
+                "orientation": df.get("orientation", df.get("Orientation", "")),
+                "offset": df.get("offset", df.get("Offset", 0)),
+                "maskLength": df.get("maskLength", df.get("mask_length", 0)),
+                "maskThickness": df.get("maskThickness", df.get("mask_thickness", 0)),
             }
         if device_posture is not None:
             params["devicePosture"] = device_posture

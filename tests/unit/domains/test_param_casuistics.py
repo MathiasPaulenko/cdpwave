@@ -263,7 +263,12 @@ class TestEmulationParamCasuistics:
     async def test_set_device_metrics_override_with_display_feature(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
-        display_feature = {"orientation": "portrait", "offset": 0, "maskLength": 100, "maskThickness": 50}
+        display_feature = {
+            "orientation": "portrait",
+            "offset": 0,
+            "maskLength": 100,
+            "maskThickness": 50,
+        }
         await domain.set_device_metrics_override(
             width=375, height=667, device_scale_factor=2, mobile=True,
             display_feature=display_feature,
