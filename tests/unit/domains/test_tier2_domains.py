@@ -222,7 +222,7 @@ class TestEmulationDomain:
         await domain.set_script_execution_disabled(True)
         assert fake.last_call == (
             "Emulation.setScriptExecutionDisabled",
-            {"disabled": True},
+            {"value": True},
         )
 
     async def test_set_geolocation_override(self) -> None:

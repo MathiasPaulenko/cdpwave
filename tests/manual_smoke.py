@@ -185,8 +185,9 @@ async def test_pdf(report: SmokeReport, session: CDPSession) -> None:
     """Test 9: Page.printToPDF."""
     try:
         data = await session.page.print_to_pdf()
-        assert len(data) > 100, f"PDF data too small: {len(data)} bytes"
-        decoded = base64.b64decode(data)
+        pdf_data = data["data"] if isinstance(data, dict) else data
+        assert len(pdf_data) > 100, f"PDF data too small: {len(pdf_data)} bytes"
+        decoded = base64.b64decode(pdf_data)
         assert decoded[:4] == b"%PDF", "Not a valid PDF"
         report.add("print_to_pdf", f"PDF {len(decoded)} bytes")
     except Exception:

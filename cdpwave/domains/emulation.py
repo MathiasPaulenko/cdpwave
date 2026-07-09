@@ -70,7 +70,12 @@ class EmulationDomain(BaseDomain):
         if viewport is not None:
             params["viewport"] = viewport
         if display_feature is not None:
-            params["displayFeature"] = display_feature
+            params["displayFeature"] = {
+                "orientation": display_feature.get("orientation", display_feature.get("Orientation", "")),
+                "offset": display_feature.get("offset", display_feature.get("Offset", 0)),
+                "maskLength": display_feature.get("maskLength", display_feature.get("mask_length", 0)),
+                "maskThickness": display_feature.get("maskThickness", display_feature.get("mask_thickness", 0)),
+            }
         if device_posture is not None:
             params["devicePosture"] = device_posture
         return await self._call("Emulation.setDeviceMetricsOverride", params)
@@ -133,7 +138,7 @@ class EmulationDomain(BaseDomain):
         """
         return await self._call(
             "Emulation.setScriptExecutionDisabled",
-            {"disabled": disabled},
+            {"value": disabled},
         )
 
     async def set_geolocation_override(
@@ -267,8 +272,10 @@ class EmulationDomain(BaseDomain):
     async def clear_default_background_color_override(self) -> dict[str, Any]:
         """Clear the default background color override.
 
-        Removes the background color override by calling
-        ``setDefaultBackgroundColorOverride`` with no color parameter.
+        .. deprecated::
+            ``Emulation.clearDefaultBackgroundColorOverride`` was removed
+            in modern Chrome. Use ``set_default_background_color_override``
+            with no arguments to clear the override.
 
         Returns:
             Response dict from the CDP.
@@ -281,6 +288,11 @@ class EmulationDomain(BaseDomain):
         is_screen_active: bool,
     ) -> dict[str, Any]:
         """Override the idle state.
+
+        .. deprecated::
+            ``Emulation.setIdleOverride`` was removed in Chrome 120+.
+            This method may return ``CommandError`` on modern Chrome.
+            Use ``set_emulated_idle_state`` instead if available.
 
         Args:
             is_user_active: Whether the user is active.
@@ -297,8 +309,9 @@ class EmulationDomain(BaseDomain):
     async def clear_idle_override(self) -> dict[str, Any]:
         """Clear the idle state override.
 
-        Removes the idle state override set by ``set_idle_override``,
-        restoring the real idle state of the device.
+        .. deprecated::
+            ``Emulation.clearIdleOverride`` was removed in Chrome 120+.
+            This method may return ``CommandError`` on modern Chrome.
 
         Returns:
             Response dict from the CDP.
@@ -307,6 +320,10 @@ class EmulationDomain(BaseDomain):
 
     async def set_disabled_sensors(self, disabled: bool) -> dict[str, Any]:
         """Disable or enable device sensors.
+
+        .. deprecated::
+            ``Emulation.setDisabledSensors`` was removed in modern Chrome.
+            This method may return ``CommandError``.
 
         Args:
             disabled: Whether to disable sensors.
@@ -539,6 +556,10 @@ class EmulationDomain(BaseDomain):
     ) -> dict[str, Any]:
         """Enable or disable simulating a focused and active page.
 
+        .. deprecated::
+            ``Emulation.setFocusEmulationEnabled`` was removed in modern
+            Chrome. This method may return ``CommandError``.
+
         Args:
             enabled: Whether to enable or disable focus emulation.
         """
@@ -552,6 +573,10 @@ class EmulationDomain(BaseDomain):
         type: str,
     ) -> dict[str, Any]:
         """Emulate a vision deficiency.
+
+        .. deprecated::
+            ``Emulation.setEmulatedVisionDeficiency`` was removed in
+            modern Chrome. This method may return ``CommandError``.
 
         Args:
             type: Vision deficiency to emulate (``"none"``,
@@ -583,6 +608,10 @@ class EmulationDomain(BaseDomain):
         y: float = 0,
     ) -> dict[str, Any]:
         """Set the scroll position for the current page.
+
+        .. deprecated::
+            ``Emulation.setScrollPositionOverride`` was removed in
+            modern Chrome. This method may return ``CommandError``.
 
         Args:
             x: Horizontal scroll position.

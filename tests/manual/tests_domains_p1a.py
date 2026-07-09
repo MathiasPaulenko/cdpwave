@@ -68,7 +68,7 @@ async def t(client):
 @reg("TC-TARGET-007", "setAutoAttach")
 async def t(client):
     s = await fresh_session(client)
-    await s.target.set_auto_attach(auto_attach=True, await_for_notifications_on_start=True, flatten=True)
+    await s.target.set_auto_attach(auto_attach=True, wait_for_debugger_on_start=False, flatten=True)
     await s.close(); log_result("TC-TARGET-007", "setAutoAttach", "PASS")
 
 @reg("TC-TARGET-008", "sendMessageToTarget")

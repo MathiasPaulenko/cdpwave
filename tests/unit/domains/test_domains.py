@@ -153,7 +153,7 @@ class TestPageDomain:
         assert params["scale"] == 1.0
         assert params["paperWidth"] == 8.5
         assert params["paperHeight"] == 11.0
-        assert result == "base64pdf"
+        assert result == {"data": "base64pdf"}
 
     async def test_print_to_pdf_invalid_scale(self) -> None:
         fake = FakeSender({"data": "base64pdf"})

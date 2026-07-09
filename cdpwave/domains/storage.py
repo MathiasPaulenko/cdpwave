@@ -10,15 +10,10 @@ class StorageDomain(BaseDomain):
 
     Provides access to browser storage: cookies per origin, IndexedDB,
     cache storage, and storage quota tracking.
+
+    The Storage and DOMStorage domains do not require ``enable``/``disable``
+    calls — commands work directly.
     """
-
-    async def enable(self) -> dict[str, Any]:
-        """Enable Storage domain."""
-        return await self._call("DOMStorage.enable")
-
-    async def disable(self) -> dict[str, Any]:
-        """Disable Storage domain."""
-        return await self._call("DOMStorage.disable")
 
     async def get_dom_storage_items(
         self,

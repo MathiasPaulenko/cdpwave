@@ -128,7 +128,7 @@ class PageDomain(BaseDomain):
         footer_template: str | None = None,
         prefer_css_page_size: bool = False,
         return_as_stream: bool = False,
-    ) -> str | dict[str, Any]:
+    ) -> dict[str, Any]:
         """Print the page to PDF.
 
         Args:
@@ -175,10 +175,7 @@ class PageDomain(BaseDomain):
             params["headerTemplate"] = header_template
         if footer_template is not None:
             params["footerTemplate"] = footer_template
-        result = await self._call("Page.printToPDF", params)
-        if return_as_stream:
-            return result
-        return str(result.get("data", ""))
+        return await self._call("Page.printToPDF", params)
 
     async def get_layout_metrics(self) -> dict[str, Any]:
         """Return page layout metrics (viewport, content size)."""

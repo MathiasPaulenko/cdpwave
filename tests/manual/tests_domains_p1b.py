@@ -388,8 +388,8 @@ async def t(client):
 @reg("TC-INPUT-003", "dispatchMouseEvent")
 async def t(client):
     s = await fresh_session(client)
-    await s.input.dispatch_mouse_event("mousePressed", "left", x=100, y=100)
-    await s.input.dispatch_mouse_event("mouseReleased", "left", x=100, y=100); await s.close()
+    await s.input.dispatch_mouse_event("mousePressed", 100, 100, button="left")
+    await s.input.dispatch_mouse_event("mouseReleased", 100, 100, button="left"); await s.close()
     log_result("TC-INPUT-003", "dispatchMouseEvent", "PASS")
 
 @reg("TC-INPUT-004", "dispatchTouchEvent")

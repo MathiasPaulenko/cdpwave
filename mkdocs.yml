@@ -57,6 +57,7 @@ nav:
       - Custom Flags: cookbook/custom-flags.md
       - Escape Hatch: cookbook/escape-hatch.md
       - Error Handling: cookbook/error-handling.md
+      - Troubleshooting: cookbook/troubleshooting.md
   - API Reference:
       - CDPClient & CDPSession: api/client.md
       - Session: api/session.md
