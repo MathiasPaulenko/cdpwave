@@ -46,7 +46,7 @@ class CSSDomain(BaseDomain):
             Dict with ``inlineStyle`` and ``attributesStyle``.
         """
         return await self._call(
-            "CSS.getInlineStylesForNode",
+            "CSS.getInlineStyles",
             {"nodeId": node_id},
         )
 

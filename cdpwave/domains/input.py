@@ -83,10 +83,10 @@ class InputDomain(BaseDomain):
     async def dispatch_mouse_event(
         self,
         type: str,
-        button: str = "none",
-        *,
         x: float = 0,
         y: float = 0,
+        *,
+        button: str = "none",
         buttons: int = 0,
         click_count: int | None = None,
         delta_x: float | None = None,

@@ -301,20 +301,24 @@ class DOMDomain(BaseDomain):
 
     async def request_node(
         self,
-        object_id: str,
+        node_id: int | None = None,
+        object_id: str | None = None,
     ) -> dict[str, Any]:
-        """Request a node by JavaScript object reference.
+        """Request a node by node ID or JavaScript object reference.
 
         Args:
+            node_id: Node ID to request node for.
             object_id: Remote object ID to request node for.
 
         Returns:
             Dict with ``nodeId`` of the requested node.
         """
-        return await self._call(
-            "DOM.requestNode",
-            {"objectId": object_id},
-        )
+        params: dict[str, Any] = {}
+        if node_id is not None:
+            params["nodeId"] = node_id
+        if object_id is not None:
+            params["objectId"] = object_id
+        return await self._call("DOM.requestNode", params)
 
     async def set_attributes_as_text(
         self,

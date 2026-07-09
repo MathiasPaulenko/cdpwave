@@ -178,7 +178,7 @@ class PageDomain(BaseDomain):
         result = await self._call("Page.printToPDF", params)
         if return_as_stream:
             return result
-        return result
+        return str(result.get("data", ""))
 
     async def get_layout_metrics(self) -> dict[str, Any]:
         """Return page layout metrics (viewport, content size)."""

@@ -133,7 +133,7 @@ class EmulationDomain(BaseDomain):
         """
         return await self._call(
             "Emulation.setScriptExecutionDisabled",
-            {"value": disabled},
+            {"disabled": disabled},
         )
 
     async def set_geolocation_override(
@@ -230,11 +230,11 @@ class EmulationDomain(BaseDomain):
 
     async def set_default_background_color_override(
         self,
+        color: dict[str, Any] | None = None,
         r: int | None = None,
         g: int | None = None,
         b: int | None = None,
         a: int | None = None,
-        color: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Override the default background color of the page.
 
@@ -249,9 +249,8 @@ class EmulationDomain(BaseDomain):
             a: Alpha channel (0-255).
             color: Pre-built color dict with ``r``, ``g``, "b", ``a``.
         """
-        if color is None:
-            if r is not None or g is not None or b is not None or a is not None:
-                color = {
+        if color is None and (r is not None or g is not None or b is not None or a is not None):
+            color = {
                     "r": r or 0,
                     "g": g or 0,
                     "b": b or 0,
@@ -274,7 +273,7 @@ class EmulationDomain(BaseDomain):
         Returns:
             Response dict from the CDP.
         """
-        return await self._call("Emulation.setDefaultBackgroundColorOverride")
+        return await self._call("Emulation.clearDefaultBackgroundColorOverride")
 
     async def set_idle_override(
         self,
@@ -291,7 +290,7 @@ class EmulationDomain(BaseDomain):
             "Emulation.setIdleOverride",
             {
                 "isUserActive": is_user_active,
-                "isScreenUnlocked": is_screen_active,
+                "isScreenActive": is_screen_active,
             },
         )
 
@@ -305,6 +304,17 @@ class EmulationDomain(BaseDomain):
             Response dict from the CDP.
         """
         return await self._call("Emulation.clearIdleOverride")
+
+    async def set_disabled_sensors(self, disabled: bool) -> dict[str, Any]:
+        """Disable or enable device sensors.
+
+        Args:
+            disabled: Whether to disable sensors.
+        """
+        return await self._call(
+            "Emulation.setDisabledSensors",
+            {"disabled": disabled},
+        )
 
     async def set_timezone_override(self, timezone_id: str) -> dict[str, Any]:
         """Override the system timezone.

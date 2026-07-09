@@ -58,7 +58,7 @@ class RuntimeDomain(BaseDomain):
             Response dict containing ``result`` with the evaluation result.
         """
         params: dict[str, Any] = {"expression": expression}
-        if return_by_value:
+        if not return_by_value:
             params["returnByValue"] = return_by_value
         if await_promise:
             params["awaitPromise"] = await_promise
