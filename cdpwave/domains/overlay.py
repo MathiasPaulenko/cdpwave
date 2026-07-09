@@ -225,3 +225,76 @@ class OverlayDomain(BaseDomain):
             "Overlay.setShowIsolatedElements",
             {"isolatedElementHighlightConfigs": isolated_element_highlight_configs},
         )
+
+    async def highlight_quad(
+        self,
+        quad: list[float],
+        color: dict[str, Any] | None = None,
+        outline_color: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Highlight a quad (polygon) with a visual overlay.
+
+        Args:
+            quad: List of 8 numbers representing the quad vertices
+                (x1, y1, x2, y2, x3, y3, x4, y4) in page coordinates.
+            color: Optional fill color as RGBA dict
+                (``{"r": 255, "g": 0, "b": 0, "a": 0.5}``).
+            outline_color: Optional outline color as RGBA dict.
+        """
+        params: dict[str, Any] = {"quad": quad}
+        if color is not None:
+            params["color"] = color
+        if outline_color is not None:
+            params["outlineColor"] = outline_color
+        return await self._call("Overlay.highlightQuad", params)
+
+    async def highlight_rect(
+        self,
+        x: float,
+        y: float,
+        width: float,
+        height: float,
+        color: dict[str, Any] | None = None,
+        outline_color: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Highlight a rectangle with a visual overlay.
+
+        Args:
+            x: X coordinate of the rect in page coordinates.
+            y: Y coordinate of the rect in page coordinates.
+            width: Width of the rect.
+            height: Height of the rect.
+            color: Optional fill color as RGBA dict.
+            outline_color: Optional outline color as RGBA dict.
+        """
+        params: dict[str, Any] = {
+            "x": x,
+            "y": y,
+            "width": width,
+            "height": height,
+        }
+        if color is not None:
+            params["color"] = color
+        if outline_color is not None:
+            params["outlineColor"] = outline_color
+        return await self._call("Overlay.highlightRect", params)
+
+    async def highlight_frame(
+        self,
+        frame_id: str,
+        content_color: dict[str, Any] | None = None,
+        content_outline_color: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Highlight a frame with a visual overlay.
+
+        Args:
+            frame_id: The frame ID to highlight.
+            content_color: Optional content fill color as RGBA dict.
+            content_outline_color: Optional content outline color as RGBA dict.
+        """
+        params: dict[str, Any] = {"frameId": frame_id}
+        if content_color is not None:
+            params["contentColor"] = content_color
+        if content_outline_color is not None:
+            params["contentOutlineColor"] = content_outline_color
+        return await self._call("Overlay.highlightFrame", params)

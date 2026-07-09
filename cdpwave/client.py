@@ -12,6 +12,7 @@ from cdpwave.browser.launcher import BrowserLauncher
 from cdpwave.domains.accessibility import AccessibilityDomain
 from cdpwave.domains.animation import AnimationDomain
 from cdpwave.domains.audits import AuditsDomain
+from cdpwave.domains.autofill import AutofillDomain
 from cdpwave.domains.background_service import BackgroundServiceDomain
 from cdpwave.domains.browser import BrowserDomain
 from cdpwave.domains.cache_storage import CacheStorageDomain
@@ -57,6 +58,7 @@ from cdpwave.domains.target import TargetDomain
 from cdpwave.domains.tethering import TetheringDomain
 from cdpwave.domains.tracing import TracingDomain
 from cdpwave.domains.web_authn import WebAuthnDomain
+from cdpwave.domains.web_audio import WebAudioDomain
 from cdpwave.domains.worker import WorkerDomain
 from cdpwave.events.dispatcher import EventDispatcher
 from cdpwave.events.handlers import EventHandler, Subscription
@@ -152,6 +154,8 @@ class CDPSession:
         self._heap_profiler = HeapProfilerDomain(self._sender)
         self._layer_tree = LayerTreeDomain(self._sender)
         self._performance_timeline = PerformanceTimelineDomain(self._sender)
+        self._autofill = AutofillDomain(self._sender)
+        self._web_audio = WebAudioDomain(self._sender)
 
     @property
     def page(self) -> PageDomain:
@@ -392,6 +396,16 @@ class CDPSession:
     def performance_timeline(self) -> PerformanceTimelineDomain:
         """PerformanceTimeline domain wrapper for timeline events."""
         return self._performance_timeline
+
+    @property
+    def autofill(self) -> AutofillDomain:
+        """Autofill domain wrapper for form autofill testing."""
+        return self._autofill
+
+    @property
+    def web_audio(self) -> WebAudioDomain:
+        """WebAudio domain wrapper for Web Audio API inspection and testing."""
+        return self._web_audio
 
     @property
     def session_id(self) -> str:
