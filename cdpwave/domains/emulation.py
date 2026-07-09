@@ -251,9 +251,9 @@ class EmulationDomain(BaseDomain):
         """
         if color is None and (r is not None or g is not None or b is not None or a is not None):
             color = {
-                    "r": r or 0,
-                    "g": g or 0,
-                    "b": b or 0,
+                    "r": r if r is not None else 0,
+                    "g": g if g is not None else 0,
+                    "b": b if b is not None else 0,
                     "a": a if a is not None else 255,
                 }
         params: dict[str, Any] = {}

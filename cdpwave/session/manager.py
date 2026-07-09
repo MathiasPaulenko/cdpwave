@@ -19,7 +19,12 @@ class SessionManager:
             "Target.createTarget",
             {"url": url},
         )
-        return str(result["targetId"])
+        target_id = result.get("targetId")
+        if target_id is None:
+            raise KeyError(
+                "Target.createTarget response missing 'targetId' field"
+            )
+        return str(target_id)
 
     async def attach_to_target(self, target_id: str) -> str:
         """Attach to a target and return the session ID."""
@@ -27,7 +32,12 @@ class SessionManager:
             "Target.attachToTarget",
             {"targetId": target_id, "flatten": True},
         )
-        return str(result["sessionId"])
+        session_id = result.get("sessionId")
+        if session_id is None:
+            raise KeyError(
+                "Target.attachToTarget response missing 'sessionId' field"
+            )
+        return str(session_id)
 
     async def detach_session(self, session_id: str) -> None:
         """Detach a session from its target."""

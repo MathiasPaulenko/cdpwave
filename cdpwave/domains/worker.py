@@ -15,6 +15,6 @@ class WorkerDomain(BaseDomain):
     - ``Worker.dedicatedWorkerStarted`` — when a dedicated worker starts.
     - ``Worker.dedicatedWorkerTerminated`` — when a dedicated worker terminates.
 
-    Use ``session.events.on("Worker.dedicatedWorkerStarted", handler)``
+    Use ``session.on("Worker.dedicatedWorkerStarted", handler)``
     to subscribe to these events.
     """

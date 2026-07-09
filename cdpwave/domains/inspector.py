@@ -15,6 +15,6 @@ class InspectorDomain(BaseDomain):
     - ``Inspector.detached`` — when the inspector is detached.
     - ``Inspector.targetCrashed`` — when the target crashes.
 
-    Use ``session.events.on("Inspector.detached", handler)``
+    Use ``session.on("Inspector.detached", handler)``
     to subscribe to these events.
     """

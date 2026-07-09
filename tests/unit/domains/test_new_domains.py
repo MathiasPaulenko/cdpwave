@@ -523,22 +523,22 @@ class TestLogDomain:
         await domain.clear()
         assert fake.last_call == ("Log.clear", None)
 
-    async def test_start_violation_report(self) -> None:
+    async def test_start_violations_report(self) -> None:
         fake = FakeSender({})
         domain = LogDomain(fake)
         config: list[dict[str, Any]] = [
             {"name": "longTask", "threshold": 500},
         ]
-        await domain.start_violation_report(config)
+        await domain.start_violations_report(config)
         assert fake.last_call == (
             "Log.startViolationsReport",
             {"config": config},
         )
 
-    async def test_stop_violation_report(self) -> None:
+    async def test_stop_violations_report(self) -> None:
         fake = FakeSender({})
         domain = LogDomain(fake)
-        await domain.stop_violation_report()
+        await domain.stop_violations_report()
         assert fake.last_call == ("Log.stopViolationsReport", None)
 
 

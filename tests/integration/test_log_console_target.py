@@ -76,14 +76,14 @@ class TestLog:
             await client.new_page() as session,
         ):
             await session.log.enable()
-            await session.log.start_violation_report(
+            await session.log.start_violations_report(
                 config=[
                     {"name": "longTask", "threshold": 500},
                     {"name": "longLayout", "threshold": 100},
                 ],
             )
 
-            await session.log.stop_violation_report()
+            await session.log.stop_violations_report()
 
 
 @pytest.mark.integration
