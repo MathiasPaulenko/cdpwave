@@ -204,16 +204,18 @@ class NetworkDomain(BaseDomain):
     async def set_cache_disabled(
         self,
         cache_disabled: bool,
+        resource_types: list[str] | None = None,
     ) -> dict[str, Any]:
         """Enable or disable the browser cache.
 
         Args:
             cache_disabled: If True, disable the cache.
+            resource_types: Optional list of resource types to apply to.
         """
-        return await self._call(
-            "Network.setCacheDisabled",
-            {"cacheDisabled": cache_disabled},
-        )
+        params: dict[str, Any] = {"cacheDisabled": cache_disabled}
+        if resource_types is not None:
+            params["resourceTypes"] = resource_types
+        return await self._call("Network.setCacheDisabled", params)
 
     async def emulate_network_conditions(
         self,
@@ -221,6 +223,7 @@ class NetworkDomain(BaseDomain):
         latency: int = 0,
         download_throughput: float = -1,
         upload_throughput: float = -1,
+        resource_types: list[str] | None = None,
     ) -> dict[str, Any]:
         """Emulate network conditions.
 
@@ -229,16 +232,17 @@ class NetworkDomain(BaseDomain):
             latency: Latency in milliseconds.
             download_throughput: Download throughput in bytes/sec (-1 for unlimited).
             upload_throughput: Upload throughput in bytes/sec (-1 for unlimited).
+            resource_types: Optional list of resource types to apply to.
         """
-        return await self._call(
-            "Network.emulateNetworkConditions",
-            {
-                "offline": offline,
-                "latency": latency,
-                "downloadThroughput": download_throughput,
-                "uploadThroughput": upload_throughput,
-            },
-        )
+        params: dict[str, Any] = {
+            "offline": offline,
+            "latency": latency,
+            "downloadThroughput": download_throughput,
+            "uploadThroughput": upload_throughput,
+        }
+        if resource_types is not None:
+            params["resourceTypes"] = resource_types
+        return await self._call("Network.emulateNetworkConditions", params)
 
     async def get_all_cookies(self) -> dict[str, Any]:
         """Get all cookies from the browser.

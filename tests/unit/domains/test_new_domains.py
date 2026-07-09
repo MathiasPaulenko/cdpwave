@@ -1,5 +1,7 @@
 from typing import Any
 
+import pytest
+
 from cdpwave.domains.console import ConsoleDomain
 from cdpwave.domains.dom import DOMDomain
 from cdpwave.domains.log import LogDomain
@@ -223,6 +225,12 @@ class TestDOMDomain:
         assert params is not None
         assert params["depth"] == 2
         assert params["pierce"] is True
+
+    async def test_get_document_invalid_depth(self) -> None:
+        fake = FakeSender({"root": {"nodeId": 1}})
+        domain = DOMDomain(fake)
+        with pytest.raises(ValueError, match="depth must be"):
+            await domain.get_document(depth=-2)
 
     async def test_get_outer_html(self) -> None:
         fake = FakeSender({"outerHTML": "<div>hello</div>"})

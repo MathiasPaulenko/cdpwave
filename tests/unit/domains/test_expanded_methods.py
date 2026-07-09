@@ -89,6 +89,15 @@ class TestPageExpanded:
         assert params["frameId"] == "frame1"
         assert params["worldName"] == "iso"
 
+    async def test_create_isolated_world_grant_universal_access(self) -> None:
+        fake = FakeSender({"executionContextId": 1})
+        domain = PageDomain(fake)
+        await domain.create_isolated_world("frame1", grant_universal_access=True)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["frameId"] == "frame1"
+        assert params["grantUniversalAccess"] is True
+
     async def test_set_document_content(self) -> None:
         fake = FakeSender({})
         domain = PageDomain(fake)
@@ -142,6 +151,12 @@ class TestPageExpanded:
             "Page.setWebLifecycleState",
             {"state": "frozen"},
         )
+
+    async def test_set_web_lifecycle_state_invalid(self) -> None:
+        fake = FakeSender({})
+        domain = PageDomain(fake)
+        with pytest.raises(ValueError, match="state must be"):
+            await domain.set_web_lifecycle_state("invalid")
 
     async def test_set_intercept_file_chooser_dialog(self) -> None:
         fake = FakeSender({})
@@ -212,8 +227,14 @@ class TestRuntimeExpanded:
         await domain.set_async_call_stack_depth(32)
         assert fake.last_call == (
             "Runtime.setAsyncCallStackDepth",
-            {"depth": 32},
+            {"maxDepth": 32},
         )
+
+    async def test_set_async_call_stack_depth_negative(self) -> None:
+        fake = FakeSender({})
+        domain = RuntimeDomain(fake)
+        with pytest.raises(ValueError, match="depth must be"):
+            await domain.set_async_call_stack_depth(-1)
 
     async def test_terminate_execution(self) -> None:
         fake = FakeSender({})
@@ -234,7 +255,7 @@ class TestRuntimeExpanded:
         fake = FakeSender({"names": ["x", "y"]})
         domain = RuntimeDomain(fake)
         await domain.global_lexical_scope_names()
-        assert fake.last_call == ("Runtime.globalLexicalScopeNames", {})
+        assert fake.last_call == ("Runtime.globalLexicalScopeNames", None)
 
     async def test_get_exception_details(self) -> None:
         fake = FakeSender({"exceptionDetails": {}})

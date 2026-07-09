@@ -44,6 +44,8 @@ class DOMDomain(BaseDomain):
         Returns:
             Response dict containing ``root`` node.
         """
+        if depth < -1:
+            raise ValueError("depth must be >= -1")
         return await self._call(
             "DOM.getDocument",
             {"depth": depth, "pierce": pierce},

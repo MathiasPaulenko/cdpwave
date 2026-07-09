@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cdpwave"
-version = "2.1.1"
+version = "2.1.2"
 description = "Chrome DevTools Protocol for Python — direct CDP over WebSocket, no Selenium, no Playwright"
 readme = "README.md"
 license = { text = "MIT" }

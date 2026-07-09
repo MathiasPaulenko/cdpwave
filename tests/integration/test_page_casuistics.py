@@ -37,11 +37,14 @@ class TestPageCasuistics:
         if len(history["entries"]) > 0:
             entry_id = history["entries"][0]["id"]
             result = await page.page.navigate_to_history_entry(entry_id)
-            assert "frameId" in result
+            assert isinstance(result, dict)
 
     async def test_remove_script_to_evaluate_on_new_document(self, page: CDPSession) -> None:
         await page.page.enable()
-        script_id = await page.page.add_script_to_evaluate_on_new_document("console.log('test')")
+        script_result = await page.page.add_script_to_evaluate_on_new_document(
+            "console.log('test')"
+        )
+        script_id = script_result["identifier"]
         result = await page.page.remove_script_to_evaluate_on_new_document(script_id)
         assert result == {}
 

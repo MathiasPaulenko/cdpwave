@@ -37,6 +37,9 @@ class RuntimeDomain(BaseDomain):
         return_by_value: bool = True,
         await_promise: bool = False,
         user_gesture: bool = False,
+        object_group: str | None = None,
+        generate_preview: bool = False,
+        silent: bool = False,
     ) -> dict[str, Any]:
         """Evaluate a JavaScript expression.
 
@@ -45,6 +48,9 @@ class RuntimeDomain(BaseDomain):
             return_by_value: Return the result as a JSON value.
             await_promise: Await any returned Promise before resolving.
             user_gesture: Treat the evaluation as a user gesture.
+            object_group: Optional name for the object group for remote objects.
+            generate_preview: Generate preview for the result object.
+            silent: If True, do not report exceptions thrown.
 
         Returns:
             Response dict containing ``result`` with the evaluation result.
@@ -56,36 +62,62 @@ class RuntimeDomain(BaseDomain):
             params["awaitPromise"] = await_promise
         if user_gesture:
             params["userGesture"] = user_gesture
+        if object_group is not None:
+            params["objectGroup"] = object_group
+        if generate_preview:
+            params["generatePreview"] = generate_preview
+        if silent:
+            params["silent"] = silent
         return await self._call("Runtime.evaluate", params)
 
     async def call_function_on(
         self,
-        object_id: str,
         function_declaration: str,
+        object_id: str | None = None,
+        execution_context_id: int | None = None,
         args: list[dict[str, Any]] | None = None,
         return_by_value: bool = True,
         await_promise: bool = False,
+        generate_preview: bool = False,
+        silent: bool = False,
+        object_group: str | None = None,
     ) -> dict[str, Any]:
-        """Call a function on a remote object.
+        """Call a function on a remote object or in a context.
+
+        Either ``object_id`` or ``execution_context_id`` must be provided.
+        If neither is given, the function runs in the default context.
 
         Args:
-            object_id: ID of the remote object to call on.
             function_declaration: JavaScript function declaration string.
+            object_id: ID of the remote object to call on.
+            execution_context_id: Context to call the function in.
             args: Optional list of argument dicts.
             return_by_value: Return the result as a JSON value.
             await_promise: Await any returned Promise before resolving.
+            generate_preview: Generate preview for the result object.
+            silent: If True, do not report exceptions thrown.
+            object_group: Optional name for the object group.
 
         Returns:
             Response dict containing ``result``.
         """
         params: dict[str, Any] = {
-            "objectId": object_id,
             "functionDeclaration": function_declaration,
             "returnByValue": return_by_value,
             "awaitPromise": await_promise,
         }
+        if object_id is not None:
+            params["objectId"] = object_id
+        if execution_context_id is not None:
+            params["executionContextId"] = execution_context_id
         if args is not None:
             params["arguments"] = args
+        if generate_preview:
+            params["generatePreview"] = generate_preview
+        if silent:
+            params["silent"] = silent
+        if object_group is not None:
+            params["objectGroup"] = object_group
         return await self._call("Runtime.callFunctionOn", params)
 
     async def release_object(self, object_id: str) -> dict[str, Any]:
@@ -270,7 +302,10 @@ class RuntimeDomain(BaseDomain):
         params: dict[str, Any] = {}
         if execution_context_id is not None:
             params["executionContextId"] = execution_context_id
-        return await self._call("Runtime.globalLexicalScopeNames", params)
+        return await self._call(
+            "Runtime.globalLexicalScopeNames",
+            params if params else None,
+        )
 
     async def get_heap_usage(self) -> dict[str, Any]:
         """Get the current JavaScript heap usage.
@@ -286,9 +321,11 @@ class RuntimeDomain(BaseDomain):
         Args:
             depth: Maximum async call stack depth (0 to disable).
         """
+        if depth < 0:
+            raise ValueError("depth must be >= 0")
         return await self._call(
             "Runtime.setAsyncCallStackDepth",
-            {"depth": depth},
+            {"maxDepth": depth},
         )
 
     async def terminate_execution(self) -> dict[str, Any]:

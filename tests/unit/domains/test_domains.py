@@ -1,5 +1,7 @@
 from typing import Any
 
+import pytest
+
 from cdpwave.domains.page import PageDomain
 from cdpwave.domains.runtime import RuntimeDomain
 from cdpwave.domains.target import TargetDomain
@@ -143,7 +145,7 @@ class TestPageDomain:
     async def test_print_to_pdf_defaults(self) -> None:
         fake = FakeSender({"data": "base64pdf"})
         domain = PageDomain(fake)
-        await domain.print_to_pdf()
+        result = await domain.print_to_pdf()
         method, params = fake.last_call
         assert method == "Page.printToPDF"
         assert params is not None
@@ -151,6 +153,25 @@ class TestPageDomain:
         assert params["scale"] == 1.0
         assert params["paperWidth"] == 8.5
         assert params["paperHeight"] == 11.0
+        assert result == "base64pdf"
+
+    async def test_print_to_pdf_invalid_scale(self) -> None:
+        fake = FakeSender({"data": "base64pdf"})
+        domain = PageDomain(fake)
+        with pytest.raises(ValueError, match="scale must be"):
+            await domain.print_to_pdf(scale=5.0)
+
+    async def test_capture_screenshot_invalid_format(self) -> None:
+        fake = FakeSender({"data": "base64data"})
+        domain = PageDomain(fake)
+        with pytest.raises(ValueError, match="format must be"):
+            await domain.capture_screenshot(format="bmp")
+
+    async def test_capture_screenshot_invalid_quality(self) -> None:
+        fake = FakeSender({"data": "base64data"})
+        domain = PageDomain(fake)
+        with pytest.raises(ValueError, match="quality must be"):
+            await domain.capture_screenshot(quality=200)
 
     async def test_get_layout_metrics_no_params(self) -> None:
         fake = FakeSender({})
@@ -202,7 +223,9 @@ class TestRuntimeDomain:
     async def test_call_function_on(self) -> None:
         fake = FakeSender({"result": {"type": "string", "value": "ok"}})
         domain = RuntimeDomain(fake)
-        await domain.call_function_on("OBJ-1", "function() { return 'ok'; }")
+        await domain.call_function_on(
+            "function() { return 'ok'; }", object_id="OBJ-1"
+        )
         method, params = fake.last_call
         assert method == "Runtime.callFunctionOn"
         assert params is not None
@@ -215,7 +238,7 @@ class TestRuntimeDomain:
         domain = RuntimeDomain(fake)
         args: list[dict[str, Any]] = [{"value": 1}, {"value": 2}]
         await domain.call_function_on(
-            "OBJ-1", "function(a, b) { return a + b; }", args=args
+            "function(a, b) { return a + b; }", object_id="OBJ-1", args=args
         )
         method, params = fake.last_call
         assert params is not None

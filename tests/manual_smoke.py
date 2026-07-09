@@ -184,8 +184,7 @@ async def test_screenshot(report: SmokeReport, session: CDPSession) -> None:
 async def test_pdf(report: SmokeReport, session: CDPSession) -> None:
     """Test 9: Page.printToPDF."""
     try:
-        result = await session.page.print_to_pdf()
-        data = result.get("data", "")
+        data = await session.page.print_to_pdf()
         assert len(data) > 100, f"PDF data too small: {len(data)} bytes"
         decoded = base64.b64decode(data)
         assert decoded[:4] == b"%PDF", "Not a valid PDF"

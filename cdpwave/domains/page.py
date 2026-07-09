@@ -97,6 +97,10 @@ class PageDomain(BaseDomain):
         Returns:
             Response dict containing base64-encoded ``data``.
         """
+        if format not in ("png", "jpeg", "webp"):
+            raise ValueError("format must be 'png', 'jpeg', or 'webp'")
+        if not 0 <= quality <= 100:
+            raise ValueError("quality must be between 0 and 100")
         params: dict[str, Any] = {
             "format": format,
             "quality": quality,
@@ -119,8 +123,12 @@ class PageDomain(BaseDomain):
         margin_bottom: float = 0.4,
         margin_left: float = 0.4,
         margin_right: float = 0.4,
+        page_ranges: str | None = None,
+        header_template: str | None = None,
+        footer_template: str | None = None,
+        prefer_css_page_size: bool = False,
         return_as_stream: bool = False,
-    ) -> dict[str, Any]:
+    ) -> str | dict[str, Any]:
         """Print the page to PDF.
 
         Args:
@@ -134,12 +142,19 @@ class PageDomain(BaseDomain):
             margin_bottom: Bottom margin in inches.
             margin_left: Left margin in inches.
             margin_right: Right margin in inches.
+            page_ranges: Optional paper ranges to print (e.g. ``"1-5, 8, 11-13"``).
+            header_template: Optional HTML template for the header.
+            footer_template: Optional HTML template for the footer.
+            prefer_css_page_size: Use CSS page sizes over default paper size.
             return_as_stream: Return a stream handle instead of base64 data.
 
         Returns:
-            Response dict containing base64-encoded ``data`` or
-            ``stream`` handle if ``return_as_stream`` is True.
+            Base64-encoded PDF string when ``return_as_stream`` is False,
+            or response dict with ``stream`` handle when ``return_as_stream``
+            is True.
         """
+        if not 0.1 <= scale <= 2.0:
+            raise ValueError("scale must be between 0.1 and 2.0")
         params: dict[str, Any] = {
             "landscape": landscape,
             "displayHeaderFooter": display_header_footer,
@@ -151,9 +166,19 @@ class PageDomain(BaseDomain):
             "marginBottom": margin_bottom,
             "marginLeft": margin_left,
             "marginRight": margin_right,
+            "preferCSSPageSize": prefer_css_page_size,
             "transferMode": "ReturnAsStream" if return_as_stream else "ReturnAsBase64",
         }
-        return await self._call("Page.printToPDF", params)
+        if page_ranges is not None:
+            params["pageRanges"] = page_ranges
+        if header_template is not None:
+            params["headerTemplate"] = header_template
+        if footer_template is not None:
+            params["footerTemplate"] = footer_template
+        result = await self._call("Page.printToPDF", params)
+        if return_as_stream:
+            return result
+        return str(result.get("data", ""))
 
     async def get_layout_metrics(self) -> dict[str, Any]:
         """Return page layout metrics (viewport, content size)."""
@@ -309,6 +334,8 @@ class PageDomain(BaseDomain):
         Args:
             state: ``"frozen"`` or ``"active"``.
         """
+        if state not in ("frozen", "active"):
+            raise ValueError("state must be 'frozen' or 'active'")
         return await self._call(
             "Page.setWebLifecycleState",
             {"state": state},
@@ -358,7 +385,7 @@ class PageDomain(BaseDomain):
         if world_name is not None:
             params["worldName"] = world_name
         if grant_universal_access:
-            params["grantUniveralAccess"] = True
+            params["grantUniversalAccess"] = True
         return await self._call("Page.createIsolatedWorld", params)
 
     async def set_document_content(
