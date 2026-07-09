@@ -83,9 +83,10 @@ class InputDomain(BaseDomain):
     async def dispatch_mouse_event(
         self,
         type: str,
-        x: float,
-        y: float,
         button: str = "none",
+        *,
+        x: float = 0,
+        y: float = 0,
         buttons: int = 0,
         click_count: int | None = None,
         delta_x: float | None = None,
@@ -98,10 +99,10 @@ class InputDomain(BaseDomain):
         Args:
             type: Event type (``"mousePressed"``, ``"mouseReleased"``,
                 ``"mouseMoved"``, ``"mouseWheel"``).
-            x: X coordinate relative to the viewport.
-            y: Y coordinate relative to the viewport.
             button: Mouse button (``"none"``, ``"left"``, ``"middle"``,
                 ``"right"``, ``"back"``, ``"forward"``).
+            x: X coordinate relative to the viewport.
+            y: Y coordinate relative to the viewport.
             buttons: Bitmask of pressed buttons.
             click_count: Number of consecutive clicks.
             delta_x: Horizontal scroll delta (for ``mouseWheel``).
@@ -204,6 +205,19 @@ class InputDomain(BaseDomain):
             Response dict from the CDP command.
         """
         return await self._call("Input.insertText", {"text": text})
+
+    async def type_text(self, text: str) -> None:
+        """Type text by sending individual ``char`` key events.
+
+        Unlike ``insert_text``, this dispatches proper key events for
+        each character, which is required for some input fields that
+        listen to ``keydown``/``keypress`` events.
+
+        Args:
+            text: The text to type.
+        """
+        for char in text:
+            await self.dispatch_key_event("char", text=char)
 
     async def ime_set_composition(
         self,
@@ -342,6 +356,71 @@ class InputDomain(BaseDomain):
                 "repeatCount": repeat_count,
                 "repeatDelayMs": repeat_delay_ms,
             },
+        )
+
+    async def emulate_touch_from_mouse_event(
+        self,
+        type: str,
+        x: float,
+        y: float,
+        button: str = "none",
+        buttons: int = 0,
+        click_count: int | None = None,
+        delta_x: float | None = None,
+        delta_y: float | None = None,
+        modifiers: int | None = None,
+        timestamp: float | None = None,
+    ) -> dict[str, Any]:
+        """Emulate a touch event from a mouse event.
+
+        Args:
+            type: Event type (``"mouseWheel"``, ``"mouseMoved"``,
+                ``"mousePressed"``, ``"mouseReleased"``).
+            x: X coordinate relative to the viewport.
+            y: Y coordinate relative to the viewport.
+            button: Mouse button (``"none"``, ``"left"``, ``"middle"``,
+                ``"right"``, ``"back"``, ``"forward"``).
+            buttons: Bitmask of pressed buttons.
+            click_count: Number of consecutive clicks.
+            delta_x: Horizontal scroll delta.
+            delta_y: Vertical scroll delta.
+            modifiers: Bitmask of modifiers.
+            timestamp: Time of the event in seconds.
+
+        Returns:
+            Response dict from the CDP command.
+        """
+        params: dict[str, Any] = {
+            "type": type,
+            "x": x,
+            "y": y,
+            "button": button,
+            "buttons": buttons,
+        }
+        if click_count is not None:
+            params["clickCount"] = click_count
+        if delta_x is not None:
+            params["deltaX"] = delta_x
+        if delta_y is not None:
+            params["deltaY"] = delta_y
+        if modifiers is not None:
+            params["modifiers"] = modifiers
+        if timestamp is not None:
+            params["timestamp"] = timestamp
+        return await self._call("Input.emulateTouchFromMouseEvent", params)
+
+    async def set_ignore_input_events(
+        self,
+        ignore: bool,
+    ) -> dict[str, Any]:
+        """Ignore or process input events.
+
+        Args:
+            ignore: Whether to ignore input events.
+        """
+        return await self._call(
+            "Input.setIgnoreInputEvents",
+            {"ignore": ignore},
         )
 
     async def synthesize_tap_gesture(

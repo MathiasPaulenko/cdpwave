@@ -298,6 +298,211 @@ class TestDOMDomain:
             {"nodeId": 42},
         )
 
+    async def test_remove_attribute(self) -> None:
+        fake = FakeSender({})
+        domain = DOMDomain(fake)
+        await domain.remove_attribute(42, "class")
+        assert fake.last_call == (
+            "DOM.removeAttribute",
+            {"nodeId": 42, "name": "class"},
+        )
+
+    async def test_describe_node_with_node_id(self) -> None:
+        fake = FakeSender({"node": {}})
+        domain = DOMDomain(fake)
+        await domain.describe_node(node_id=42)
+        method, params = fake.last_call
+        assert method == "DOM.describeNode"
+        assert params is not None
+        assert params["nodeId"] == 42
+        assert params["depth"] == -1
+        assert params["pierce"] is False
+
+    async def test_describe_node_with_backend_node_id(self) -> None:
+        fake = FakeSender({"node": {}})
+        domain = DOMDomain(fake)
+        await domain.describe_node(backend_node_id=10, depth=2, pierce=True)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["backendNodeId"] == 10
+        assert params["depth"] == 2
+        assert params["pierce"] is True
+        assert "nodeId" not in params
+
+    async def test_describe_node_with_object_id(self) -> None:
+        fake = FakeSender({"node": {}})
+        domain = DOMDomain(fake)
+        await domain.describe_node(object_id="obj-1")
+        method, params = fake.last_call
+        assert params is not None
+        assert params["objectId"] == "obj-1"
+
+    async def test_get_box_model_with_node_id(self) -> None:
+        fake = FakeSender({"model": {}})
+        domain = DOMDomain(fake)
+        await domain.get_box_model(node_id=42)
+        assert fake.last_call == ("DOM.getBoxModel", {"nodeId": 42})
+
+    async def test_get_box_model_with_backend_node_id(self) -> None:
+        fake = FakeSender({"model": {}})
+        domain = DOMDomain(fake)
+        await domain.get_box_model(backend_node_id=10)
+        assert fake.last_call == ("DOM.getBoxModel", {"backendNodeId": 10})
+
+    async def test_get_box_model_with_object_id(self) -> None:
+        fake = FakeSender({"model": {}})
+        domain = DOMDomain(fake)
+        await domain.get_box_model(object_id="obj-1")
+        assert fake.last_call == ("DOM.getBoxModel", {"objectId": "obj-1"})
+
+    async def test_get_node_for_location_defaults(self) -> None:
+        fake = FakeSender({"nodeId": 5, "backendNodeId": 10, "frameId": "F1"})
+        domain = DOMDomain(fake)
+        await domain.get_node_for_location(100, 200)
+        assert fake.last_call == (
+            "DOM.getNodeForLocation",
+            {"x": 100, "y": 200},
+        )
+
+    async def test_get_node_for_location_with_shadow_dom(self) -> None:
+        fake = FakeSender({"nodeId": 5})
+        domain = DOMDomain(fake)
+        await domain.get_node_for_location(100, 200, include_user_agent_shadow_dom=True)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["includeUserAgentShadowDOM"] is True
+
+    async def test_resolve_node_with_node_id(self) -> None:
+        fake = FakeSender({"object": {}})
+        domain = DOMDomain(fake)
+        await domain.resolve_node(node_id=42)
+        assert fake.last_call == ("DOM.resolveNode", {"nodeId": 42})
+
+    async def test_resolve_node_with_backend_and_group(self) -> None:
+        fake = FakeSender({"object": {}})
+        domain = DOMDomain(fake)
+        await domain.resolve_node(backend_node_id=10, object_group="grp")
+        method, params = fake.last_call
+        assert params is not None
+        assert params["backendNodeId"] == 10
+        assert params["objectGroup"] == "grp"
+
+    async def test_request_node(self) -> None:
+        fake = FakeSender({"node": {}})
+        domain = DOMDomain(fake)
+        await domain.request_node(42)
+        assert fake.last_call == ("DOM.requestNode", {"nodeId": 42})
+
+    async def test_set_attributes_as_text_defaults(self) -> None:
+        fake = FakeSender({})
+        domain = DOMDomain(fake)
+        await domain.set_attributes_as_text(42, "class='foo'")
+        assert fake.last_call == (
+            "DOM.setAttributesAsText",
+            {"nodeId": 42, "text": "class='foo'"},
+        )
+
+    async def test_set_attributes_as_text_with_name(self) -> None:
+        fake = FakeSender({})
+        domain = DOMDomain(fake)
+        await domain.set_attributes_as_text(42, "class='foo'", name="class")
+        method, params = fake.last_call
+        assert params is not None
+        assert params["name"] == "class"
+
+    async def test_copy_to_defaults(self) -> None:
+        fake = FakeSender({"nodeId": 99})
+        domain = DOMDomain(fake)
+        await domain.copy_to(1, 2)
+        assert fake.last_call == (
+            "DOM.copyTo",
+            {"nodeId": 1, "targetNodeId": 2},
+        )
+
+    async def test_copy_to_with_insert_before(self) -> None:
+        fake = FakeSender({"nodeId": 99})
+        domain = DOMDomain(fake)
+        await domain.copy_to(1, 2, insert_before_node_id=3)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["insertBeforeNodeId"] == 3
+
+    async def test_move_to_defaults(self) -> None:
+        fake = FakeSender({"nodeId": 99})
+        domain = DOMDomain(fake)
+        await domain.move_to(1, 2)
+        assert fake.last_call == (
+            "DOM.moveTo",
+            {"nodeId": 1, "targetNodeId": 2},
+        )
+
+    async def test_move_to_with_insert_before(self) -> None:
+        fake = FakeSender({"nodeId": 99})
+        domain = DOMDomain(fake)
+        await domain.move_to(1, 2, insert_before_node_id=3)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["insertBeforeNodeId"] == 3
+
+    async def test_request_child_nodes_defaults(self) -> None:
+        fake = FakeSender({})
+        domain = DOMDomain(fake)
+        await domain.request_child_nodes(42)
+        assert fake.last_call == (
+            "DOM.requestChildNodes",
+            {"nodeId": 42, "depth": -1, "pierce": False},
+        )
+
+    async def test_request_child_nodes_with_depth_pierce(self) -> None:
+        fake = FakeSender({})
+        domain = DOMDomain(fake)
+        await domain.request_child_nodes(42, depth=3, pierce=True)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["depth"] == 3
+        assert params["pierce"] is True
+
+    async def test_perform_search_defaults(self) -> None:
+        fake = FakeSender({"searchId": "s1", "resultCount": 5})
+        domain = DOMDomain(fake)
+        await domain.perform_search("//div")
+        assert fake.last_call == ("DOM.performSearch", {"query": "//div"})
+
+    async def test_perform_search_with_shadow_dom(self) -> None:
+        fake = FakeSender({"searchId": "s1", "resultCount": 5})
+        domain = DOMDomain(fake)
+        await domain.perform_search("//div", include_user_agent_shadow_dom=True)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["includeUserAgentShadowDOM"] is True
+
+    async def test_get_search_results(self) -> None:
+        fake = FakeSender({"nodeIds": [1, 2, 3]})
+        domain = DOMDomain(fake)
+        await domain.get_search_results("s1", 0, 10)
+        assert fake.last_call == (
+            "DOM.getSearchResults",
+            {"searchId": "s1", "fromIndex": 0, "toIndex": 10},
+        )
+
+    async def test_discard_search_results(self) -> None:
+        fake = FakeSender({})
+        domain = DOMDomain(fake)
+        await domain.discard_search_results("s1")
+        assert fake.last_call == (
+            "DOM.discardSearchResults",
+            {"searchId": "s1"},
+        )
+
+    async def test_set_node_value(self) -> None:
+        fake = FakeSender({})
+        domain = DOMDomain(fake)
+        await domain.set_node_value(42, "new value")
+        assert fake.last_call == (
+            "DOM.setNodeValue",
+            {"nodeId": 42, "value": "new value"},
+        )
+
 
 class TestLogDomain:
     async def test_enable_no_params(self) -> None:

@@ -133,6 +133,61 @@ class TestDebuggerDomain:
             {"skip": True},
         )
 
+    async def test_get_possible_breakpoints(self) -> None:
+        fake = FakeSender({"locations": []})
+        domain = DebuggerDomain(fake)
+        start = {"scriptId": "s1", "lineNumber": 0}
+        await domain.get_possible_breakpoints(start)
+        method, params = fake.last_call
+        assert method == "Debugger.getPossibleBreakpoints"
+        assert params is not None
+        assert params["start"] == start
+
+    async def test_get_possible_breakpoints_with_end_and_restrict(self) -> None:
+        fake = FakeSender({"locations": []})
+        domain = DebuggerDomain(fake)
+        start = {"scriptId": "s1", "lineNumber": 0}
+        end = {"scriptId": "s1", "lineNumber": 10}
+        await domain.get_possible_breakpoints(start, end=end, restrict_to_function=True)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["end"] == end
+        assert params["restrictToFunction"] is True
+
+    async def test_set_breakpoint_on_function_call(self) -> None:
+        fake = FakeSender({"breakpointId": "bp1"})
+        domain = DebuggerDomain(fake)
+        await domain.set_breakpoint_on_function_call("obj1")
+        assert fake.last_call == (
+            "Debugger.setBreakpointOnFunctionCall",
+            {"objectId": "obj1"},
+        )
+
+    async def test_set_breakpoint_on_function_call_with_condition(self) -> None:
+        fake = FakeSender({"breakpointId": "bp2"})
+        domain = DebuggerDomain(fake)
+        await domain.set_breakpoint_on_function_call("obj1", condition="x > 5")
+        method, params = fake.last_call
+        assert method == "Debugger.setBreakpointOnFunctionCall"
+        assert params is not None
+        assert params["objectId"] == "obj1"
+        assert params["condition"] == "x > 5"
+
+    async def test_set_variable_value(self) -> None:
+        fake = FakeSender({})
+        domain = DebuggerDomain(fake)
+        new_val = {"value": 42}
+        await domain.set_variable_value("frame1", 0, "myVar", new_val)
+        assert fake.last_call == (
+            "Debugger.setVariableValue",
+            {
+                "callFrameId": "frame1",
+                "scopeNumber": 0,
+                "variableName": "myVar",
+                "newValue": new_val,
+            },
+        )
+
 
 @pytest.mark.unit
 class TestOverlayDomain:
@@ -221,6 +276,44 @@ class TestOverlayDomain:
         assert params is not None
         assert params["highlightConfig"]["showInfo"] is True
         assert params["nodeId"] == 42
+
+    async def test_set_show_hinge(self) -> None:
+        fake = FakeSender({})
+        domain = OverlayDomain(fake)
+        hinge = {"x": 0, "y": 100, "width": 100, "height": 50}
+        await domain.set_show_hinge(hinge)
+        method, params = fake.last_call
+        assert method == "Overlay.setShowHinge"
+        assert params is not None
+        assert params["hingeConfig"] == hinge
+
+    async def test_set_show_hinge_none(self) -> None:
+        fake = FakeSender({})
+        domain = OverlayDomain(fake)
+        await domain.set_show_hinge(None)
+        method, params = fake.last_call
+        assert method == "Overlay.setShowHinge"
+        assert params == {}
+
+    async def test_set_show_window_controls(self) -> None:
+        fake = FakeSender({})
+        domain = OverlayDomain(fake)
+        controls = {"show": True, "theme": "dark"}
+        await domain.set_show_window_controls(controls)
+        assert fake.last_call == (
+            "Overlay.setShowWindowControls",
+            {"windowControls": controls},
+        )
+
+    async def test_set_show_isolated_elements(self) -> None:
+        fake = FakeSender({})
+        domain = OverlayDomain(fake)
+        configs = [{"showInfo": True}, {"showStyles": True}]
+        await domain.set_show_isolated_elements(configs)
+        assert fake.last_call == (
+            "Overlay.setShowIsolatedElements",
+            {"isolatedElementHighlightConfigs": configs},
+        )
 
 
 @pytest.mark.unit

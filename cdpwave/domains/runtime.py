@@ -40,6 +40,7 @@ class RuntimeDomain(BaseDomain):
         object_group: str | None = None,
         generate_preview: bool = False,
         silent: bool = False,
+        execution_context_id: int | None = None,
     ) -> dict[str, Any]:
         """Evaluate a JavaScript expression.
 
@@ -51,12 +52,13 @@ class RuntimeDomain(BaseDomain):
             object_group: Optional name for the object group for remote objects.
             generate_preview: Generate preview for the result object.
             silent: If True, do not report exceptions thrown.
+            execution_context_id: Optional context to evaluate in.
 
         Returns:
             Response dict containing ``result`` with the evaluation result.
         """
         params: dict[str, Any] = {"expression": expression}
-        if not return_by_value:
+        if return_by_value:
             params["returnByValue"] = return_by_value
         if await_promise:
             params["awaitPromise"] = await_promise
@@ -68,6 +70,8 @@ class RuntimeDomain(BaseDomain):
             params["generatePreview"] = generate_preview
         if silent:
             params["silent"] = silent
+        if execution_context_id is not None:
+            params["contextId"] = execution_context_id
         return await self._call("Runtime.evaluate", params)
 
     async def call_function_on(
@@ -367,3 +371,29 @@ class RuntimeDomain(BaseDomain):
             Response dict from the CDP.
         """
         return await self._call("Runtime.discardConsoleEntries")
+
+    async def get_isolate_id(self) -> dict[str, Any]:
+        """Get the isolate id.
+
+        Returns:
+            Dict with ``isolateId`` string.
+        """
+        return await self._call("Runtime.getIsolateId")
+
+    async def collect_garbage(self) -> dict[str, Any]:
+        """Run garbage collection."""
+        return await self._call("Runtime.collectGarbage")
+
+    async def set_custom_object_formatter_enabled(
+        self,
+        enabled: bool,
+    ) -> dict[str, Any]:
+        """Enable or disable custom object formatter.
+
+        Args:
+            enabled: Whether to enable custom object formatting.
+        """
+        return await self._call(
+            "Runtime.setCustomObjectFormatterEnabled",
+            {"enabled": enabled},
+        )

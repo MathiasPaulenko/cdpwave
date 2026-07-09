@@ -104,6 +104,41 @@ class FetchDomain(BaseDomain):
             },
         )
 
+    async def continue_with_auth(
+        self,
+        request_id: str,
+        response: str,
+        username: str | None = None,
+        password: str | None = None,
+    ) -> dict[str, Any]:
+        """Continue an intercepted request with auth response.
+
+        Convenience wrapper around ``continue_request_with_auth`` that
+        accepts a simple response string instead of a dict.
+
+        Args:
+            request_id: The ID of the intercepted request.
+            response: Auth response (``"Default"``, ``"CancelAuth"``,
+                ``"ProvideCredentials"``).
+            username: Optional username for credentials.
+            password: Optional password for credentials.
+
+        Returns:
+            Response dict from the CDP command.
+        """
+        auth_challenge_response: dict[str, Any] = {"response": response}
+        if username is not None:
+            auth_challenge_response["username"] = username
+        if password is not None:
+            auth_challenge_response["password"] = password
+        return await self._call(
+            "Fetch.continueWithAuth",
+            {
+                "requestId": request_id,
+                "authChallengeResponse": auth_challenge_response,
+            },
+        )
+
     async def continue_response(
         self,
         request_id: str,
@@ -139,10 +174,11 @@ class FetchDomain(BaseDomain):
     async def fulfill_request(
         self,
         request_id: str,
-        response_code: int,
+        response_code: int | None = None,
         response_headers: list[dict[str, str]] | None = None,
         body: str | None = None,
         binary_response_headers: str | None = None,
+        status_code: int | None = None,
     ) -> dict[str, Any]:
         """Provide a complete response to an intercepted request.
 
@@ -153,13 +189,17 @@ class FetchDomain(BaseDomain):
                 ``{"name": ..., "value": ...}``.
             body: Response body as base64-encoded string.
             binary_response_headers: Base64-encoded response headers.
+            status_code: Alias for ``response_code``.
 
         Returns:
             Response dict from the CDP command.
         """
+        code = response_code if response_code is not None else status_code
+        if code is None:
+            raise ValueError("Either response_code or status_code must be provided")
         params: dict[str, Any] = {
             "requestId": request_id,
-            "responseCode": response_code,
+            "responseCode": code,
         }
         if response_headers is not None:
             params["responseHeaders"] = response_headers

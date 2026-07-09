@@ -13,6 +13,14 @@ class CacheStorageDomain(BaseDomain):
     retrieving entries, and deleting caches or individual entries.
     """
 
+    async def enable(self) -> dict[str, Any]:
+        """Enable CacheStorage domain."""
+        return await self._call("CacheStorage.enable")
+
+    async def disable(self) -> dict[str, Any]:
+        """Disable CacheStorage domain."""
+        return await self._call("CacheStorage.disable")
+
     async def delete_cache(
         self,
         cache_id: str,

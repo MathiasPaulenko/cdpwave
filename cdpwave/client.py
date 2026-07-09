@@ -522,6 +522,35 @@ class CDPSession:
         await self.close()
 
 
+class _LaunchContext:
+    """Wrapper that supports both ``await CDPClient.launch()`` and
+    ``async with CDPClient.launch() as client:`` patterns.
+
+    The underlying coroutine is awaited on first use (either via
+    ``__await__`` or ``__aenter__``).
+    """
+
+    def __init__(self, coro: Any) -> None:
+        self._coro = coro
+        self._client: CDPClient | None = None
+
+    def __await__(self) -> Any:
+        return self._coro.__await__()
+
+    async def __aenter__(self) -> CDPClient:
+        self._client = await self._coro
+        return self._client
+
+    async def __aexit__(
+        self,
+        exc_type: object,
+        exc_val: object,
+        exc_tb: object,
+    ) -> None:
+        if self._client is not None:
+            await self._client.close()
+
+
 class CDPClient:
     """Main entry point for cdpwave.
 
@@ -568,7 +597,7 @@ class CDPClient:
                         detached_session_id,
                     )
                 else:
-                    logger.warning(
+                    logger.debug(
                         "Target.detachedFromTarget for unknown session %s",
                         detached_session_id,
                     )
@@ -581,7 +610,7 @@ class CDPClient:
             if dispatcher is not None:
                 await dispatcher.dispatch(event_name, params)
             else:
-                logger.warning(
+                logger.debug(
                     "Event %s for unknown session %s",
                     event_name,
                     session_id,
@@ -633,7 +662,7 @@ class CDPClient:
         return self._browser
 
     @classmethod
-    async def launch(
+    def launch(
         cls,
         headless: bool = True,
         browser_path: str | None = None,
@@ -641,8 +670,11 @@ class CDPClient:
         user_data_dir: str | None = None,
         extra_args: list[str] | None = None,
         timeout: float = 10.0,
-    ) -> CDPClient:
+    ) -> _LaunchContext:
         """Launch a new browser and return a connected CDPClient.
+
+        Supports both ``await CDPClient.launch()`` and
+        ``async with CDPClient.launch() as client:`` patterns.
 
         Args:
             headless: Run browser in headless mode.
@@ -653,42 +685,49 @@ class CDPClient:
             timeout: Maximum seconds to wait for browser startup.
 
         Returns:
-            A connected CDPClient instance.
+            A _LaunchContext that resolves to a connected CDPClient.
         """
-        launcher = BrowserLauncher(
-            browser_path=browser_path,
-            port=port,
-            headless=headless,
-            user_data_dir=user_data_dir,
-            extra_args=extra_args,
-        )
-        info = await launcher.launch(timeout=timeout)
-        discovery = TargetDiscovery(port=info.port)
-        client = cls.__new__(cls)
-        client._connection = Connection(
-            info.web_socket_debugger_url,
-            event_callback=client._event_callback,
-        )
-        await client._connection.connect()
-        client._launcher = launcher
-        client._discovery = discovery
-        client._session_manager = SessionManager(client._connection)
-        client._dispatcher = EventDispatcher()
-        client._session_dispatchers = {}
-        client._sessions = {}
-        client._managed_targets = set()
-        client._closed = False
-        client._browser = BrowserDomain(client.send)
-        return client
+
+        async def _do_launch() -> CDPClient:
+            launcher = BrowserLauncher(
+                browser_path=browser_path,
+                port=port,
+                headless=headless,
+                user_data_dir=user_data_dir,
+                extra_args=extra_args,
+            )
+            info = await launcher.launch(timeout=timeout)
+            discovery = TargetDiscovery(port=info.port)
+            client = cls.__new__(cls)
+            client._connection = Connection(
+                info.web_socket_debugger_url,
+                event_callback=client._event_callback,
+            )
+            await client._connection.connect()
+            client._launcher = launcher
+            client._discovery = discovery
+            client._session_manager = SessionManager(client._connection)
+            client._dispatcher = EventDispatcher()
+            client._session_dispatchers = {}
+            client._sessions = {}
+            client._managed_targets = set()
+            client._closed = False
+            client._browser = BrowserDomain(client.send)
+            return client
+
+        return _LaunchContext(_do_launch())
 
     @classmethod
-    async def connect(
+    def connect(
         cls,
         host: str = "localhost",
         port: int = 9222,
         ws_url: str | None = None,
-    ) -> CDPClient:
+    ) -> _LaunchContext:
         """Connect to an existing browser's CDP endpoint.
+
+        Supports both ``await CDPClient.connect()`` and
+        ``async with CDPClient.connect() as client:`` patterns.
 
         If ``ws_url`` is provided, connects directly to that WebSocket
         URL without HTTP discovery. Otherwise, discovers the WebSocket
@@ -700,30 +739,34 @@ class CDPClient:
             ws_url: Optional direct WebSocket URL (skips discovery).
 
         Returns:
-            A connected CDPClient instance.
+            A _LaunchContext that resolves to a connected CDPClient.
         """
-        discovery = TargetDiscovery(host=host, port=port)
-        if ws_url is not None:
-            socket_url = ws_url
-        else:
-            version = await discovery.get_version()
-            socket_url = version.web_socket_debugger_url
-        client = cls.__new__(cls)
-        client._connection = Connection(
-            socket_url,
-            event_callback=client._event_callback,
-        )
-        await client._connection.connect()
-        client._launcher = None
-        client._discovery = discovery
-        client._session_manager = SessionManager(client._connection)
-        client._dispatcher = EventDispatcher()
-        client._session_dispatchers = {}
-        client._sessions = {}
-        client._managed_targets = set()
-        client._closed = False
-        client._browser = BrowserDomain(client.send)
-        return client
+
+        async def _do_connect() -> CDPClient:
+            discovery = TargetDiscovery(host=host, port=port)
+            if ws_url is not None:
+                socket_url = ws_url
+            else:
+                version = await discovery.get_version()
+                socket_url = version.web_socket_debugger_url
+            client = cls.__new__(cls)
+            client._connection = Connection(
+                socket_url,
+                event_callback=client._event_callback,
+            )
+            await client._connection.connect()
+            client._launcher = None
+            client._discovery = discovery
+            client._session_manager = SessionManager(client._connection)
+            client._dispatcher = EventDispatcher()
+            client._session_dispatchers = {}
+            client._sessions = {}
+            client._managed_targets = set()
+            client._closed = False
+            client._browser = BrowserDomain(client.send)
+            return client
+
+        return _LaunchContext(_do_connect())
 
     async def new_page(self, url: str = "about:blank") -> CDPSession:
         """Create a new page target and return a CDPSession for it.

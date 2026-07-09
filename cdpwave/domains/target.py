@@ -72,16 +72,23 @@ class TargetDomain(BaseDomain):
         self,
         auto_attach: bool,
         flatten: bool = True,
+        await_for_notifications_on_start: bool = False,
     ) -> dict[str, Any]:
         """Configure auto-attach to new targets.
 
         Args:
             auto_attach: If True, auto-attach to new targets.
             flatten: If True, use flatten mode for auto-attached sessions.
+            await_for_notifications_on_start: If True, waits for debugger
+                notifications on start (maps to CDP's ``waitForDebuggerOnStart``).
         """
         return await self._call(
             "Target.setAutoAttach",
-            {"autoAttach": auto_attach, "flatten": flatten},
+            {
+                "autoAttach": auto_attach,
+                "waitForDebuggerOnStart": await_for_notifications_on_start,
+                "flatten": flatten,
+            },
         )
 
     async def activate_target(self, target_id: str) -> dict[str, Any]:

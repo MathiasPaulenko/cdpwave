@@ -117,6 +117,21 @@ class TestLayerTreeDomain:
         await domain.disable()
         assert fake.last_call == ("LayerTree.disable", None)
 
+    async def test_get_layers(self) -> None:
+        fake = FakeSender({"layers": []})
+        domain = LayerTreeDomain(fake)
+        await domain.get_layers()
+        assert fake.last_call == ("LayerTree.getLayers", {})
+
+    async def test_get_layers_with_root_id(self) -> None:
+        fake = FakeSender({"layers": []})
+        domain = LayerTreeDomain(fake)
+        await domain.get_layers(root_id=42)
+        method, params = fake.last_call
+        assert method == "LayerTree.getLayers"
+        assert params is not None
+        assert params["rootId"] == 42
+
     async def test_compositing_reasons(self) -> None:
         fake = FakeSender({"compositingReasons": [], "compositingReasonIds": []})
         domain = LayerTreeDomain(fake)

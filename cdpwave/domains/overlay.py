@@ -116,7 +116,7 @@ class OverlayDomain(BaseDomain):
 
     async def highlight_node(
         self,
-        highlight_config: dict[str, Any],
+        highlight_config: dict[str, Any] | None = None,
         node_id: int | None = None,
         backend_node_id: int | None = None,
         object_id: str | None = None,
@@ -126,13 +126,15 @@ class OverlayDomain(BaseDomain):
 
         Args:
             highlight_config: Dict with show options (``showInfo``,
-                ``showStyles``, ``contentColor``, etc.).
+                ``showStyles``, ``contentColor``, etc.). Optional.
             node_id: Optional DOM node ID.
             backend_node_id: Optional backend DOM node ID.
             object_id: Optional remote object ID.
             selector: Optional CSS selector.
         """
-        params: dict[str, Any] = {"highlightConfig": highlight_config}
+        params: dict[str, Any] = {}
+        if highlight_config is not None:
+            params["highlightConfig"] = highlight_config
         if node_id is not None:
             params["nodeId"] = node_id
         if backend_node_id is not None:

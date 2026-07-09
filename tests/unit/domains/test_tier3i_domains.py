@@ -120,6 +120,39 @@ class TestCSSDomain:
         await domain.get_media_queries()
         assert fake.last_call == ("CSS.getMediaQueries", None)
 
+    async def test_set_style_text(self) -> None:
+        fake = FakeSender({"styles": []})
+        domain = CSSDomain(fake)
+        rng = {"startLine": 0, "startColumn": 0, "endLine": 0, "endColumn": 10}
+        await domain.set_style_text("ss1", rng, "color: red;")
+        method, params = fake.last_call
+        assert method == "CSS.setStyleTexts"
+        assert params is not None
+        assert params["edits"][0]["styleSheetId"] == "ss1"
+        assert params["edits"][0]["range"] == rng
+        assert params["edits"][0]["text"] == "color: red;"
+
+    async def test_set_rule_selector(self) -> None:
+        fake = FakeSender({"rule": {}})
+        domain = CSSDomain(fake)
+        rng = {"startLine": 0, "startColumn": 0, "endLine": 0, "endColumn": 5}
+        await domain.set_rule_selector("ss1", rng, ".new-selector")
+        method, params = fake.last_call
+        assert method == "CSS.setRuleSelector"
+        assert params is not None
+        assert params["styleSheetId"] == "ss1"
+        assert params["range"] == rng
+        assert params["selector"] == ".new-selector"
+
+    async def test_get_background_colors(self) -> None:
+        fake = FakeSender({"backgroundColors": ["#fff"]})
+        domain = CSSDomain(fake)
+        await domain.get_background_colors(42)
+        assert fake.last_call == (
+            "CSS.getBackgroundColors",
+            {"nodeId": 42},
+        )
+
 
 @pytest.mark.unit
 class TestDOMDebuggerDomain:

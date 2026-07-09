@@ -160,3 +160,91 @@ class BrowserDomain:
         if events_enabled is not None:
             params["eventsEnabled"] = events_enabled
         return await self._call("Browser.setDownloadBehavior", params)
+
+    async def get_browser_command_line(self) -> dict[str, Any]:
+        """Get the browser command line.
+
+        Returns:
+            Dict with ``commandLine`` string.
+        """
+        return await self._call("Browser.getBrowserCommandLine")
+
+    async def get_command_line(self) -> dict[str, Any]:
+        """Get the browser command line.
+
+        Alias for ``get_browser_command_line``.
+
+        Returns:
+            Dict with ``commandLine`` string.
+        """
+        return await self.get_browser_command_line()
+
+    async def get_histogram(
+        self,
+        name: str,
+        delta: bool | None = None,
+    ) -> dict[str, Any]:
+        """Get a Chrome histogram by name.
+
+        Args:
+            name: Histogram name (e.g. ``"V8.ExecuteJS"``).
+            delta: Whether to return delta since last call.
+
+        Returns:
+            Dict with ``histogram`` containing ``name``, ``sum``, and ``buckets``.
+        """
+        params: dict[str, Any] = {"name": name}
+        if delta is not None:
+            params["delta"] = delta
+        return await self._call("Browser.getHistogram", params)
+
+    async def get_histograms(self) -> dict[str, Any]:
+        """Get all Chrome histograms.
+
+        Returns:
+            Dict with ``histograms`` list.
+        """
+        return await self._call("Browser.getHistograms")
+
+    async def reset_histograms(self) -> dict[str, Any]:
+        """Reset all Chrome histograms.
+
+        Clears all histogram data collected so far.
+        """
+        return await self._call("Browser.resetHistograms")
+
+    async def get_cpu_profile(self) -> dict[str, Any]:
+        """Get CPU profile.
+
+        Returns:
+            Dict with CPU profile data.
+        """
+        return await self._call("Browser.getCPUProfile")
+
+    async def get_heap_profile(self) -> dict[str, Any]:
+        """Get heap profile.
+
+        Returns:
+            Dict with heap profile data.
+        """
+        return await self._call("Browser.getHeapProfile")
+
+    async def get_bounds(self) -> dict[str, Any]:
+        """Get browser window bounds.
+
+        Returns:
+            Dict with ``bounds`` containing window position and size.
+        """
+        return await self._call("Browser.getBounds")
+
+    async def set_bounds(
+        self,
+        bounds: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Set browser window bounds.
+
+        Args:
+            bounds: Dict with window position and size (e.g. ``left``,
+                ``top``, ``width``, ``height``, ``windowState``).
+        """
+        return await self._call("Browser.setBounds", {"bounds": bounds})

@@ -111,6 +111,36 @@ class TestStorageDomain:
         await domain.get_trust_tokens()
         assert fake.last_call == ("Storage.getTrustTokens", None)
 
+    async def test_clear_trust_tokens_all(self) -> None:
+        fake = FakeSender({})
+        domain = StorageDomain(fake)
+        await domain.clear_trust_tokens()
+        assert fake.last_call == ("Storage.clearTrustTokens", {})
+
+    async def test_clear_trust_tokens_with_issuer(self) -> None:
+        fake = FakeSender({})
+        domain = StorageDomain(fake)
+        await domain.clear_trust_tokens(issuer_origin="https://issuer.example.com")
+        method, params = fake.last_call
+        assert params is not None
+        assert params["issuerOrigin"] == "https://issuer.example.com"
+
+    async def test_set_storage_bucket_info(self) -> None:
+        fake = FakeSender({})
+        domain = StorageDomain(fake)
+        bucket: dict[str, str] = {"name": "default", "origin": "https://example.com"}
+        await domain.set_storage_bucket_info(bucket)
+        assert fake.last_call == ("Storage.setStorageBucketInfo", {"bucket": bucket})
+
+    async def test_get_storage_key_for_frame(self) -> None:
+        fake = FakeSender({"storageKey": "https://example.com"})
+        domain = StorageDomain(fake)
+        await domain.get_storage_key_for_frame("frame1")
+        assert fake.last_call == (
+            "Storage.getStorageKeyForFrame",
+            {"frameId": "frame1"},
+        )
+
 
 @pytest.mark.unit
 class TestTracingDomain:
@@ -143,6 +173,12 @@ class TestTracingDomain:
             "Tracing.recordClockSyncMarker",
             {"syncId": "sync1"},
         )
+
+    async def test_request_clock_sync_marker(self) -> None:
+        fake = FakeSender({})
+        domain = TracingDomain(fake)
+        await domain.request_clock_sync_marker()
+        assert fake.last_call == ("Tracing.requestClockSyncMarker", None)
 
 
 @pytest.mark.unit

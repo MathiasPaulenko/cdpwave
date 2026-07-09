@@ -63,6 +63,63 @@ class TestServiceWorkerDomain:
         assert params["registrationId"] == "reg1"
         assert params["data"] == "data123"
 
+    async def test_dispatch_sync_event(self) -> None:
+        fake = FakeSender({})
+        domain = ServiceWorkerDomain(fake)
+        await domain.dispatch_sync_event(
+            "https://example.com", "reg1", "sync-tag", False
+        )
+        method, params = fake.last_call
+        assert method == "ServiceWorker.dispatchSyncEvent"
+        assert params is not None
+        assert params["origin"] == "https://example.com"
+        assert params["registrationId"] == "reg1"
+        assert params["tag"] == "sync-tag"
+        assert params["lastChance"] is False
+
+    async def test_dispatch_sync_event_last_chance(self) -> None:
+        fake = FakeSender({})
+        domain = ServiceWorkerDomain(fake)
+        await domain.dispatch_sync_event(
+            "https://example.com", "reg1", "sync-tag", True
+        )
+        method, params = fake.last_call
+        assert params is not None
+        assert params["lastChance"] is True
+
+    async def test_skip_waiting(self) -> None:
+        fake = FakeSender({})
+        domain = ServiceWorkerDomain(fake)
+        await domain.skip_waiting("https://example.com/sw")
+        assert fake.last_call == (
+            "ServiceWorker.skipWaiting",
+            {"scope": "https://example.com/sw"},
+        )
+
+    async def test_inspect_worker(self) -> None:
+        fake = FakeSender({})
+        domain = ServiceWorkerDomain(fake)
+        await domain.inspect_worker("123")
+        assert fake.last_call == (
+            "ServiceWorker.inspectWorker",
+            {"versionId": "123"},
+        )
+
+    async def test_update(self) -> None:
+        fake = FakeSender({})
+        domain = ServiceWorkerDomain(fake)
+        await domain.update("https://example.com/sw")
+        assert fake.last_call == (
+            "ServiceWorker.update",
+            {"scope": "https://example.com/sw"},
+        )
+
+    async def test_get_messages(self) -> None:
+        fake = FakeSender({"messages": []})
+        domain = ServiceWorkerDomain(fake)
+        await domain.get_messages()
+        assert fake.last_call == ("ServiceWorker.getMessages", None)
+
 
 @pytest.mark.unit
 class TestSystemInfoDomain:
@@ -146,6 +203,15 @@ class TestWebAuthnDomain:
         assert fake.last_call == (
             "WebAuthn.getCredentials",
             {"authenticatorId": "auth1"},
+        )
+
+    async def test_get_credential(self) -> None:
+        fake = FakeSender({"credential": {}})
+        domain = WebAuthnDomain(fake)
+        await domain.get_credential("auth1", "cred1")
+        assert fake.last_call == (
+            "WebAuthn.getCredential",
+            {"authenticatorId": "auth1", "credentialId": "cred1"},
         )
 
     async def test_remove_credential(self) -> None:

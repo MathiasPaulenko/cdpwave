@@ -310,3 +310,11 @@ class NetworkDomain(BaseDomain):
             "Network.getRequestPostData",
             {"requestId": request_id},
         )
+
+    async def can_emulate_network_conditions(self) -> dict[str, Any]:
+        """Check if network conditions emulation is supported.
+
+        Returns:
+            Dict with ``result`` boolean.
+        """
+        return await self._call("Network.canEmulateNetworkConditions")

@@ -378,6 +378,59 @@ class TestEmulationDomain:
             {"width": 800, "height": 600},
         )
 
+    async def test_set_scrollbars_hidden(self) -> None:
+        fake = FakeSender({})
+        domain = EmulationDomain(fake)
+        await domain.set_scrollbars_hidden(True)
+        assert fake.last_call == (
+            "Emulation.setScrollbarsHidden",
+            {"hidden": True},
+        )
+
+    async def test_set_javascript_disabled(self) -> None:
+        fake = FakeSender({})
+        domain = EmulationDomain(fake)
+        await domain.set_javascript_disabled(True)
+        assert fake.last_call == (
+            "Emulation.setJavaScriptDisabled",
+            {"disabled": True},
+        )
+
+    async def test_set_document_cookie_disabled(self) -> None:
+        fake = FakeSender({})
+        domain = EmulationDomain(fake)
+        await domain.set_document_cookie_disabled(True)
+        assert fake.last_call == (
+            "Emulation.setDocumentCookieDisabled",
+            {"disabled": True},
+        )
+
+    async def test_set_emit_touch_events_for_mouse_defaults(self) -> None:
+        fake = FakeSender({})
+        domain = EmulationDomain(fake)
+        await domain.set_emit_touch_events_for_mouse(True)
+        assert fake.last_call == (
+            "Emulation.setEmitTouchEventsForMouse",
+            {"enabled": True, "configuration": "mobile"},
+        )
+
+    async def test_set_emit_touch_events_for_mouse_desktop(self) -> None:
+        fake = FakeSender({})
+        domain = EmulationDomain(fake)
+        await domain.set_emit_touch_events_for_mouse(True, configuration="desktop")
+        method, params = fake.last_call
+        assert params is not None
+        assert params["configuration"] == "desktop"
+
+    async def test_set_auto_dark_mode_override(self) -> None:
+        fake = FakeSender({})
+        domain = EmulationDomain(fake)
+        await domain.set_auto_dark_mode_override(True)
+        assert fake.last_call == (
+            "Emulation.setAutoDarkModeOverride",
+            {"enabled": True},
+        )
+
 
 class TestFetchDomain:
     async def test_enable_no_params(self) -> None:

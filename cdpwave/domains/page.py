@@ -149,9 +149,9 @@ class PageDomain(BaseDomain):
             return_as_stream: Return a stream handle instead of base64 data.
 
         Returns:
-            Base64-encoded PDF string when ``return_as_stream`` is False,
-            or response dict with ``stream`` handle when ``return_as_stream``
-            is True.
+            Response dict with ``data`` (base64-encoded PDF) when
+            ``return_as_stream`` is False, or response dict with
+            ``stream`` handle when ``return_as_stream`` is True.
         """
         if not 0.1 <= scale <= 2.0:
             raise ValueError("scale must be between 0.1 and 2.0")
@@ -178,11 +178,43 @@ class PageDomain(BaseDomain):
         result = await self._call("Page.printToPDF", params)
         if return_as_stream:
             return result
-        return str(result.get("data", ""))
+        return result
 
     async def get_layout_metrics(self) -> dict[str, Any]:
         """Return page layout metrics (viewport, content size)."""
         return await self._call("Page.getLayoutMetrics")
+
+    async def go_back(self) -> dict[str, Any]:
+        """Navigate to the previous page in history.
+
+        Convenience method that uses ``get_navigation_history`` and
+        ``navigate_to_history_entry`` internally.
+
+        Returns:
+            Response dict from ``Page.navigateToHistoryEntry``.
+        """
+        history = await self.get_navigation_history()
+        idx = history.get("currentIndex", 0)
+        if idx > 0:
+            entries = history.get("entries", [])
+            return await self.navigate_to_history_entry(entries[idx - 1]["id"])
+        return {}
+
+    async def go_forward(self) -> dict[str, Any]:
+        """Navigate to the next page in history.
+
+        Convenience method that uses ``get_navigation_history`` and
+        ``navigate_to_history_entry`` internally.
+
+        Returns:
+            Response dict from ``Page.navigateToHistoryEntry``.
+        """
+        history = await self.get_navigation_history()
+        idx = history.get("currentIndex", 0)
+        entries = history.get("entries", [])
+        if idx < len(entries) - 1:
+            return await self.navigate_to_history_entry(entries[idx + 1]["id"])
+        return {}
 
     async def get_navigation_history(self) -> dict[str, Any]:
         """Return the navigation history of the page.
@@ -356,6 +388,8 @@ class PageDomain(BaseDomain):
         if prompt_text is not None:
             params["promptText"] = prompt_text
         return await self._call("Page.handleJavaScriptDialog", params)
+
+    handle_javascript_dialog = handle_java_script_dialog
 
     async def get_app_manifest(self) -> dict[str, Any]:
         """Get the web app manifest for the current page.

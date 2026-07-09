@@ -128,6 +128,41 @@ class DebuggerDomain(BaseDomain):
             params["condition"] = condition
         return await self._call("Debugger.setBreakpointByUrl", params)
 
+    async def set_breakpoints_by_url(
+        self,
+        url: str | None = None,
+        url_regex: str | None = None,
+        url_prefix: str | None = None,
+        line_number: int = 0,
+        column_number: int | None = None,
+        condition: str | None = None,
+    ) -> dict[str, Any]:
+        """Set breakpoints by URL patterns.
+
+        Args:
+            url: Exact script URL to set the breakpoint in.
+            url_regex: Regex pattern to match script URLs.
+            url_prefix: Prefix to match script URLs.
+            line_number: Zero-based line number.
+            column_number: Optional zero-based column number.
+            condition: Optional breakpoint condition expression.
+
+        Returns:
+            Dict with ``breakpointId`` and ``locations`` list.
+        """
+        params: dict[str, Any] = {"lineNumber": line_number}
+        if url is not None:
+            params["url"] = url
+        if url_regex is not None:
+            params["urlRegex"] = url_regex
+        if url_prefix is not None:
+            params["urlPrefix"] = url_prefix
+        if column_number is not None:
+            params["columnNumber"] = column_number
+        if condition is not None:
+            params["condition"] = condition
+        return await self._call("Debugger.setBreakpointByUrl", params)
+
     async def remove_breakpoint(self, breakpoint_id: str) -> dict[str, Any]:
         """Remove a breakpoint by ID.
 
@@ -213,6 +248,31 @@ class DebuggerDomain(BaseDomain):
             "Debugger.getScriptSource",
             {"scriptId": script_id},
         )
+
+    async def set_script_source(
+        self,
+        script_id: str,
+        source: str,
+        dry_run: bool | None = None,
+    ) -> dict[str, Any]:
+        """Set the source code of a script.
+
+        Args:
+            script_id: Script ID from ``Debugger.scriptParsed`` event.
+            source: New source code string.
+            dry_run: If true, only check for errors without actually
+                modifying the script.
+
+        Returns:
+            Dict with ``callFrames`` and ``stackChanged``.
+        """
+        params: dict[str, Any] = {
+            "scriptId": script_id,
+            "source": source,
+        }
+        if dry_run is not None:
+            params["dryRun"] = dry_run
+        return await self._call("Debugger.setScriptSource", params)
 
     async def get_stack_trace(self) -> dict[str, Any]:
         """Get the current call stack trace.
@@ -366,3 +426,34 @@ class DebuggerDomain(BaseDomain):
             "Debugger.setReturnValue",
             {"newValue": new_value},
         )
+
+    async def get_properties(
+        self,
+        object_id: str,
+        own_properties: bool = False,
+        accessor_properties_only: bool = False,
+        generate_preview: bool = False,
+        non_indexed_properties_only: bool = False,
+    ) -> dict[str, Any]:
+        """Get properties of a remote object.
+
+        Args:
+            object_id: ID of the remote object.
+            own_properties: If True, only return own properties.
+            accessor_properties_only: If True, only return accessor properties.
+            generate_preview: Generate preview for the results.
+            non_indexed_properties_only: If True, only return non-indexed properties.
+
+        Returns:
+            Dict with ``result`` and ``internalProperties`` lists.
+        """
+        params: dict[str, Any] = {"objectId": object_id}
+        if own_properties:
+            params["ownProperties"] = own_properties
+        if accessor_properties_only:
+            params["accessorPropertiesOnly"] = accessor_properties_only
+        if generate_preview:
+            params["generatePreview"] = generate_preview
+        if non_indexed_properties_only:
+            params["nonIndexedPropertiesOnly"] = non_indexed_properties_only
+        return await self._call("Runtime.getProperties", params)

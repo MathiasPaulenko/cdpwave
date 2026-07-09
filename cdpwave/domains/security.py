@@ -65,3 +65,14 @@ class SecurityDomain(BaseDomain):
             "Security.setOverrideCertificateErrors",
             {"override": override},
         )
+
+    set_ignore_certificate_errors = set_override_certificate_errors
+
+    async def get_visible_security_state(self) -> dict[str, Any]:
+        """Get the visible security state of the page.
+
+        Returns:
+            Dict with ``visibleSecurityState`` containing security state
+            details (e.g. ``securityState``, ``certificateSecurityState``).
+        """
+        return await self._call("Security.getVisibleSecurityState")

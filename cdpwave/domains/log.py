@@ -41,7 +41,7 @@ class LogDomain(BaseDomain):
         """
         return await self._call("Log.clear")
 
-    async def start_violation_report(
+    async def start_violations_report(
         self,
         config: list[dict[str, Any]],
     ) -> dict[str, Any]:
@@ -55,13 +55,30 @@ class LogDomain(BaseDomain):
             {"config": config},
         )
 
-    async def stop_violation_report(self) -> dict[str, Any]:
+    async def start_violation_report(
+        self,
+        config: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Start reporting violations.
+
+        Deprecated alias for ``start_violations_report``.
+        """
+        return await self.start_violations_report(config)
+
+    async def stop_violations_report(self) -> dict[str, Any]:
         """Stop reporting violations.
 
         Stops the violation reporting that was started by
-        ``start_violation_report``.
+        ``start_violations_report``.
 
         Returns:
             Response dict from the CDP.
         """
         return await self._call("Log.stopViolationsReport")
+
+    async def stop_violation_report(self) -> dict[str, Any]:
+        """Stop reporting violations.
+
+        Deprecated alias for ``stop_violations_report``.
+        """
+        return await self.stop_violations_report()

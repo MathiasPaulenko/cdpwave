@@ -33,7 +33,7 @@ class CSSDomain(BaseDomain):
         """
         return await self._call("CSS.disable")
 
-    async def get_inline_styles(
+    async def get_inline_styles_for_node(
         self,
         node_id: int,
     ) -> dict[str, Any]:
@@ -46,7 +46,58 @@ class CSSDomain(BaseDomain):
             Dict with ``inlineStyle`` and ``attributesStyle``.
         """
         return await self._call(
-            "CSS.getInlineStyles",
+            "CSS.getInlineStylesForNode",
+            {"nodeId": node_id},
+        )
+
+    async def get_inline_styles(
+        self,
+        node_id: int,
+    ) -> dict[str, Any]:
+        """Get inline styles for a DOM node.
+
+        Alias for ``get_inline_styles_for_node``.
+
+        Args:
+            node_id: DOM node ID.
+
+        Returns:
+            Dict with ``inlineStyle`` and ``attributesStyle``.
+        """
+        return await self.get_inline_styles_for_node(node_id)
+
+    async def get_matched_styles_for_node(
+        self,
+        node_id: int,
+    ) -> dict[str, Any]:
+        """Get matched styles for a DOM node.
+
+        Args:
+            node_id: DOM node ID.
+
+        Returns:
+            Dict with ``inlineStyle``, ``attributesStyle``,
+            ``matchedCSSRules``, ``pseudoElements``, ``inherited``.
+        """
+        return await self._call(
+            "CSS.getMatchedStylesForNode",
+            {"nodeId": node_id},
+        )
+
+    async def get_platform_fonts_for_node(
+        self,
+        node_id: int,
+    ) -> dict[str, Any]:
+        """Get platform fonts for a DOM node.
+
+        Args:
+            node_id: DOM node ID.
+
+        Returns:
+            Dict with ``fonts`` list.
+        """
+        return await self._call(
+            "CSS.getPlatformFontsForNode",
             {"nodeId": node_id},
         )
 
@@ -149,6 +200,34 @@ class CSSDomain(BaseDomain):
             params["location"] = location
         return await self._call("CSS.addRule", params)
 
+    async def set_rule_style(
+        self,
+        style_sheet_id: str,
+        selector: str,
+        style_text: str,
+    ) -> dict[str, Any]:
+        """Set the style text of a CSS rule in a stylesheet.
+
+        Args:
+            style_sheet_id: The stylesheet ID.
+            selector: The selector of the rule to update.
+            style_text: The new style text (e.g. ``"color: green"``).
+
+        Returns:
+            Response dict from ``CSS.setStyleTexts``.
+        """
+        return await self._call(
+            "CSS.setStyleTexts",
+            {
+                "edits": [
+                    {
+                        "styleSheetId": style_sheet_id,
+                        "text": style_text,
+                    }
+                ]
+            },
+        )
+
     async def set_style_text(
         self,
         style_sheet_id: str,
@@ -247,3 +326,15 @@ class CSSDomain(BaseDomain):
             "CSS.forcePseudoState",
             {"nodeId": node_id, "forcedPseudoClasses": pseudo_state},
         )
+
+    async def start_rule_usage_tracking(self) -> dict[str, Any]:
+        """Start rule usage tracking."""
+        return await self._call("CSS.startRuleUsageTracking")
+
+    async def stop_rule_usage_tracking(self) -> dict[str, Any]:
+        """Stop rule usage tracking."""
+        return await self._call("CSS.stopRuleUsageTracking")
+
+    async def take_coverage_delta(self) -> dict[str, Any]:
+        """Get coverage delta for CSS rules."""
+        return await self._call("CSS.takeCoverageDelta")

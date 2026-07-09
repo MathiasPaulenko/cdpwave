@@ -56,8 +56,9 @@ class ServiceWorkerDomain(BaseDomain):
         self,
         origin: str,
         registration_id: str,
-        tag: str,
-        last_chance: bool,
+        tag: str = "",
+        last_chance: bool = False,
+        data: str | None = None,
     ) -> dict[str, Any]:
         """Dispatch a sync event to a service worker.
 
@@ -66,6 +67,7 @@ class ServiceWorkerDomain(BaseDomain):
             registration_id: Registration ID.
             tag: Sync tag.
             last_chance: Whether this is the last retry.
+            data: Sync event data (not a CDP parameter, kept for API compatibility).
         """
         return await self._call(
             "ServiceWorker.dispatchSyncEvent",

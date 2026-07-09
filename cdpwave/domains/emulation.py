@@ -133,7 +133,7 @@ class EmulationDomain(BaseDomain):
         """
         return await self._call(
             "Emulation.setScriptExecutionDisabled",
-            {"disabled": disabled},
+            {"value": disabled},
         )
 
     async def set_geolocation_override(
@@ -203,31 +203,78 @@ class EmulationDomain(BaseDomain):
             params["features"] = features
         return await self._call("Emulation.setEmulatedMedia", params)
 
+    async def clear_emulated_media(self) -> dict[str, Any]:
+        """Clear all emulated media settings.
+
+        Resets both media type and features to their defaults.
+        """
+        return await self._call("Emulation.setEmulatedMedia", {"media": ""})
+
+    async def set_emulated_media_feature(
+        self,
+        name: str,
+        value: str,
+    ) -> dict[str, Any]:
+        """Set a single CSS media feature.
+
+        Convenience method for the common case of setting one media
+        feature (e.g. ``prefers-color-scheme``).
+
+        Args:
+            name: Media feature name (e.g. ``"prefers-color-scheme"``).
+            value: Media feature value (e.g. ``"dark"``, ``"light"``).
+        """
+        return await self.set_emulated_media(
+            features=[{"name": name, "value": value}],
+        )
+
     async def set_default_background_color_override(
         self,
-        color: dict[str, Any],
+        r: int | None = None,
+        g: int | None = None,
+        b: int | None = None,
+        a: int | None = None,
+        color: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Override the default background color of the page.
 
+        If ``color`` is provided, uses it directly. Otherwise builds
+        the color dict from ``r``, ``g``, ``b``, ``a`` (0-255 range).
+        If no arguments are provided, clears the override.
+
         Args:
-            color: Color dict with ``r``, ``g``, ``b``, ``a`` (0-255 range).
+            r: Red channel (0-255).
+            g: Green channel (0-255).
+            b: Blue channel (0-255).
+            a: Alpha channel (0-255).
+            color: Pre-built color dict with ``r``, ``g``, "b", ``a``.
         """
+        if color is None:
+            if r is not None or g is not None or b is not None or a is not None:
+                color = {
+                    "r": r or 0,
+                    "g": g or 0,
+                    "b": b or 0,
+                    "a": a if a is not None else 255,
+                }
+        params: dict[str, Any] = {}
+        if color is not None:
+            params["color"] = color
         return await self._call(
             "Emulation.setDefaultBackgroundColorOverride",
-            {"color": color},
+            params,
         )
 
     async def clear_default_background_color_override(self) -> dict[str, Any]:
         """Clear the default background color override.
 
-        Removes the background color override set by
-        ``set_default_background_color_override``, restoring the
-        default transparent or white background.
+        Removes the background color override by calling
+        ``setDefaultBackgroundColorOverride`` with no color parameter.
 
         Returns:
             Response dict from the CDP.
         """
-        return await self._call("Emulation.clearDefaultBackgroundColorOverride")
+        return await self._call("Emulation.setDefaultBackgroundColorOverride")
 
     async def set_idle_override(
         self,
@@ -238,13 +285,13 @@ class EmulationDomain(BaseDomain):
 
         Args:
             is_user_active: Whether the user is active.
-            is_screen_active: Whether the screen is active.
+            is_screen_active: Whether the screen is unlocked.
         """
         return await self._call(
             "Emulation.setIdleOverride",
             {
                 "isUserActive": is_user_active,
-                "isScreenActive": is_screen_active,
+                "isScreenUnlocked": is_screen_active,
             },
         )
 
@@ -293,20 +340,6 @@ class EmulationDomain(BaseDomain):
         return await self._call(
             "Emulation.setLocaleOverride",
             {"locale": locale},
-        )
-
-    async def set_disabled_sensors(
-        self,
-        disabled: bool,
-    ) -> dict[str, Any]:
-        """Disable or enable sensor emulation.
-
-        Args:
-            disabled: Whether to disable sensors.
-        """
-        return await self._call(
-            "Emulation.setDisabledSensors",
-            {"disabled": disabled},
         )
 
     async def set_sensor_override_readings(
@@ -416,14 +449,136 @@ class EmulationDomain(BaseDomain):
 
     async def set_auto_dark_mode_override(
         self,
-        enabled: bool,
+        enabled: bool | None = None,
     ) -> dict[str, Any]:
         """Override the auto dark mode setting.
 
         Args:
-            enabled: Whether to enable auto dark mode.
+            enabled: Whether to enable auto dark mode. If not specified,
+                any existing override will be cleared.
         """
+        params: dict[str, Any] = {}
+        if enabled is not None:
+            params["enabled"] = enabled
         return await self._call(
             "Emulation.setAutoDarkModeOverride",
+            params,
+        )
+
+    async def clear_auto_dark_mode_override(self) -> dict[str, Any]:
+        """Clear the auto dark mode override.
+
+        Removes the auto dark mode override by calling
+        ``setAutoDarkModeOverride`` with no enabled parameter.
+
+        Returns:
+            Response dict from the CDP.
+        """
+        return await self._call("Emulation.setAutoDarkModeOverride")
+
+    async def set_navigator_overrides(
+        self,
+        platform: str,
+    ) -> dict[str, Any]:
+        """Override the navigator platform.
+
+        Args:
+            platform: The platform string navigator.platform should return.
+        """
+        return await self._call(
+            "Emulation.setNavigatorOverrides",
+            {"platform": platform},
+        )
+
+    async def set_virtual_time_policy(
+        self,
+        policy: str,
+        budget: int | None = None,
+        max_virtual_time_task_starvation_count: int | None = None,
+        initial_virtual_time: float | None = None,
+    ) -> dict[str, Any]:
+        """Turn on virtual time for all frames.
+
+        Replaces real-time with a synthetic time source and sets the
+        current virtual time policy.
+
+        Args:
+            policy: Virtual time policy (``"advance"``, ``"pause"``,
+                ``"pauseIfNetworkFetchesPending"``).
+            budget: After this many virtual milliseconds have elapsed,
+                virtual time will be paused.
+            max_virtual_time_task_starvation_count: Maximum number of tasks
+                that can be run before virtual is forced forwards.
+            initial_virtual_time: Base time that will be initially returned.
+
+        Returns:
+            Dict with ``virtualTimeTicksBase``.
+        """
+        params: dict[str, Any] = {"policy": policy}
+        if budget is not None:
+            params["budget"] = budget
+        if max_virtual_time_task_starvation_count is not None:
+            params["maxVirtualTimeTaskStarvationCount"] = max_virtual_time_task_starvation_count
+        if initial_virtual_time is not None:
+            params["initialVirtualTime"] = initial_virtual_time
+        return await self._call("Emulation.setVirtualTimePolicy", params)
+
+    async def set_focus_emulation_enabled(
+        self,
+        enabled: bool,
+    ) -> dict[str, Any]:
+        """Enable or disable simulating a focused and active page.
+
+        Args:
+            enabled: Whether to enable or disable focus emulation.
+        """
+        return await self._call(
+            "Emulation.setFocusEmulationEnabled",
             {"enabled": enabled},
+        )
+
+    async def set_emulated_vision_deficiency(
+        self,
+        type: str,
+    ) -> dict[str, Any]:
+        """Emulate a vision deficiency.
+
+        Args:
+            type: Vision deficiency to emulate (``"none"``,
+                ``"blurredVision"``, ``"reducedContrast"``,
+                ``"achromatopsia"``, ``"deuteranopia"``,
+                ``"protanopia"``, ``"tritanopia"``).
+        """
+        return await self._call(
+            "Emulation.setEmulatedVisionDeficiency",
+            {"type": type},
+        )
+
+    async def clear_emulated_vision_deficiency(self) -> dict[str, Any]:
+        """Clear the emulated vision deficiency.
+
+        Resets the vision deficiency to ``"none"``.
+
+        Returns:
+            Response dict from the CDP.
+        """
+        return await self._call(
+            "Emulation.setEmulatedVisionDeficiency",
+            {"type": "none"},
+        )
+
+    async def set_scroll_position(
+        self,
+        x: float = 0,
+        y: float = 0,
+    ) -> dict[str, Any]:
+        """Set the scroll position for the current page.
+
+        Args:
+            x: Horizontal scroll position.
+            y: Vertical scroll position.
+        """
+        return await self._call(
+            "Emulation.setScrollPositionOverride",
+            {"x": x, "y": y},
         )

@@ -1,0 +1,3380 @@
+[
+  {
+    "tc": "TC-PAGE-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-002",
+    "name": "navigate",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-003",
+    "name": "navigate with referrer",
+    "status": "PASS",
+    "detail": "referrer=https://google.com/"
+  },
+  {
+    "tc": "TC-PAGE-004",
+    "name": "navigate with transition_type",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-005",
+    "name": "reload",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-006",
+    "name": "goBack",
+    "status": "PASS",
+    "detail": "Used navigate_to_history_entry (BUG-002)"
+  },
+  {
+    "tc": "TC-PAGE-007",
+    "name": "goForward",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-008",
+    "name": "captureScreenshot PNG",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-009",
+    "name": "captureScreenshot JPEG",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-010",
+    "name": "captureScreenshot with clip",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-011",
+    "name": "printToPDF basic",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-012",
+    "name": "printToPDF landscape",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-013",
+    "name": "printToPDF background",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-014",
+    "name": "printToPDF margins",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-015",
+    "name": "printToPDF pageRanges",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-016",
+    "name": "getLayoutMetrics",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-017",
+    "name": "getNavigationHistory",
+    "status": "PASS",
+    "detail": "3 entries"
+  },
+  {
+    "tc": "TC-PAGE-018",
+    "name": "setDocumentContent",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-019",
+    "name": "getFrameTree",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-020",
+    "name": "setBypassCSP",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-021",
+    "name": "crash",
+    "status": "FAIL",
+    "detail": "Command timeout: Page.crash"
+  },
+  {
+    "tc": "TC-PAGE-022",
+    "name": "close",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-023",
+    "name": "bringToFront",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-024",
+    "name": "handleJavaScript Dialog",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-025",
+    "name": "createIsolatedWorld",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-026",
+    "name": "captureSnapshot",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-027",
+    "name": "addScriptToEvaluateOnNewDocument",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-028",
+    "name": "get_navigation_history 3 navs",
+    "status": "PASS",
+    "detail": "4 entries"
+  },
+  {
+    "tc": "TC-PAGE-029",
+    "name": "reset_navigation_history",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-030",
+    "name": "navigate_to_history_entry",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_runtime.py\", line 285, in t\n    h2 = await s.page.get_navigation_history()\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\page.py\", line 196, in get_navigation_history\n    return await self._call(\"Page.getNavigationHistory\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwa"
+  },
+  {
+    "tc": "TC-PAGE-031",
+    "name": "remove_script_to_evaluate_on_new_document",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-032",
+    "name": "get_resource_tree",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-033",
+    "name": "get_resource_content",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-034",
+    "name": "set_bypass_csp strict",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-035",
+    "name": "set_web_lifecycle_state active",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-036",
+    "name": "set_web_lifecycle_state frozen",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-037",
+    "name": "get_app_manifest",
+    "status": "PASS",
+    "detail": "{'url': '', 'errors': [], 'data': '', 'parsed': {'scope': 'https://example.com/'"
+  },
+  {
+    "tc": "TC-PAGE-038",
+    "name": "set_intercept_file_chooser_dialog",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-039",
+    "name": "captureScreenshot webp",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-040",
+    "name": "captureScreenshot with quality",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-041",
+    "name": "printToPDF header/footer",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-042",
+    "name": "printToPDF custom header",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-043",
+    "name": "printToPDF custom footer",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-044",
+    "name": "printToPDF prefer_css_page_size",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-045",
+    "name": "printToPDF scale",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-046",
+    "name": "printToPDF paper size",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-047",
+    "name": "printToPDF page ranges multi",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-048",
+    "name": "captureScreenshot with clip v2",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-049",
+    "name": "captureScreenshot from_surface",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PAGE-050",
+    "name": "captureScreenshot beyond_viewport",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-002",
+    "name": "evaluate basic",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-003",
+    "name": "evaluate async",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-004",
+    "name": "evaluate with context",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-005",
+    "name": "callFunctionOn",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-006",
+    "name": "releaseObject",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-007",
+    "name": "getProperties",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-008",
+    "name": "compileScript",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-009",
+    "name": "runScript",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-010",
+    "name": "queryObjects",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-011",
+    "name": "globalLexicalScopeNames",
+    "status": "PASS",
+    "detail": "['x', 'y']"
+  },
+  {
+    "tc": "TC-RUNTIME-012",
+    "name": "addBinding",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-013",
+    "name": "removeBinding",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-014",
+    "name": "getHeapUsage",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-015",
+    "name": "getIsolateId",
+    "status": "FAIL",
+    "detail": "Method missing"
+  },
+  {
+    "tc": "TC-RUNTIME-016",
+    "name": "collectGarbage",
+    "status": "FAIL",
+    "detail": "Method missing"
+  },
+  {
+    "tc": "TC-RUNTIME-017",
+    "name": "terminateExecution",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-018",
+    "name": "setCustomObjectFormatterEnabled",
+    "status": "FAIL",
+    "detail": "Method missing"
+  },
+  {
+    "tc": "TC-RUNTIME-019",
+    "name": "getExceptionDetails",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_runtime.py\", line 632, in t\n    d = await s.runtime.get_exception_details(exc_id)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\runtime.py\", line 266, in get_exception_details\n    return await self._call(\n           ^^^^^^^^^^^^^^^^^\n    ...<2 lines>...\n    )\n    ^\n  File \"D:\\Codigo\\cdpwave\\cdpwa"
+  },
+  {
+    "tc": "TC-RUNTIME-020",
+    "name": "awaitPromise timeout",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-021",
+    "name": "release_object_group",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-022",
+    "name": "run_if_waiting_for_debugger",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-023",
+    "name": "get_exception_details v2",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_runtime.py\", line 673, in t\n    d = await s.runtime.get_exception_details(eid)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\runtime.py\", line 266, in get_exception_details\n    return await self._call(\n           ^^^^^^^^^^^^^^^^^\n    ...<2 lines>...\n    )\n    ^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\dom"
+  },
+  {
+    "tc": "TC-RUNTIME-024",
+    "name": "query_objects with prototype",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-025",
+    "name": "global_lexical_scope_names with ctx",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-026",
+    "name": "set_async_call_stack_depth",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-027",
+    "name": "await_promise with timeout",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-028",
+    "name": "discard_console_entries",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-029",
+    "name": "evaluate with generate_preview",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-030",
+    "name": "evaluate with silent",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-031",
+    "name": "evaluate with object_group",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-032",
+    "name": "evaluate return_by_value False",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-RUNTIME-033",
+    "name": "callFunctionOn with return_by_value",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_runtime.py\", line 757, in t\n    r = await s.runtime.call_function_on(\"function(){return 42}\", return_by_value=True)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\runtime.py\", line 121, in call_function_on\n    return await self._call(\"Runtime.callFunctionOn\", para"
+  },
+  {
+    "tc": "TC-RUNTIME-034",
+    "name": "callFunctionOn with generate_preview",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_runtime.py\", line 765, in t\n    r = await s.runtime.call_function_on(\"function(){return {a:1,b:[1,2]}}\", generate_preview=True)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\runtime.py\", line 121, in call_function_on\n    return await self._call(\"Runti"
+  },
+  {
+    "tc": "TC-RUNTIME-035",
+    "name": "callFunctionOn with silent",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_runtime.py\", line 773, in t\n    r = await s.runtime.call_function_on(\"function(){return 1+1}\", silent=True, return_by_value=True)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\runtime.py\", line 121, in call_function_on\n    return await self._call(\"R"
+  },
+  {
+    "tc": "TC-TARGET-001",
+    "name": "createTarget",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-TARGET-002",
+    "name": "attachToTarget",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-TARGET-003",
+    "name": "detachFromTarget",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-TARGET-004",
+    "name": "closeTarget",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-TARGET-005",
+    "name": "getTargets",
+    "status": "PASS",
+    "detail": "10 targets"
+  },
+  {
+    "tc": "TC-TARGET-006",
+    "name": "activateTarget",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-TARGET-007",
+    "name": "setAutoAttach",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1a.py\", line 71, in t\n    await s.target.set_auto_attach(auto_attach=True, await_for_notifications_on_start=True, flatten=True)\n          ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: TargetDomain.set_auto_attach() got an unexpected keyword argument 'await_for_notifications_on"
+  },
+  {
+    "tc": "TC-TARGET-008",
+    "name": "sendMessageToTarget",
+    "status": "SKIP",
+    "detail": "Flatten mode uses sessions directly"
+  },
+  {
+    "tc": "TC-TARGET-009",
+    "name": "setDiscoverTargets",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-TARGET-010",
+    "name": "setRemoteLocations",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-TARGET-011",
+    "name": "getTargetInfo",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-TARGET-012",
+    "name": "initiateTargetShutdown",
+    "status": "FAIL",
+    "detail": "[-32601] 'Target.initiateTargetShutdown' wasn't found"
+  },
+  {
+    "tc": "TC-NETWORK-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-NETWORK-002",
+    "name": "setCacheDisabled",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-NETWORK-003",
+    "name": "setUserAgentOverride",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-NETWORK-004",
+    "name": "clearBrowserCookies",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-NETWORK-005",
+    "name": "clearBrowserCache",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-NETWORK-006",
+    "name": "getAllCookies",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-NETWORK-007",
+    "name": "setCookies",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-NETWORK-008",
+    "name": "getCookies",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-NETWORK-009",
+    "name": "deleteCookies",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-NETWORK-010",
+    "name": "setExtraHTTPHeaders",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-NETWORK-011",
+    "name": "canEmulateNetworkConditions",
+    "status": "FAIL",
+    "detail": "Method missing (BUG-005)"
+  },
+  {
+    "tc": "TC-NETWORK-012",
+    "name": "emulateNetworkConditions",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-NETWORK-013",
+    "name": "getResponseBody",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-NETWORK-014",
+    "name": "continueInterceptedRequest",
+    "status": "SKIP",
+    "detail": "Requires Fetch interception setup"
+  },
+  {
+    "tc": "TC-NETWORK-015",
+    "name": "getPostData",
+    "status": "SKIP",
+    "detail": "Requires POST request capture"
+  },
+  {
+    "tc": "TC-NETWORK-016",
+    "name": "replayXHR",
+    "status": "SKIP",
+    "detail": "Requires XHR capture"
+  },
+  {
+    "tc": "TC-NETWORK-017",
+    "name": "getResponseBodyForInterception",
+    "status": "SKIP",
+    "detail": "Requires Fetch interception"
+  },
+  {
+    "tc": "TC-NETWORK-018",
+    "name": "set_cache_disabled v2",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-NETWORK-019",
+    "name": "set_blocked_urls",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-NETWORK-020",
+    "name": "set_bypass_service_worker",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-NETWORK-021",
+    "name": "load_network_resource",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-NETWORK-022",
+    "name": "get_request_post_data",
+    "status": "SKIP",
+    "detail": "Requires POST capture"
+  },
+  {
+    "tc": "TC-NETWORK-023",
+    "name": "set_blocked_urls patterns",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-NETWORK-024",
+    "name": "emulate_network_conditions resource_types",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-NETWORK-025",
+    "name": "set_cache_disabled resource_types",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-002",
+    "name": "getDocument",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-003",
+    "name": "getFlattenedDocument",
+    "status": "FAIL",
+    "detail": "Method missing"
+  },
+  {
+    "tc": "TC-DOM-004",
+    "name": "collectClassNamesFromSubtree",
+    "status": "FAIL",
+    "detail": "Method missing"
+  },
+  {
+    "tc": "TC-DOM-005",
+    "name": "querySelector",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-006",
+    "name": "querySelectorAll",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-007",
+    "name": "removeNode",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-008",
+    "name": "setAttributeValue",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-009",
+    "name": "setAttributesAsText",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-010",
+    "name": "removeAttribute",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-011",
+    "name": "setTextContent",
+    "status": "FAIL",
+    "detail": "'DOMDomain' object has no attribute 'set_text_content'"
+  },
+  {
+    "tc": "TC-DOM-012",
+    "name": "getBoxModel",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-013",
+    "name": "getContentQuads",
+    "status": "FAIL",
+    "detail": "'DOMDomain' object has no attribute 'get_content_quads'"
+  },
+  {
+    "tc": "TC-DOM-014",
+    "name": "describeNode",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-015",
+    "name": "focus",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-016",
+    "name": "scrollIntoViewIfNeeded",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-017",
+    "name": "setFileInputFiles",
+    "status": "FAIL",
+    "detail": "'DOMDomain' object has no attribute 'set_file_input_files'"
+  },
+  {
+    "tc": "TC-DOM-018",
+    "name": "performSearch",
+    "status": "PASS",
+    "detail": "1 results"
+  },
+  {
+    "tc": "TC-DOM-019",
+    "name": "getSearchResults",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-020",
+    "name": "discardSearchResults",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-021",
+    "name": "requestChildNodes",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-022",
+    "name": "requestNode",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-DOM-023",
+    "name": "getOuterHTML",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-024",
+    "name": "setOuterHTML",
+    "status": "FAIL",
+    "detail": "'DOMDomain' object has no attribute 'set_outer_html'"
+  },
+  {
+    "tc": "TC-DOM-025",
+    "name": "getHighlightObjectForTest",
+    "status": "FAIL",
+    "detail": "Method missing"
+  },
+  {
+    "tc": "TC-DOM-026",
+    "name": "setChildNodes",
+    "status": "SKIP",
+    "detail": "Event-driven, not a command"
+  },
+  {
+    "tc": "TC-DOM-027",
+    "name": "get_inner_html",
+    "status": "FAIL",
+    "detail": "[-32601] 'DOM.getInnerHTML' wasn't found"
+  },
+  {
+    "tc": "TC-DOM-028",
+    "name": "get_attribute",
+    "status": "FAIL",
+    "detail": "DOMDomain.get_attribute() takes 2 positional arguments but 3 were given"
+  },
+  {
+    "tc": "TC-DOM-029",
+    "name": "resolve_node object_id",
+    "status": "FAIL",
+    "detail": "DOMDomain.resolve_node() got an unexpected keyword argument 'object_id'"
+  },
+  {
+    "tc": "TC-DOM-030",
+    "name": "resolve_node backend",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-031",
+    "name": "copy_to",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-032",
+    "name": "move_to",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-033",
+    "name": "set_node_value",
+    "status": "FAIL",
+    "detail": "[-32000] Can only set value of text nodes or processing instructions"
+  },
+  {
+    "tc": "TC-DOM-034",
+    "name": "get_node_for_location",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-035",
+    "name": "request_node backend",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-DOM-036",
+    "name": "get_document depth",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-037",
+    "name": "get_document pierce",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-038",
+    "name": "query_selector node_id",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DOM-039",
+    "name": "query_selector object_id",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-BROWSER-001",
+    "name": "getVersion",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-BROWSER-002",
+    "name": "getCommandLine",
+    "status": "FAIL",
+    "detail": "'BrowserDomain' object has no attribute 'get_command_line'"
+  },
+  {
+    "tc": "TC-BROWSER-003",
+    "name": "getHistogram",
+    "status": "FAIL",
+    "detail": "'BrowserDomain' object has no attribute 'get_histogram'"
+  },
+  {
+    "tc": "TC-BROWSER-004",
+    "name": "getHistograms",
+    "status": "FAIL",
+    "detail": "'BrowserDomain' object has no attribute 'get_histograms'"
+  },
+  {
+    "tc": "TC-BROWSER-005",
+    "name": "getCPUProfile",
+    "status": "FAIL",
+    "detail": "Method missing"
+  },
+  {
+    "tc": "TC-BROWSER-006",
+    "name": "getHeapProfile",
+    "status": "FAIL",
+    "detail": "Method missing"
+  },
+  {
+    "tc": "TC-BROWSER-007",
+    "name": "resetHistograms",
+    "status": "FAIL",
+    "detail": "'BrowserDomain' object has no attribute 'reset_histograms'"
+  },
+  {
+    "tc": "TC-BROWSER-008",
+    "name": "getBrowserCommandLine",
+    "status": "FAIL",
+    "detail": "Method missing"
+  },
+  {
+    "tc": "TC-BROWSER-009",
+    "name": "getBounds",
+    "status": "FAIL",
+    "detail": "Method missing"
+  },
+  {
+    "tc": "TC-EMULATION-001",
+    "name": "setDeviceMetricsOverride",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-002",
+    "name": "clearDeviceMetricsOverride",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-003",
+    "name": "setGeolocationOverride",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-004",
+    "name": "clearGeolocationOverride",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-005",
+    "name": "setCPUThrottlingRate",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-006",
+    "name": "setUserAgentOverride",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-007",
+    "name": "setTouchEmulationEnabled",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-008",
+    "name": "setEmulatedMedia",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-009",
+    "name": "clearEmulatedMedia",
+    "status": "PASS",
+    "detail": "Used set_emulated_media('') (BUG-006)"
+  },
+  {
+    "tc": "TC-EMULATION-010",
+    "name": "setTimezoneOverride",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-011",
+    "name": "clearTimezoneOverride",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-012",
+    "name": "setIdleOverride",
+    "status": "FAIL",
+    "detail": "Deprecated: [-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-EMULATION-013",
+    "name": "clearIdleOverride",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-014",
+    "name": "setNavigatorOverrides",
+    "status": "FAIL",
+    "detail": "Method missing"
+  },
+  {
+    "tc": "TC-EMULATION-015",
+    "name": "setPageScaleFactor",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-016",
+    "name": "setScriptExecutionDisabled",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-EMULATION-017",
+    "name": "setDefaultBackgroundColorOverride",
+    "status": "FAIL",
+    "detail": "EmulationDomain.set_default_background_color_override() got an unexpected keyword argument 'r'"
+  },
+  {
+    "tc": "TC-EMULATION-018",
+    "name": "clearDefaultBackgroundColorOverride",
+    "status": "FAIL",
+    "detail": "[-32601] 'Emulation.clearDefaultBackgroundColorOverride' wasn't found"
+  },
+  {
+    "tc": "TC-EMULATION-019",
+    "name": "setVirtualTimePolicy",
+    "status": "FAIL",
+    "detail": "Method missing"
+  },
+  {
+    "tc": "TC-EMULATION-020",
+    "name": "setLocale",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-021",
+    "name": "setScrollPosition",
+    "status": "FAIL",
+    "detail": "Method missing"
+  },
+  {
+    "tc": "TC-EMULATION-022",
+    "name": "setFocusEmulationEnabled",
+    "status": "FAIL",
+    "detail": "Method missing"
+  },
+  {
+    "tc": "TC-EMULATION-023",
+    "name": "setEmulatedVisionDeficiency",
+    "status": "FAIL",
+    "detail": "Method missing (BUG-008)"
+  },
+  {
+    "tc": "TC-EMULATION-024",
+    "name": "clearEmulatedVisionDeficiency",
+    "status": "FAIL",
+    "detail": "Method missing (BUG-008)"
+  },
+  {
+    "tc": "TC-EMULATION-025",
+    "name": "setAutoDarkModeOverride",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-026",
+    "name": "clearAutoDarkModeOverride",
+    "status": "FAIL",
+    "detail": "Method missing"
+  },
+  {
+    "tc": "TC-EMULATION-027",
+    "name": "set_scrollbars_hidden",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-028",
+    "name": "set_javascript_disabled",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-EMULATION-029",
+    "name": "set_document_cookie_disabled",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-030",
+    "name": "set_emit_touch_events_for_mouse",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-031",
+    "name": "set_locale_override v2",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-032",
+    "name": "set_disabled_sensors",
+    "status": "FAIL",
+    "detail": "[-32601] 'Emulation.setDisabledSensors' wasn't found"
+  },
+  {
+    "tc": "TC-EMULATION-033",
+    "name": "set_sensor_override_readings",
+    "status": "FAIL",
+    "detail": "[-32601] 'Sensor.enable' wasn't found"
+  },
+  {
+    "tc": "TC-EMULATION-034",
+    "name": "clear_sensor_override_readings",
+    "status": "FAIL",
+    "detail": "[-32601] 'Sensor.enable' wasn't found"
+  },
+  {
+    "tc": "TC-EMULATION-035",
+    "name": "set_visible_size",
+    "status": "PASS",
+    "detail": "Used set_device_metrics_override"
+  },
+  {
+    "tc": "TC-EMULATION-036",
+    "name": "device_metrics screen_orientation",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-037",
+    "name": "device_metrics viewport",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EMULATION-038",
+    "name": "device_metrics display_feature",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-EMULATION-039",
+    "name": "device_metrics device_posture",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-001",
+    "name": "dispatchKeyEvent char",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-002",
+    "name": "dispatchKeyEvent keyDown",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-003",
+    "name": "dispatchMouseEvent",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1b.py\", line 391, in t\n    await s.input.dispatch_mouse_event(\"mousePressed\", \"left\", x=100, y=100)\n          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: InputDomain.dispatch_mouse_event() got multiple values for argument 'x'\n"
+  },
+  {
+    "tc": "TC-INPUT-004",
+    "name": "dispatchTouchEvent",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-005",
+    "name": "emulateTouchFromMouseEvent",
+    "status": "FAIL",
+    "detail": "'InputDomain' object has no attribute 'emulate_touch_from_mouse_event'"
+  },
+  {
+    "tc": "TC-INPUT-006",
+    "name": "synthesizePinchGesture",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-007",
+    "name": "synthesizeScrollGesture",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-008",
+    "name": "synthesizeTapGesture",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-009",
+    "name": "insertText",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-010",
+    "name": "setIgnoreInputEvents",
+    "status": "FAIL",
+    "detail": "Method missing (BUG-004)"
+  },
+  {
+    "tc": "TC-INPUT-011",
+    "name": "cancelDragging",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-012",
+    "name": "dispatch_drag_event",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-INPUT-013",
+    "name": "ime_set_composition",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-014",
+    "name": "set_intercept_drags",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-015",
+    "name": "dispatch_key_event modifiers",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-016",
+    "name": "dispatch_key_event location",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-017",
+    "name": "dispatch_key_event auto_repeat",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-018",
+    "name": "dispatch_key_event is_keypad",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-019",
+    "name": "dispatch_key_event is_system_key",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-020",
+    "name": "synthesize_pinch_gesture source_type",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-021",
+    "name": "synthesize_scroll_gesture repeat_count",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-022",
+    "name": "synthesize_scroll_gesture repeat_delay_ms",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INPUT-023",
+    "name": "synthesize_tap_gesture source_type",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-FETCH-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-FETCH-002",
+    "name": "failRequest",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1b.py\", line 592, in t\n    await s.page.navigate(\"https://example.com\")\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\page.py\", line 56, in navigate\n    return await self._call(\"Page.navigate\", params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\base.py\", line 32, in _call\n    return await "
+  },
+  {
+    "tc": "TC-FETCH-003",
+    "name": "fulfillRequest",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1b.py\", line 611, in t\n    await s.page.navigate(\"https://example.com\")\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\page.py\", line 56, in navigate\n    return await self._call(\"Page.navigate\", params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\base.py\", line 32, in _call\n    return await "
+  },
+  {
+    "tc": "TC-FETCH-004",
+    "name": "continueRequest",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1b.py\", line 630, in t\n    await s.page.navigate(\"https://example.com\")\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\page.py\", line 56, in navigate\n    return await self._call(\"Page.navigate\", params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\base.py\", line 32, in _call\n    return await "
+  },
+  {
+    "tc": "TC-FETCH-005",
+    "name": "continueWithAuth",
+    "status": "FAIL",
+    "detail": "'FetchDomain' object has no attribute 'continue_with_auth'"
+  },
+  {
+    "tc": "TC-FETCH-006",
+    "name": "getResponseBody",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid InterceptionId."
+  },
+  {
+    "tc": "TC-FETCH-007",
+    "name": "takeResponseBodyAsStream",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid InterceptionId."
+  },
+  {
+    "tc": "TC-FETCH-008",
+    "name": "continueResponse",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid InterceptionId."
+  },
+  {
+    "tc": "TC-FETCH-009",
+    "name": "pause/resume",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-FETCH-010",
+    "name": "fail",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid InterceptionId."
+  },
+  {
+    "tc": "TC-STORAGE-001",
+    "name": "enable/disable",
+    "status": "FAIL",
+    "detail": "[-32601] 'Storage.enable' wasn't found"
+  },
+  {
+    "tc": "TC-STORAGE-002",
+    "name": "getDOMStorageItems",
+    "status": "FAIL",
+    "detail": "[-32601] 'Storage.getDOMStorageItems' wasn't found"
+  },
+  {
+    "tc": "TC-STORAGE-003",
+    "name": "setDOMStorageItem",
+    "status": "FAIL",
+    "detail": "[-32601] 'Storage.setDOMStorageItem' wasn't found"
+  },
+  {
+    "tc": "TC-STORAGE-004",
+    "name": "removeDOMStorageItem",
+    "status": "FAIL",
+    "detail": "[-32601] 'Storage.removeDOMStorageItem' wasn't found"
+  },
+  {
+    "tc": "TC-STORAGE-005",
+    "name": "clearDOMStorageItems",
+    "status": "FAIL",
+    "detail": "[-32601] 'Storage.clearDOMStorageItems' wasn't found"
+  },
+  {
+    "tc": "TC-STORAGE-006",
+    "name": "getUsageAndQuota",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-STORAGE-007",
+    "name": "trackCacheStorageForOrigin",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-STORAGE-008",
+    "name": "trackIndexedDBForOrigin",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-STORAGE-009",
+    "name": "untrackCacheStorageForOrigin",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-STORAGE-010",
+    "name": "untrackIndexedDBForOrigin",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-STORAGE-011",
+    "name": "getCacheStorageForOrigin",
+    "status": "FAIL",
+    "detail": "[-32602] Frame tree node for given frame not found"
+  },
+  {
+    "tc": "TC-STORAGE-012",
+    "name": "getIndexedDBForOrigin",
+    "status": "FAIL",
+    "detail": "[-32602] Frame tree node for given frame not found"
+  },
+  {
+    "tc": "TC-STORAGE-013",
+    "name": "getCookies",
+    "status": "FAIL",
+    "detail": "[-32602] browserContextId is only allowed for Browser target"
+  },
+  {
+    "tc": "TC-CSS-001",
+    "name": "enable/disable",
+    "status": "FAIL",
+    "detail": "[-32000] DOM agent needs to be enabled first."
+  },
+  {
+    "tc": "TC-CSS-002",
+    "name": "getComputedStyle",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-CSS-003",
+    "name": "getInlineStylesForNode",
+    "status": "FAIL",
+    "detail": "'CSSDomain' object has no attribute 'get_inline_styles_for_node'"
+  },
+  {
+    "tc": "TC-CSS-004",
+    "name": "getMatchedStylesForNode",
+    "status": "FAIL",
+    "detail": "'CSSDomain' object has no attribute 'get_matched_styles_for_node'"
+  },
+  {
+    "tc": "TC-CSS-005",
+    "name": "getMediaQueries",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1c.py\", line 66, in t\n    s = await fresh_session(client); await s.css.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\css.py\", line 24, in enable\n    return await self._call(\"CSS.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\base"
+  },
+  {
+    "tc": "TC-CSS-006",
+    "name": "getPlatformFontsForNode",
+    "status": "FAIL",
+    "detail": "'CSSDomain' object has no attribute 'get_platform_fonts_for_node'"
+  },
+  {
+    "tc": "TC-CSS-007",
+    "name": "getStyleSheetText",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1c.py\", line 87, in t\n    s = await fresh_session(client); await s.css.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\css.py\", line 24, in enable\n    return await self._call(\"CSS.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\base"
+  },
+  {
+    "tc": "TC-CSS-008",
+    "name": "setStyleSheetText",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1c.py\", line 104, in t\n    s = await fresh_session(client); await s.css.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\css.py\", line 24, in enable\n    return await self._call(\"CSS.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\bas"
+  },
+  {
+    "tc": "TC-CSS-009",
+    "name": "setRuleStyle",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1c.py\", line 121, in t\n    s = await fresh_session(client); await s.css.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\css.py\", line 24, in enable\n    return await self._call(\"CSS.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\bas"
+  },
+  {
+    "tc": "TC-CSS-010",
+    "name": "addRule",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1c.py\", line 138, in t\n    s = await fresh_session(client); await s.css.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\css.py\", line 24, in enable\n    return await self._call(\"CSS.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\bas"
+  },
+  {
+    "tc": "TC-CSS-011",
+    "name": "forcePseudoState",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-CSS-012",
+    "name": "getBackgroundColors",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-CSS-013",
+    "name": "setEffectiveCompositeForNode",
+    "status": "FAIL",
+    "detail": "[-32601] 'CSS.setEffectivePropertyValuesForNode' wasn't found"
+  },
+  {
+    "tc": "TC-CSS-014",
+    "name": "takeCoverageDelta",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1c.py\", line 191, in t\n    s = await fresh_session(client); await s.css.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\css.py\", line 24, in enable\n    return await self._call(\"CSS.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\bas"
+  },
+  {
+    "tc": "TC-OVERLAY-001",
+    "name": "enable/disable",
+    "status": "FAIL",
+    "detail": "[-32000] DOM should be enabled first"
+  },
+  {
+    "tc": "TC-OVERLAY-002",
+    "name": "setShowDevTools",
+    "status": "FAIL",
+    "detail": "[-32601] 'Overlay.setShowDevTools' wasn't found"
+  },
+  {
+    "tc": "TC-OVERLAY-003",
+    "name": "setPausedInOverlayMessage",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-OVERLAY-004",
+    "name": "highlightNode",
+    "status": "FAIL",
+    "detail": "OverlayDomain.highlight_node() missing 1 required positional argument: 'highlight_config'"
+  },
+  {
+    "tc": "TC-OVERLAY-005",
+    "name": "highlightFrame",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1c.py\", line 241, in t\n    s = await fresh_session(client); await s.page.enable(); await s.overlay.enable()\n                                                            ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\overlay.py\", line 25, in enable\n    return await self._call(\"Overlay.enable\")\n           ^^^^^^^^^^^^^^"
+  },
+  {
+    "tc": "TC-OVERLAY-006",
+    "name": "highlightQuad",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1c.py\", line 252, in t\n    s = await fresh_session(client); await s.overlay.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\overlay.py\", line 25, in enable\n    return await self._call(\"Overlay.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave"
+  },
+  {
+    "tc": "TC-OVERLAY-007",
+    "name": "highlightRect",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1c.py\", line 262, in t\n    s = await fresh_session(client); await s.overlay.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\overlay.py\", line 25, in enable\n    return await self._call(\"Overlay.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave"
+  },
+  {
+    "tc": "TC-OVERLAY-008",
+    "name": "highlightShape",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1c.py\", line 272, in t\n    s = await fresh_session(client); await s.overlay.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\overlay.py\", line 25, in enable\n    return await self._call(\"Overlay.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave"
+  },
+  {
+    "tc": "TC-OVERLAY-009",
+    "name": "setShowGridOverlays",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1c.py\", line 281, in t\n    s = await fresh_session(client); await s.overlay.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\overlay.py\", line 25, in enable\n    return await self._call(\"Overlay.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave"
+  },
+  {
+    "tc": "TC-OVERLAY-010",
+    "name": "setShowPaintRects",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1c.py\", line 290, in t\n    s = await fresh_session(client); await s.overlay.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\overlay.py\", line 25, in enable\n    return await self._call(\"Overlay.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave"
+  },
+  {
+    "tc": "TC-OVERLAY-011",
+    "name": "setShowLayoutRects",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1c.py\", line 299, in t\n    s = await fresh_session(client); await s.overlay.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\overlay.py\", line 25, in enable\n    return await self._call(\"Overlay.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave"
+  },
+  {
+    "tc": "TC-OVERLAY-012",
+    "name": "setShowScrollBottleneckRects",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1c.py\", line 308, in t\n    s = await fresh_session(client); await s.overlay.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\overlay.py\", line 25, in enable\n    return await self._call(\"Overlay.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave"
+  },
+  {
+    "tc": "TC-OVERLAY-013",
+    "name": "setShowHitTestRects",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1c.py\", line 317, in t\n    s = await fresh_session(client); await s.overlay.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\overlay.py\", line 25, in enable\n    return await self._call(\"Overlay.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave"
+  },
+  {
+    "tc": "TC-OVERLAY-014",
+    "name": "setShowWebVitals",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1c.py\", line 326, in t\n    s = await fresh_session(client); await s.overlay.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\overlay.py\", line 25, in enable\n    return await self._call(\"Overlay.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave"
+  },
+  {
+    "tc": "TC-OVERLAY-015",
+    "name": "setShowViewportSizeOnResize",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p1c.py\", line 335, in t\n    s = await fresh_session(client); await s.overlay.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\overlay.py\", line 25, in enable\n    return await self._call(\"Overlay.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave"
+  },
+  {
+    "tc": "TC-DEBUGGER-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DEBUGGER-002",
+    "name": "setBreakpointsByUrl",
+    "status": "FAIL",
+    "detail": "'DebuggerDomain' object has no attribute 'set_breakpoints_by_url'"
+  },
+  {
+    "tc": "TC-DEBUGGER-003",
+    "name": "removeBreakpoint",
+    "status": "FAIL",
+    "detail": "'DebuggerDomain' object has no attribute 'set_breakpoints_by_url'"
+  },
+  {
+    "tc": "TC-DEBUGGER-004",
+    "name": "getPossibleBreakpoints",
+    "status": "FAIL",
+    "detail": "[-32000] Script not found"
+  },
+  {
+    "tc": "TC-DEBUGGER-005",
+    "name": "setBreakpointByScriptId",
+    "status": "FAIL",
+    "detail": "[-32000] Could not resolve breakpoint"
+  },
+  {
+    "tc": "TC-DEBUGGER-006",
+    "name": "setBreakpointActive",
+    "status": "FAIL",
+    "detail": "[-32601] 'Debugger.setBreakpointActive' wasn't found"
+  },
+  {
+    "tc": "TC-DEBUGGER-007",
+    "name": "setBreakpointsActive",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DEBUGGER-008",
+    "name": "stepInto",
+    "status": "FAIL",
+    "detail": "[-32000] Can only perform operation while paused."
+  },
+  {
+    "tc": "TC-DEBUGGER-009",
+    "name": "stepOver",
+    "status": "FAIL",
+    "detail": "[-32000] Can only perform operation while paused."
+  },
+  {
+    "tc": "TC-DEBUGGER-010",
+    "name": "stepOut",
+    "status": "FAIL",
+    "detail": "[-32000] Can only perform operation while paused."
+  },
+  {
+    "tc": "TC-DEBUGGER-011",
+    "name": "pause",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DEBUGGER-012",
+    "name": "resume",
+    "status": "FAIL",
+    "detail": "[-32000] Can only perform operation while paused."
+  },
+  {
+    "tc": "TC-DEBUGGER-013",
+    "name": "searchInContent",
+    "status": "FAIL",
+    "detail": "[-32000] No script for id: 0"
+  },
+  {
+    "tc": "TC-DEBUGGER-014",
+    "name": "setScriptSource",
+    "status": "FAIL",
+    "detail": "'DebuggerDomain' object has no attribute 'set_script_source'"
+  },
+  {
+    "tc": "TC-DEBUGGER-015",
+    "name": "restartFrame",
+    "status": "FAIL",
+    "detail": "[-32000] Can only perform operation while paused."
+  },
+  {
+    "tc": "TC-DEBUGGER-016",
+    "name": "getScriptSource",
+    "status": "FAIL",
+    "detail": "[-32000] No script for id: 0"
+  },
+  {
+    "tc": "TC-DEBUGGER-017",
+    "name": "setPauseOnExceptions",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DEBUGGER-018",
+    "name": "evaluateOnCallFrame",
+    "status": "FAIL",
+    "detail": "[-32000] Can only perform operation while paused."
+  },
+  {
+    "tc": "TC-DEBUGGER-019",
+    "name": "setVariableValue",
+    "status": "FAIL",
+    "detail": "[-32000] Can only perform operation while paused."
+  },
+  {
+    "tc": "TC-DEBUGGER-020",
+    "name": "setAsyncStackTrace",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DEBUGGER-021",
+    "name": "setBlackboxPatterns",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DEBUGGER-022",
+    "name": "getProperties",
+    "status": "FAIL",
+    "detail": "'DebuggerDomain' object has no attribute 'get_properties'"
+  },
+  {
+    "tc": "TC-LOG-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-LOG-002",
+    "name": "clear",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-LOG-003",
+    "name": "startViolationsReport",
+    "status": "FAIL",
+    "detail": "'LogDomain' object has no attribute 'start_violations_report'"
+  },
+  {
+    "tc": "TC-LOG-004",
+    "name": "stopViolationsReport",
+    "status": "FAIL",
+    "detail": "'LogDomain' object has no attribute 'stop_violations_report'"
+  },
+  {
+    "tc": "TC-LOG-005",
+    "name": "getViolationsReport",
+    "status": "FAIL",
+    "detail": "[-32601] 'Log.getViolationsReport' wasn't found"
+  },
+  {
+    "tc": "TC-PERF-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PERF-002",
+    "name": "getMetrics",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PERF-003",
+    "name": "setTimeDomain",
+    "status": "FAIL",
+    "detail": "[-32000] Cannot set time domain while performance metrics collection is enabled."
+  },
+  {
+    "tc": "TC-PERF-004",
+    "name": "setDisableMetrics",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PROFILER-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PROFILER-002",
+    "name": "start",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PROFILER-003",
+    "name": "stop",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PROFILER-004",
+    "name": "setSamplingInterval",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PROFILER-005",
+    "name": "setPreciseCoverage",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PROFILER-006",
+    "name": "takePreciseCoverage",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PROFILER-007",
+    "name": "getBestEffortCoverage",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PROFILER-008",
+    "name": "startTypeProfile",
+    "status": "FAIL",
+    "detail": "[-32601] 'Profiler.startTypeProfile' wasn't found"
+  },
+  {
+    "tc": "TC-PROFILER-009",
+    "name": "stopTypeProfile",
+    "status": "FAIL",
+    "detail": "[-32601] 'Profiler.stopTypeProfile' wasn't found"
+  },
+  {
+    "tc": "TC-HEAP-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-HEAP-002",
+    "name": "startSampling",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-HEAP-003",
+    "name": "stopSampling",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-HEAP-004",
+    "name": "startTrackingHeapObjects",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-HEAP-005",
+    "name": "stopTrackingHeapObjects",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-HEAP-006",
+    "name": "takeHeapSnapshot",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-HEAP-007",
+    "name": "collectGarbage",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-HEAP-008",
+    "name": "getObjectByHeapObjectId",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-HEAP-009",
+    "name": "addHeapSnapshotChunk",
+    "status": "FAIL",
+    "detail": "[-32601] 'HeapProfiler.addHeapSnapshotChunk' wasn't found"
+  },
+  {
+    "tc": "TC-HEAP-010",
+    "name": "getLastSeenObjectID",
+    "status": "FAIL",
+    "detail": "[-32601] 'HeapProfiler.getLastSeenObjectId' wasn't found"
+  },
+  {
+    "tc": "TC-SECURITY-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-SECURITY-002",
+    "name": "setIgnoreCertificateErrors",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-SECURITY-003",
+    "name": "handleCertificateError",
+    "status": "FAIL",
+    "detail": "[-32000] Unknown event id: 1"
+  },
+  {
+    "tc": "TC-SECURITY-004",
+    "name": "getVisibleSecurityState",
+    "status": "FAIL",
+    "detail": "[-32601] 'Security.getVisibleSecurityState' wasn't found"
+  },
+  {
+    "tc": "TC-A11Y-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-A11Y-002",
+    "name": "getPartialAXTree",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-A11Y-003",
+    "name": "getFullAXTree",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-A11Y-004",
+    "name": "getRootAXNode",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-A11Y-005",
+    "name": "getAXNodeAndAncestors",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-A11Y-006",
+    "name": "getAXNode",
+    "status": "FAIL",
+    "detail": "[-32601] 'Accessibility.getAXNode' wasn't found"
+  },
+  {
+    "tc": "TC-A11Y-007",
+    "name": "getImageData",
+    "status": "FAIL",
+    "detail": "[-32601] 'Accessibility.getImageData' wasn't found"
+  },
+  {
+    "tc": "TC-ANIM-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-ANIM-002",
+    "name": "getPlayState",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-ANIM-003",
+    "name": "getCurrentTime",
+    "status": "FAIL",
+    "detail": "[-32000] Could not find animation with given id"
+  },
+  {
+    "tc": "TC-ANIM-004",
+    "name": "setPlaybackRate",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-ANIM-005",
+    "name": "setTiming",
+    "status": "FAIL",
+    "detail": "[-32000] Could not find animation with given id"
+  },
+  {
+    "tc": "TC-ANIM-006",
+    "name": "seekAnimations",
+    "status": "FAIL",
+    "detail": "[-32000] Could not find animation with given id"
+  },
+  {
+    "tc": "TC-ANIM-007",
+    "name": "pause",
+    "status": "FAIL",
+    "detail": "[-32601] 'Animation.pause' wasn't found"
+  },
+  {
+    "tc": "TC-ANIM-008",
+    "name": "resume",
+    "status": "FAIL",
+    "detail": "[-32601] 'Animation.resume' wasn't found"
+  },
+  {
+    "tc": "TC-ANIM-009",
+    "name": "releaseAnimations",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-IDB-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-IDB-002",
+    "name": "requestDatabaseNames",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-IDB-003",
+    "name": "requestDatabase",
+    "status": "FAIL",
+    "detail": "[-32000] Aborted upgrade."
+  },
+  {
+    "tc": "TC-IDB-004",
+    "name": "deleteDatabase",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-IDB-005",
+    "name": "requestData",
+    "status": "FAIL",
+    "detail": "[-32000] Aborted upgrade."
+  },
+  {
+    "tc": "TC-IDB-006",
+    "name": "deleteObjectStore",
+    "status": "FAIL",
+    "detail": "[-32601] 'IndexedDB.deleteObjectStore' wasn't found"
+  },
+  {
+    "tc": "TC-IDB-007",
+    "name": "clearObjectStore",
+    "status": "FAIL",
+    "detail": "[-32000] Aborted upgrade."
+  },
+  {
+    "tc": "TC-SW-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-SW-002",
+    "name": "unregister",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-SW-003",
+    "name": "updateRegistration",
+    "status": "FAIL",
+    "detail": "[-32601] 'ServiceWorker.update' wasn't found"
+  },
+  {
+    "tc": "TC-SW-004",
+    "name": "startWorker",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-SW-005",
+    "name": "skipWaiting",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-SW-006",
+    "name": "stopWorker",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid version ID"
+  },
+  {
+    "tc": "TC-SW-007",
+    "name": "stopAllWorkers",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-SW-008",
+    "name": "dispatchSyncEvent",
+    "status": "FAIL",
+    "detail": "ServiceWorkerDomain.dispatch_sync_event() got an unexpected keyword argument 'data'"
+  },
+  {
+    "tc": "TC-SW-009",
+    "name": "inspectWorker",
+    "status": "FAIL",
+    "detail": "[-32601] 'ServiceWorker.inspectWorker' wasn't found"
+  },
+  {
+    "tc": "TC-SW-010",
+    "name": "getWorkers",
+    "status": "FAIL",
+    "detail": "[-32601] 'ServiceWorker.getWorkers' wasn't found"
+  },
+  {
+    "tc": "TC-SW-011",
+    "name": "getVersion",
+    "status": "FAIL",
+    "detail": "[-32601] 'ServiceWorker.getMessages' wasn't found"
+  },
+  {
+    "tc": "TC-WA-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-WA-002",
+    "name": "addVirtualAuthenticator",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-WA-003",
+    "name": "removeVirtualAuthenticator",
+    "status": "FAIL",
+    "detail": "[-32602] Could not find a Virtual Authenticator matching the ID"
+  },
+  {
+    "tc": "TC-WA-004",
+    "name": "getCredentials",
+    "status": "FAIL",
+    "detail": "[-32602] Could not find a Virtual Authenticator matching the ID"
+  },
+  {
+    "tc": "TC-WA-005",
+    "name": "add_credential",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-WA-006",
+    "name": "get_credential",
+    "status": "FAIL",
+    "detail": "[-32602] Could not find a Virtual Authenticator matching the ID"
+  },
+  {
+    "tc": "TC-WA-007",
+    "name": "remove_credential",
+    "status": "FAIL",
+    "detail": "[-32602] Could not find a Virtual Authenticator matching the ID"
+  },
+  {
+    "tc": "TC-WA-008",
+    "name": "clear_credentials",
+    "status": "FAIL",
+    "detail": "[-32602] Could not find a Virtual Authenticator matching the ID"
+  },
+  {
+    "tc": "TC-WA-009",
+    "name": "set_user_verified",
+    "status": "FAIL",
+    "detail": "[-32602] Could not find a Virtual Authenticator matching the ID"
+  },
+  {
+    "tc": "TC-WA-010",
+    "name": "set_automatic_presence_simulation",
+    "status": "FAIL",
+    "detail": "[-32602] Could not find a Virtual Authenticator matching the ID"
+  },
+  {
+    "tc": "TC-WA-011",
+    "name": "add_virtual_authenticator options",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-AUDIT-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-AUDIT-002",
+    "name": "getEncodedResponse",
+    "status": "FAIL",
+    "detail": "[-32000] No resource with given identifier found"
+  },
+  {
+    "tc": "TC-AUDIT-003",
+    "name": "checkContrast",
+    "status": "FAIL",
+    "detail": "[-32601] 'Audits.checkContrast' wasn't found"
+  },
+  {
+    "tc": "TC-BS-001",
+    "name": "startObserving",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-BS-002",
+    "name": "stopObserving",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-BS-003",
+    "name": "setRecording",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-BS-004",
+    "name": "clearEvents",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-CS-001",
+    "name": "enable/disable",
+    "status": "FAIL",
+    "detail": "'CacheStorageDomain' object has no attribute 'enable'"
+  },
+  {
+    "tc": "TC-CS-002",
+    "name": "requestCacheNames",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p3.py\", line 70, in t\n    s = await fresh_session(client); await s.cache_storage.enable()\n                                           ^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'CacheStorageDomain' object has no attribute 'enable'\n"
+  },
+  {
+    "tc": "TC-CS-003",
+    "name": "requestEntries",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p3.py\", line 76, in t\n    s = await fresh_session(client); await s.cache_storage.enable()\n                                           ^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'CacheStorageDomain' object has no attribute 'enable'\n"
+  },
+  {
+    "tc": "TC-CS-004",
+    "name": "deleteCache",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p3.py\", line 82, in t\n    s = await fresh_session(client); await s.cache_storage.enable()\n                                           ^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'CacheStorageDomain' object has no attribute 'enable'\n"
+  },
+  {
+    "tc": "TC-CS-005",
+    "name": "deleteEntry",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p3.py\", line 88, in t\n    s = await fresh_session(client); await s.cache_storage.enable()\n                                           ^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'CacheStorageDomain' object has no attribute 'enable'\n"
+  },
+  {
+    "tc": "TC-CS-006",
+    "name": "requestCachedResponse",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p3.py\", line 94, in t\n    s = await fresh_session(client); await s.cache_storage.enable()\n                                           ^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'CacheStorageDomain' object has no attribute 'enable'\n"
+  },
+  {
+    "tc": "TC-CS-007",
+    "name": "requestCacheStorageForOrigin",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p3.py\", line 100, in t\n    s = await fresh_session(client); await s.cache_storage.enable()\n                                           ^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'CacheStorageDomain' object has no attribute 'enable'\n"
+  },
+  {
+    "tc": "TC-CAST-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-CAST-002",
+    "name": "setSinkToUse",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-CAST-003",
+    "name": "stopTabMirroring",
+    "status": "FAIL",
+    "detail": "[-32601] 'Cast.stopTabMirroring' wasn't found"
+  },
+  {
+    "tc": "TC-CONSOLE-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-CONSOLE-002",
+    "name": "clearMessages",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-CONSOLE-003",
+    "name": "messageAdded",
+    "status": "SKIP",
+    "detail": "Event-driven, not a command"
+  },
+  {
+    "tc": "TC-DA-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DA-002",
+    "name": "selectPrompt",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-DO-001",
+    "name": "setDeviceOrientationOverride",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DO-002",
+    "name": "clearDeviceOrientationOverride",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DD-001",
+    "name": "getDOMBreakpoints",
+    "status": "FAIL",
+    "detail": "[-32601] 'DOMDebugger.getDOMBreakpoints' wasn't found"
+  },
+  {
+    "tc": "TC-DD-002",
+    "name": "setDOMBreakpoint",
+    "status": "FAIL",
+    "detail": "[-32000] Could not find node with given id"
+  },
+  {
+    "tc": "TC-DD-003",
+    "name": "removeDOMBreakpoint",
+    "status": "FAIL",
+    "detail": "[-32000] Could not find node with given id"
+  },
+  {
+    "tc": "TC-DD-004",
+    "name": "setEventListenerBreakpoint",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DD-005",
+    "name": "removeEventListenerBreakpoint",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DD-006",
+    "name": "setXHRBreakpoint",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-DD-007",
+    "name": "removeXHRBreakpoint",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EB-001",
+    "name": "setInstrumentationBreakpoint",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EB-002",
+    "name": "removeInstrumentationBreakpoint",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EB-003",
+    "name": "disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-EXT-001",
+    "name": "load",
+    "status": "PASS",
+    "detail": "Expected error: [-32601] 'Extensions.load' wasn't found"
+  },
+  {
+    "tc": "TC-EXT-002",
+    "name": "checkForAllowedExtensions",
+    "status": "FAIL",
+    "detail": "[-32601] 'Extensions.checkForAllowedExtensions' wasn't found"
+  },
+  {
+    "tc": "TC-HE-001",
+    "name": "beginFrame",
+    "status": "FAIL",
+    "detail": "[-32601] 'HeadlessExperimental.beginFrame' wasn't found"
+  },
+  {
+    "tc": "TC-HE-002",
+    "name": "disable",
+    "status": "FAIL",
+    "detail": "[-32601] 'HeadlessExperimental.disable' wasn't found"
+  },
+  {
+    "tc": "TC-INS-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INS-002",
+    "name": "detach",
+    "status": "FAIL",
+    "detail": "[-32601] 'Inspector.detach' wasn't found"
+  },
+  {
+    "tc": "TC-INS-003",
+    "name": "reload",
+    "status": "FAIL",
+    "detail": "[-32601] 'Inspector.reload' wasn't found"
+  },
+  {
+    "tc": "TC-IO-001",
+    "name": "read",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid stream handle"
+  },
+  {
+    "tc": "TC-IO-002",
+    "name": "close",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid stream handle"
+  },
+  {
+    "tc": "TC-IO-003",
+    "name": "resolveBlob",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-IO-004",
+    "name": "read with size",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid stream handle"
+  },
+  {
+    "tc": "TC-LT-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-LT-002",
+    "name": "getTree",
+    "status": "FAIL",
+    "detail": "[-32601] 'LayerTree.getTree' wasn't found"
+  },
+  {
+    "tc": "TC-LT-003",
+    "name": "loadSnapshot",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-LT-004",
+    "name": "releaseSnapshot",
+    "status": "FAIL",
+    "detail": "[-32000] Snapshot not found"
+  },
+  {
+    "tc": "TC-LT-005",
+    "name": "profileSnapshot",
+    "status": "FAIL",
+    "detail": "[-32000] Snapshot not found"
+  },
+  {
+    "tc": "TC-LT-006",
+    "name": "replaySnapshot",
+    "status": "FAIL",
+    "detail": "[-32000] Snapshot not found"
+  },
+  {
+    "tc": "TC-LT-007",
+    "name": "snapshotCommandLog",
+    "status": "FAIL",
+    "detail": "[-32000] Snapshot not found"
+  },
+  {
+    "tc": "TC-LT-008",
+    "name": "setShowPaints",
+    "status": "FAIL",
+    "detail": "[-32601] 'LayerTree.setShowPaints' wasn't found"
+  },
+  {
+    "tc": "TC-MEDIA-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MEDIA-002",
+    "name": "setPlayerMessageHandler",
+    "status": "FAIL",
+    "detail": "[-32601] 'Media.setPlayerMessageHandler' wasn't found"
+  },
+  {
+    "tc": "TC-MEDIA-003",
+    "name": "setPlayerBreakpoint",
+    "status": "FAIL",
+    "detail": "[-32601] 'Media.setPlayerBreakpoint' wasn't found"
+  },
+  {
+    "tc": "TC-MEDIA-004",
+    "name": "clearPlayerEvents",
+    "status": "FAIL",
+    "detail": "[-32601] 'Media.clearPlayerEvents' wasn't found"
+  },
+  {
+    "tc": "TC-MEM-001",
+    "name": "getDOMCounters",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MEM-002",
+    "name": "prepareForLeakDetection",
+    "status": "FAIL",
+    "detail": "[-32000] Failed to run leak detection"
+  },
+  {
+    "tc": "TC-MEM-003",
+    "name": "setPressureNotificationsSuppressed",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PT-001",
+    "name": "enable",
+    "status": "FAIL",
+    "detail": "[-32602] Unknown or unsupported entry type"
+  },
+  {
+    "tc": "TC-PT-002",
+    "name": "enable with event_types",
+    "status": "FAIL",
+    "detail": "[-32602] Unknown or unsupported entry type"
+  },
+  {
+    "tc": "TC-PL-001",
+    "name": "enable/disable",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-PL-002",
+    "name": "setPreloadPrefetchLogging",
+    "status": "FAIL",
+    "detail": "[-32601] 'Preload.setPrefetchLogging' wasn't found"
+  },
+  {
+    "tc": "TC-PL-003",
+    "name": "setPrefetchLogging",
+    "status": "FAIL",
+    "detail": "[-32601] 'Preload.setPrefetchLogging' wasn't found"
+  },
+  {
+    "tc": "TC-PWA-001",
+    "name": "install",
+    "status": "FAIL",
+    "detail": "[-32601] 'PWA.install' wasn't found"
+  },
+  {
+    "tc": "TC-PWA-002",
+    "name": "uninstall",
+    "status": "FAIL",
+    "detail": "[-32601] 'PWA.uninstall' wasn't found"
+  },
+  {
+    "tc": "TC-PWA-003",
+    "name": "launch",
+    "status": "FAIL",
+    "detail": "[-32601] 'PWA.launch' wasn't found"
+  },
+  {
+    "tc": "TC-SCHEMA-001",
+    "name": "getDomains",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-SCHEMA-002",
+    "name": "getDomains flatten",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-SENSOR-001",
+    "name": "enable/disable",
+    "status": "FAIL",
+    "detail": "[-32601] 'Sensor.enable' wasn't found"
+  },
+  {
+    "tc": "TC-SENSOR-002",
+    "name": "setSensorOverride",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p3.py\", line 465, in t\n    s = await fresh_session(client); await s.sensor.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\sensor.py\", line 25, in enable\n    return await self._call(\"Sensor.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwa"
+  },
+  {
+    "tc": "TC-SENSOR-003",
+    "name": "clearSensorOverride",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p3.py\", line 471, in t\n    s = await fresh_session(client); await s.sensor.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\sensor.py\", line 25, in enable\n    return await self._call(\"Sensor.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwa"
+  },
+  {
+    "tc": "TC-SENSOR-004",
+    "name": "set_sensor_override gyroscope",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p3.py\", line 477, in t\n    s = await fresh_session(client); await s.sensor.enable()\n                                     ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\sensor.py\", line 25, in enable\n    return await self._call(\"Sensor.enable\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwa"
+  },
+  {
+    "tc": "TC-SI-001",
+    "name": "getInfo",
+    "status": "FAIL",
+    "detail": "[-32000] SystemInfo.getInfo is only supported on the browser target"
+  },
+  {
+    "tc": "TC-SI-002",
+    "name": "getProcessInfo",
+    "status": "FAIL",
+    "detail": "[-32000] SystemInfo.getProcessInfo is only supported on the browser target"
+  },
+  {
+    "tc": "TC-SI-003",
+    "name": "getFeatureState",
+    "status": "FAIL",
+    "detail": "[-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-SI-004",
+    "name": "getGPUInfo",
+    "status": "FAIL",
+    "detail": "[-32000] SystemInfo.getInfo is only supported on the browser target"
+  },
+  {
+    "tc": "TC-SI-005",
+    "name": "getDisplayInfo",
+    "status": "FAIL",
+    "detail": "[-32000] SystemInfo.getInfo is only supported on the browser target"
+  },
+  {
+    "tc": "TC-TETH-001",
+    "name": "bind",
+    "status": "FAIL",
+    "detail": "[-32601] 'Tethering.bind' wasn't found"
+  },
+  {
+    "tc": "TC-TETH-002",
+    "name": "unbind",
+    "status": "FAIL",
+    "detail": "[-32601] 'Tethering.unbind' wasn't found"
+  },
+  {
+    "tc": "TC-TRACE-001",
+    "name": "start",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-TRACE-002",
+    "name": "end",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-TRACE-003",
+    "name": "getCategories",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-TRACE-004",
+    "name": "recordClockSyncMarker",
+    "status": "FAIL",
+    "detail": "[-32000] Tracing is not started"
+  },
+  {
+    "tc": "TC-TRACE-005",
+    "name": "requestClockSyncMarker",
+    "status": "FAIL",
+    "detail": "[-32601] 'Tracing.requestClockSyncMarker' wasn't found"
+  },
+  {
+    "tc": "TC-WORKER-001",
+    "name": "disable",
+    "status": "FAIL",
+    "detail": "[-32601] 'Worker.disable' wasn't found"
+  },
+  {
+    "tc": "TC-WORKER-002",
+    "name": "enable",
+    "status": "FAIL",
+    "detail": "[-32601] 'Worker.enable' wasn't found"
+  },
+  {
+    "tc": "TC-WORKER-003",
+    "name": "sendMessageToWorker",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_domains_p3.py\", line 571, in t\n    s = await fresh_session(client); await s.send(\"Worker.enable\", {})\n                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\client.py\", line 425, in send\n    return await self._sender(method, params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\"
+  },
+  {
+    "tc": "TC-WORKER-004",
+    "name": "canInspectWorker",
+    "status": "FAIL",
+    "detail": "[-32601] 'Worker.enable' wasn't found"
+  },
+  {
+    "tc": "TC-INT-001",
+    "name": "navigate + screenshot",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INT-002",
+    "name": "navigate + evaluate",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INT-003",
+    "name": "navigate + DOM query",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INT-004",
+    "name": "navigate + PDF",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INT-005",
+    "name": "navigate + network cookies",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INT-006",
+    "name": "multi-tab navigation",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_integration.py\", line 67, in t\n    assert r1[\"result\"][\"value\"] != r2[\"result\"][\"value\"]\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+  },
+  {
+    "tc": "TC-INT-007",
+    "name": "emulation + navigate",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INT-008",
+    "name": "fetch intercept + continue",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_integration.py\", line 87, in t\n    await s.page.navigate(\"https://example.com\")\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\page.py\", line 56, in navigate\n    return await self._call(\"Page.navigate\", params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\base.py\", line 32, in _call\n    return await s"
+  },
+  {
+    "tc": "TC-INT-009",
+    "name": "input + DOM focus + key event",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INT-010",
+    "name": "console + runtime evaluate",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INT-011",
+    "name": "CSS + DOM getComputedStyle",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INT-012",
+    "name": "profiler start + stop",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INT-013",
+    "name": "debugger + runtime evaluate",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INT-014",
+    "name": "heap snapshot + GC",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INT-015",
+    "name": "accessibility tree + DOM",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INT-016",
+    "name": "network + navigate + response body",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INT-017",
+    "name": "target create + attach + close",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INT-018",
+    "name": "storage + DOM storage",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_integration.py\", line 176, in t\n    await s.send(\"Storage.setDOMStorageItem\", {\"storageId\":{\"securityOrigin\":\"https://example.com\",\"isLocalStorage\":True},\"key\":\"test\",\"value\":\"val\"})\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\client.py\", line 425, in send\n    return await self._sender(method, params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \""
+  },
+  {
+    "tc": "TC-INT-019",
+    "name": "emulation + screenshot",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-INT-020",
+    "name": "overlay + DOM highlight",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_integration.py\", line 195, in t\n    await s.overlay.highlight_node(node_id=n[\"nodeId\"])\n          ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^\nTypeError: OverlayDomain.highlight_node() missing 1 required positional argument: 'highlight_config'\n"
+  },
+  {
+    "tc": "TC-ERR-001",
+    "name": "navigate invalid URL",
+    "status": "PASS",
+    "detail": "Error: [-32000] Cannot navigate to invalid URL"
+  },
+  {
+    "tc": "TC-ERR-002",
+    "name": "evaluate syntax error",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-ERR-003",
+    "name": "DOM querySelector no match",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-ERR-004",
+    "name": "Runtime evaluate throw",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-ERR-005",
+    "name": "command timeout",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-ERR-006",
+    "name": "session closed error",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_integration.py\", line 244, in t\n    await s.page.crash()\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\page.py\", line 311, in crash\n    return await self._call(\"Page.crash\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\base.py\", line 32, in _call\n    return await self._send(method, params)\n           ^^^^^^^^^^"
+  },
+  {
+    "tc": "TC-ERR-007",
+    "name": "invalid CDP method",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-ERR-008",
+    "name": "DOM removeNode nonexistent",
+    "status": "PASS",
+    "detail": "Error: [-32000] Could not find node with given id"
+  },
+  {
+    "tc": "TC-ERR-009",
+    "name": "Network invalid cookie",
+    "status": "PASS",
+    "detail": "Error: [-32602] At least one of the url or domain needs to be specified"
+  },
+  {
+    "tc": "TC-ERR-010",
+    "name": "callFunctionOn invalid objectId",
+    "status": "PASS",
+    "detail": "Error: [-32000] Invalid remote object id"
+  },
+  {
+    "tc": "TC-CLEAN-001",
+    "name": "close session",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-CLEAN-002",
+    "name": "close multiple sessions",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-CLEAN-003",
+    "name": "disable all domains",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-CLEAN-004",
+    "name": "clear cookies after test",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-CLEAN-005",
+    "name": "clear cache after test",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-CLEAN-006",
+    "name": "release objects after test",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-CLEAN-007",
+    "name": "disable debugger after test",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-CLEAN-008",
+    "name": "disable profiler after test",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-CLEAN-009",
+    "name": "reset emulation after test",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-CLEAN-010",
+    "name": "close target after test",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-001",
+    "name": "Navigate to example.com",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-002",
+    "name": "Evaluate JavaScript",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-003",
+    "name": "Form interaction",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-004",
+    "name": "PDF capture",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-005",
+    "name": "Fetch interception",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_integration.py\", line 402, in t\n    await s.page.navigate(\"https://example.com\")\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\page.py\", line 56, in navigate\n    return await self._call(\"Page.navigate\", params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\base.py\", line 32, in _call\n    return await "
+  },
+  {
+    "tc": "TC-MAN-006",
+    "name": "Dialog handling",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-007",
+    "name": "Cookies set/get",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-008",
+    "name": "Emulation mobile",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-009",
+    "name": "Multi-tab",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_integration.py\", line 444, in t\n    assert r1[\"result\"][\"value\"] != r2[\"result\"][\"value\"]\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+  },
+  {
+    "tc": "TC-MAN-010",
+    "name": "Console monitoring",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-011",
+    "name": "DOM manipulation",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-012",
+    "name": "Navigation history",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-013",
+    "name": "Geolocation override",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-014",
+    "name": "Screenshot clipping",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-015",
+    "name": "Command timeout",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-016",
+    "name": "Script injection",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-017",
+    "name": "Network monitoring",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-018",
+    "name": "CPU throttling",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-019",
+    "name": "Input event blocking",
+    "status": "FAIL",
+    "detail": "Method missing (BUG-004)"
+  },
+  {
+    "tc": "TC-MAN-020",
+    "name": "Heap snapshot",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-021",
+    "name": "Accessibility tree",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-022",
+    "name": "Connection closing",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-023",
+    "name": "Referrer navigation",
+    "status": "PASS",
+    "detail": "referrer=https://google.com/"
+  },
+  {
+    "tc": "TC-MAN-024",
+    "name": "Vision deficiency emulation",
+    "status": "FAIL",
+    "detail": "Method missing (BUG-008)"
+  },
+  {
+    "tc": "TC-MAN-025",
+    "name": "Fetch response interception",
+    "status": "ERROR",
+    "detail": "Traceback (most recent call last):\n  File \"D:\\Codigo\\cdpwave\\_run_all_tests.py\", line 61, in main\n    await func(client)\n  File \"D:\\Codigo\\cdpwave\\tests_integration.py\", line 580, in t\n    await s.page.navigate(\"https://example.com\")\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\page.py\", line 56, in navigate\n    return await self._call(\"Page.navigate\", params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Codigo\\cdpwave\\cdpwave\\domains\\base.py\", line 32, in _call\n    return await "
+  },
+  {
+    "tc": "TC-MAN-026",
+    "name": "HTTP-only cookies",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-027",
+    "name": "Isolated world creation",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-028",
+    "name": "Layout metrics",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-029",
+    "name": "Idle state emulation",
+    "status": "FAIL",
+    "detail": "Deprecated: [-32602] Invalid parameters"
+  },
+  {
+    "tc": "TC-MAN-030",
+    "name": "Data URL navigation",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-031",
+    "name": "URL blocking",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-032",
+    "name": "Async evaluation",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-033",
+    "name": "Screenshot full page",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-034",
+    "name": "Set document content",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-035",
+    "name": "Get frame tree",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-036",
+    "name": "Navigate to history entry",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-037",
+    "name": "Reset navigation history",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-038",
+    "name": "Capture snapshot MHTML",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-039",
+    "name": "Timezone override",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-040",
+    "name": "User agent override",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-041",
+    "name": "Media emulation",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-042",
+    "name": "Touch emulation",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-043",
+    "name": "Virtual time policy",
+    "status": "FAIL",
+    "detail": "'EmulationDomain' object has no attribute 'set_virtual_time_policy'"
+  },
+  {
+    "tc": "TC-MAN-044",
+    "name": "Background color override",
+    "status": "FAIL",
+    "detail": "EmulationDomain.set_default_background_color_override() got an unexpected keyword argument 'r'"
+  },
+  {
+    "tc": "TC-MAN-045",
+    "name": "Locale override",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-046",
+    "name": "Focus emulation",
+    "status": "FAIL",
+    "detail": "'EmulationDomain' object has no attribute 'set_focus_emulation_enabled'"
+  },
+  {
+    "tc": "TC-MAN-047",
+    "name": "Auto dark mode",
+    "status": "FAIL",
+    "detail": "'EmulationDomain' object has no attribute 'clear_auto_dark_mode_override'"
+  },
+  {
+    "tc": "TC-MAN-048",
+    "name": "Scrollbars hidden",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-049",
+    "name": "Network conditions emulation",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "tc": "TC-MAN-050",
+    "name": "Bypass CSP",
+    "status": "PASS",
+    "detail": ""
+  }
+]

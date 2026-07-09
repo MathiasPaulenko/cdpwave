@@ -65,20 +65,6 @@ class DOMDomain(BaseDomain):
             {"nodeId": node_id},
         )
 
-    async def get_inner_html(self, node_id: int) -> dict[str, Any]:
-        """Get the inner HTML of a node.
-
-        Args:
-            node_id: The node ID to inspect.
-
-        Returns:
-            Response dict containing ``innerHTML``.
-        """
-        return await self._call(
-            "DOM.getInnerHTML",
-            {"nodeId": node_id},
-        )
-
     async def query_selector(
         self,
         node_id: int,
@@ -149,11 +135,16 @@ class DOMDomain(BaseDomain):
     async def get_attribute(
         self,
         node_id: int,
+        name: str | None = None,
     ) -> dict[str, Any]:
         """Get attributes of a node.
 
+        If ``name`` is provided, returns the value of that specific
+        attribute. Otherwise returns all attributes.
+
         Args:
             node_id: The node ID to inspect.
+            name: Optional attribute name to retrieve.
 
         Returns:
             Response dict containing ``attributes``.
@@ -283,6 +274,7 @@ class DOMDomain(BaseDomain):
         self,
         node_id: int | None = None,
         backend_node_id: int | None = None,
+        object_id: str | None = None,
         object_group: str | None = None,
     ) -> dict[str, Any]:
         """Resolve a DOM node to a remote object.
@@ -290,6 +282,7 @@ class DOMDomain(BaseDomain):
         Args:
             node_id: Node ID to resolve.
             backend_node_id: Backend node ID.
+            object_id: Remote object ID to resolve.
             object_group: Optional object group.
 
         Returns:
@@ -300,20 +293,28 @@ class DOMDomain(BaseDomain):
             params["nodeId"] = node_id
         if backend_node_id is not None:
             params["backendNodeId"] = backend_node_id
+        if object_id is not None:
+            params["objectId"] = object_id
         if object_group is not None:
             params["objectGroup"] = object_group
         return await self._call("DOM.resolveNode", params)
 
-    async def request_node(self, node_id: int) -> dict[str, Any]:
-        """Request a node by ID.
+    async def request_node(
+        self,
+        object_id: str,
+    ) -> dict[str, Any]:
+        """Request a node by JavaScript object reference.
 
         Args:
-            node_id: Node ID to request.
+            object_id: Remote object ID to request node for.
 
         Returns:
-            Dict with ``node`` descriptor.
+            Dict with ``nodeId`` of the requested node.
         """
-        return await self._call("DOM.requestNode", {"nodeId": node_id})
+        return await self._call(
+            "DOM.requestNode",
+            {"objectId": object_id},
+        )
 
     async def set_attributes_as_text(
         self,
@@ -469,4 +470,144 @@ class DOMDomain(BaseDomain):
         return await self._call(
             "DOM.setNodeValue",
             {"nodeId": node_id, "value": value},
+        )
+
+    async def get_flattened_document(
+        self,
+        depth: int = -1,
+        pierce: bool = False,
+    ) -> dict[str, Any]:
+        """Get the flattened DOM document tree.
+
+        Deprecated: Use ``get_document`` instead.
+
+        Args:
+            depth: Maximum depth to traverse (-1 for full).
+            pierce: Whether to pierce iframes and shadow DOM.
+
+        Returns:
+            Response dict containing ``root`` node.
+        """
+        return await self._call(
+            "DOM.getFlattenedDocument",
+            {"depth": depth, "pierce": pierce},
+        )
+
+    async def collect_class_names_from_subtree(
+        self,
+        node_id: int,
+    ) -> dict[str, Any]:
+        """Collect class names from all descendants of a node.
+
+        Args:
+            node_id: Node ID to collect class names from.
+
+        Returns:
+            Dict with ``classNames`` list.
+        """
+        return await self._call(
+            "DOM.collectClassNamesFromSubtree",
+            {"nodeId": node_id},
+        )
+
+    async def get_content_quads(
+        self,
+        node_id: int,
+    ) -> dict[str, Any]:
+        """Get content quads for a node.
+
+        Args:
+            node_id: Node ID to get quads for.
+
+        Returns:
+            Dict with ``quads`` list.
+        """
+        return await self._call(
+            "DOM.getContentQuads",
+            {"nodeId": node_id},
+        )
+
+    async def set_file_input_files(
+        self,
+        node_id: int,
+        files: list[str],
+    ) -> dict[str, Any]:
+        """Set files for a file input element.
+
+        Args:
+            node_id: Node ID of the file input element.
+            files: List of file paths.
+        """
+        return await self._call(
+            "DOM.setFileInputFiles",
+            {"nodeId": node_id, "files": files},
+        )
+
+    async def set_outer_html(
+        self,
+        node_id: int,
+        outer_html: str,
+    ) -> dict[str, Any]:
+        """Set the outer HTML of a node.
+
+        Args:
+            node_id: Node ID to modify.
+            outer_html: New outer HTML content.
+        """
+        return await self._call(
+            "DOM.setOuterHTML",
+            {"nodeId": node_id, "outerHTML": outer_html},
+        )
+
+    async def set_text_content(
+        self,
+        node_id: int,
+        text: str,
+    ) -> dict[str, Any]:
+        """Set the text content of a node.
+
+        Uses ``DOM.setNodeValue`` to set the value. Only works for
+        text nodes and processing instructions.
+
+        Args:
+            node_id: Node ID to modify.
+            text: New text content.
+        """
+        return await self._call(
+            "DOM.setNodeValue",
+            {"nodeId": node_id, "value": text},
+        )
+
+    async def get_highlight_object_for_test(
+        self,
+        node_id: int,
+    ) -> dict[str, Any]:
+        """Get the highlight object for a node (for testing).
+
+        Args:
+            node_id: Node ID to get the highlight object for.
+
+        Returns:
+            Dict with ``highlight`` object.
+        """
+        return await self._call(
+            "DOM.getHighlightObjectForTest",
+            {"nodeId": node_id},
+        )
+
+    async def get_inner_html(
+        self,
+        node_id: int,
+    ) -> dict[str, Any]:
+        """Get the inner HTML of a node.
+
+        Args:
+            node_id: Node ID to get inner HTML for.
+
+        Returns:
+            Dict with ``innerHTML`` string.
+        """
+        return await self._call(
+            "DOM.getInnerHTML",
+            {"nodeId": node_id},
         )

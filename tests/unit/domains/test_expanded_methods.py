@@ -272,6 +272,21 @@ class TestRuntimeExpanded:
         await domain.discard_console_entries()
         assert fake.last_call == ("Runtime.discardConsoleEntries", None)
 
+    async def test_run_if_waiting_for_debugger(self) -> None:
+        fake = FakeSender({})
+        domain = RuntimeDomain(fake)
+        await domain.run_if_waiting_for_debugger()
+        assert fake.last_call == ("Runtime.runIfWaitingForDebugger", None)
+
+    async def test_release_object_group(self) -> None:
+        fake = FakeSender({})
+        domain = RuntimeDomain(fake)
+        await domain.release_object_group("grp1")
+        assert fake.last_call == (
+            "Runtime.releaseObjectGroup",
+            {"objectGroup": "grp1"},
+        )
+
 
 @pytest.mark.unit
 class TestDOMExpanded:
@@ -416,6 +431,27 @@ class TestNetworkExpanded:
             {"requestId": "req1"},
         )
 
+    async def test_load_network_resource_defaults(self) -> None:
+        fake = FakeSender({"resource": {}})
+        domain = NetworkDomain(fake)
+        await domain.load_network_resource("frame1", "https://example.com/data")
+        assert fake.last_call == (
+            "Network.loadNetworkResource",
+            {"frameId": "frame1", "url": "https://example.com/data"},
+        )
+
+    async def test_load_network_resource_with_options(self) -> None:
+        fake = FakeSender({"resource": {}})
+        domain = NetworkDomain(fake)
+        await domain.load_network_resource(
+            "frame1",
+            "https://example.com/data",
+            options={"disableCache": True},
+        )
+        method, params = fake.last_call
+        assert params is not None
+        assert params["options"] == {"disableCache": True}
+
 
 @pytest.mark.unit
 class TestDebuggerExpanded:
@@ -504,6 +540,25 @@ class TestTargetExpanded:
             {"browserContextId": "ctx1"},
         )
 
+    async def test_expose_dev_tools_protocol(self) -> None:
+        fake = FakeSender({})
+        domain = TargetDomain(fake)
+        await domain.expose_dev_tools_protocol("t1")
+        assert fake.last_call == (
+            "Target.exposeDevToolsProtocol",
+            {"targetId": "t1", "bindingName": "cdp"},
+        )
+
+    async def test_expose_dev_tools_protocol_custom_name(self) -> None:
+        fake = FakeSender({})
+        domain = TargetDomain(fake)
+        await domain.expose_dev_tools_protocol("t1", binding_name="custom")
+        method, params = fake.last_call
+        assert method == "Target.exposeDevToolsProtocol"
+        assert params is not None
+        assert params["targetId"] == "t1"
+        assert params["bindingName"] == "custom"
+
 
 @pytest.mark.unit
 class TestEmulationExpanded:
@@ -591,6 +646,15 @@ class TestStorageExpanded:
         await domain.track_cache_storage_for_origin("https://example.com")
         assert fake.last_call == (
             "Storage.trackCacheStorageForOrigin",
+            {"origin": "https://example.com"},
+        )
+
+    async def test_untrack_cache_storage_for_origin(self) -> None:
+        fake = FakeSender({})
+        domain = StorageDomain(fake)
+        await domain.untrack_cache_storage_for_origin("https://example.com")
+        assert fake.last_call == (
+            "Storage.untrackCacheStorageForOrigin",
             {"origin": "https://example.com"},
         )
 
