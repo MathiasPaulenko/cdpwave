@@ -97,7 +97,9 @@ class TestCDPClient:
         mock_launcher.launch.assert_awaited_once()
         mock_conn_cls.assert_called_with(
             "ws://localhost:9222/devtools/browser/abc",
-            event_callback=client._event_callback,
+            max_retries=0,
+            backoff_base=1.0,
+            backoff_max=30.0,
         )
         mock_conn.connect.assert_awaited_once()
         assert client.is_closed is False
@@ -119,7 +121,9 @@ class TestCDPClient:
         mock_discovery.get_version.assert_awaited_once()
         mock_conn_cls.assert_called_with(
             "ws://localhost:9222/devtools/browser/xyz",
-            event_callback=client._event_callback,
+            max_retries=0,
+            backoff_base=1.0,
+            backoff_max=30.0,
         )
         mock_conn.connect.assert_awaited_once()
         assert client.is_closed is False

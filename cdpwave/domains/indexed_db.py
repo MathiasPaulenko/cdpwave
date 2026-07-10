@@ -184,3 +184,67 @@ class IndexedDBDomain(BaseDomain):
         if storage_bucket is not None:
             params["storageBucket"] = storage_bucket
         return await self._call("IndexedDB.clearObjectStore", params)
+
+    async def delete_object_store_entries(
+        self,
+        database_name: str,
+        object_store_name: str,
+        key_range: dict[str, Any],
+        security_origin: str | None = None,
+        storage_key: str | None = None,
+        storage_bucket: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Delete entries from an object store.
+
+        Args:
+            database_name: Database name.
+            object_store_name: Object store name.
+            key_range: Key range of entries to delete.
+            security_origin: Security origin.
+            storage_key: Storage key.
+            storage_bucket: Optional storage bucket info.
+        """
+        params: dict[str, Any] = {
+            "databaseName": database_name,
+            "objectStoreName": object_store_name,
+            "keyRange": key_range,
+        }
+        if security_origin is not None:
+            params["securityOrigin"] = security_origin
+        if storage_key is not None:
+            params["storageKey"] = storage_key
+        if storage_bucket is not None:
+            params["storageBucket"] = storage_bucket
+        return await self._call("IndexedDB.deleteObjectStoreEntries", params)
+
+    async def get_metadata(
+        self,
+        database_name: str,
+        object_store_name: str,
+        security_origin: str | None = None,
+        storage_key: str | None = None,
+        storage_bucket: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Get metadata for an object store.
+
+        Args:
+            database_name: Database name.
+            object_store_name: Object store name.
+            security_origin: Security origin.
+            storage_key: Storage key.
+            storage_bucket: Optional storage bucket info.
+
+        Returns:
+            Dict with ``entriesCount`` and ``keyGeneratorValue``.
+        """
+        params: dict[str, Any] = {
+            "databaseName": database_name,
+            "objectStoreName": object_store_name,
+        }
+        if security_origin is not None:
+            params["securityOrigin"] = security_origin
+        if storage_key is not None:
+            params["storageKey"] = storage_key
+        if storage_bucket is not None:
+            params["storageBucket"] = storage_bucket
+        return await self._call("IndexedDB.getMetadata", params)

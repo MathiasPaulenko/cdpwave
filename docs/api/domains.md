@@ -191,3 +191,51 @@
 ## PerformanceTimeline
 
 ::: cdpwave.domains.performance_timeline.PerformanceTimelineDomain
+
+## Ads
+
+::: cdpwave.domains.ads.AdsDomain
+
+## Autofill
+
+::: cdpwave.domains.autofill.AutofillDomain
+
+## BluetoothEmulation
+
+::: cdpwave.domains.bluetooth_emulation.BluetoothEmulationDomain
+
+## CrashReportContext
+
+::: cdpwave.domains.crash_report_context.CrashReportContextDomain
+
+## DigitalCredentials
+
+::: cdpwave.domains.digital_credentials.DigitalCredentialsDomain
+
+## DOMSnapshot
+
+::: cdpwave.domains.dom_snapshot.DOMSnapshotDomain
+
+## DOMStorage
+
+::: cdpwave.domains.dom_storage.DOMStorageDomain
+
+## FedCM
+
+::: cdpwave.domains.fed_cm.FedCMDomain
+
+## FileSystem
+
+::: cdpwave.domains.file_system.FileSystemDomain
+
+## SmartCardEmulation
+
+::: cdpwave.domains.smart_card_emulation.SmartCardEmulationDomain
+
+## WebAudio
+
+::: cdpwave.domains.web_audio.WebAudioDomain
+
+## WebMCP
+
+::: cdpwave.domains.web_mcp.WebMCPDomain

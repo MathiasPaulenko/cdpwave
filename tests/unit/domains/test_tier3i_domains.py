@@ -76,7 +76,7 @@ class TestCSSDomain:
         fake = FakeSender({"inlineStyle": {}, "attributesStyle": {}})
         domain = CSSDomain(fake)
         await domain.get_inline_styles(42)
-        assert fake.last_call == ("CSS.getInlineStyles", {"nodeId": 42})
+        assert fake.last_call == ("CSS.getInlineStylesForNode", {"nodeId": 42})
 
     async def test_get_computed_style_for_node(self) -> None:
         fake = FakeSender({"computedStyle": []})

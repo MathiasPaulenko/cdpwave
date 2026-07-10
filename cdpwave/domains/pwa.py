@@ -56,3 +56,75 @@ class PWADomain(BaseDomain):
             "PWA.getOsAppState",
             {"manifestId": manifest_id},
         )
+
+    async def launch(
+        self,
+        manifest_id: str,
+        url: str | None = None,
+    ) -> dict[str, Any]:
+        """Launch a PWA.
+
+        Args:
+            manifest_id: Manifest ID of the PWA to launch.
+            url: Optional URL to launch.
+
+        Returns:
+            Dict with ``targetId``.
+        """
+        params: dict[str, Any] = {"manifestId": manifest_id}
+        if url is not None:
+            params["url"] = url
+        return await self._call("PWA.launch", params)
+
+    async def launch_files_in_app(
+        self,
+        manifest_id: str,
+        files: list[str],
+    ) -> dict[str, Any]:
+        """Launch files in a PWA.
+
+        Args:
+            manifest_id: Manifest ID of the PWA.
+            files: List of file paths to open.
+
+        Returns:
+            Dict with ``targetIds`` list.
+        """
+        return await self._call(
+            "PWA.launchFilesInApp",
+            {"manifestId": manifest_id, "files": files},
+        )
+
+    async def open_current_page_in_app(
+        self,
+        manifest_id: str,
+    ) -> dict[str, Any]:
+        """Open the current page in a PWA.
+
+        Args:
+            manifest_id: Manifest ID of the PWA.
+        """
+        return await self._call(
+            "PWA.openCurrentPageInApp",
+            {"manifestId": manifest_id},
+        )
+
+    async def change_app_user_settings(
+        self,
+        manifest_id: str,
+        link_capturing: bool | None = None,
+        display_mode: str | None = None,
+    ) -> dict[str, Any]:
+        """Change app user settings for a PWA.
+
+        Args:
+            manifest_id: Manifest ID of the PWA.
+            link_capturing: Whether to enable link capturing.
+            display_mode: Display mode (e.g. ``"standalone"``).
+        """
+        params: dict[str, Any] = {"manifestId": manifest_id}
+        if link_capturing is not None:
+            params["linkCapturing"] = link_capturing
+        if display_mode is not None:
+            params["displayMode"] = display_mode
+        return await self._call("PWA.changeAppUserSettings", params)

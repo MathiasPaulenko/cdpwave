@@ -209,7 +209,7 @@ class TestOverlayDomain:
         await domain.set_show_paint_rects(True)
         assert fake.last_call == (
             "Overlay.setShowPaintRects",
-            {"show": True},
+            {"result": True},
         )
 
     async def test_set_show_debug_borders(self) -> None:

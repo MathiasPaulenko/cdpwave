@@ -1,8 +1,9 @@
 # Advanced Domains
 
-cdpwave covers all 48 CDP domains. This guide covers the remaining domains
+cdpwave covers all 60 CDP domains. This guide covers the remaining domains
 not covered in other guides: Accessibility, CSS, Overlay, Security, Audits,
-WebAuthn, Animation, LayerTree, ServiceWorker, Media, and more.
+WebAuthn, Animation, LayerTree, ServiceWorker, Media, DOMSnapshot,
+DOMStorage, Autofill, BluetoothEmulation, FedCM, WebAudio, and more.
 
 ## Accessibility
 
@@ -611,3 +612,293 @@ await client.browser.set_download_behavior(
 
 Use `behavior="deny"` to block all downloads, or
 `behavior="allowAndName"` to let the browser auto-name files.
+
+---
+
+## DOMSnapshot
+
+The `DOMSnapshot` domain captures a full DOM snapshot including computed
+styles, text content, and layout information in a single call. It's more
+efficient than walking the DOM tree with `DOM.getDocument` when you need
+style data.
+
+```python
+await session.dom_snapshot.enable()
+
+result = await session.dom_snapshot.capture_snapshot(
+    computed_styles=["color", "display", "background-color"],
+)
+for doc in result["documents"]:
+    print(f"Document: {len(doc['nodes'])} nodes")
+
+await session.dom_snapshot.disable()
+```
+
+!!! tip "Performance"
+    `DOMSnapshot.captureSnapshot` is significantly faster than calling
+    `DOM.getDocument` + `CSS.getComputedStyleForNode` for each node.
+
+### Capture with experimental options
+
+Include blended background colors and text color opacities:
+
+```python
+result = await session.dom_snapshot.capture_snapshot(
+    computed_styles=["color"],
+    include_blended_background_colors=True,
+    include_text_color_opacities=True,
+)
+```
+
+## DOMStorage
+
+The `DOMStorage` domain provides access to `localStorage` and
+`sessionStorage` for any origin. Storage is accessed via a
+`storage_id` containing the security origin and whether it's
+local or session storage.
+
+```python
+storage_id = {
+    "securityOrigin": "https://example.com",
+    "isLocalStorage": True,
+}
+
+# Set an item
+await session.dom_storage.set_dom_storage_item(storage_id, "key1", "value1")
+
+# Get all items
+result = await session.dom_storage.get_dom_storage_items(storage_id)
+for item in result["entries"]:
+    print(f"{item['key']}: {item['value']}")
+
+# Remove an item
+await session.dom_storage.remove_dom_storage_item(storage_id, "key1")
+
+# Clear all storage
+await session.dom_storage.clear_dom_storage_items(storage_id)
+```
+
+## Autofill
+
+The `Autofill` domain allows you to simulate browser autofill
+behavior — injecting address data into forms as if the user had
+selected a saved address.
+
+```python
+await session.autofill.enable()
+
+await session.autofill.set_addresses([
+    {
+        "name": "Test User",
+        "streetAddress": "123 Main St",
+        "city": "Test City",
+        "state": "CA",
+        "postalCode": "12345",
+        "country": "US",
+    },
+])
+
+await session.autofill.disable()
+```
+
+!!! warning "Experimental domain"
+    `Autofill` is experimental and may not be available in all Chrome
+    versions. Catch `CommandError` with code `-32601` to handle
+    unavailable domains gracefully.
+
+## BluetoothEmulation
+
+The `BluetoothEmulation` domain simulates Bluetooth adapters and
+devices for testing Web Bluetooth API interactions without physical
+hardware.
+
+```python
+await session.bluetooth_emulation.enable()
+
+# Set a simulated central state
+await session.bluetooth_emulation.set_simulated_central_state("powered-on")
+
+# Simulate a preconnected peripheral device
+await session.bluetooth_emulation.simulate_preconnected_peripheral(
+    address="00:11:22:33:44:55",
+    name="Test Device",
+    known_service_uuids=["0000180f-0000-1000-8000-00805f9b34fb"],
+)
+
+# Simulate an advertisement
+await session.bluetooth_emulation.simulate_advertisement(
+    advertisement={"type": "broadcast", "serviceUuids": []},
+)
+
+await session.bluetooth_emulation.disable()
+```
+
+!!! warning "Experimental domain"
+    `BluetoothEmulation` is experimental and may not be available in
+    all Chrome versions.
+
+## FedCM
+
+The `FedCM` domain controls the Federated Credential Management API,
+allowing you to test identity provider flows without real network
+requests.
+
+```python
+await session.fed_cm.enable()
+
+# Reset any pending FedCM dialog
+await session.fed_cm.reset_cooldown()
+
+# Select an account in a FedCM dialog (requires dialog ID from event)
+# await session.fed_cm.select_account(dialog_id="dialog-1", account_index=0)
+
+# Click the dialog's continue button (requires dialog ID from event)
+# await session.fed_cm.click_dialog_button(dialog_id="dialog-1", button="ConfirmIdpLoginContinue")
+
+# Dismiss a dialog
+# await session.fed_cm.dismiss_dialog(dialog_id="dialog-1", trigger_cooldown=True)
+
+await session.fed_cm.disable()
+```
+
+!!! note "Dialog ID required"
+    Most FedCm methods require a `dialog_id` obtained from the
+    `FedCm.dialogShown` event. Register an event handler to capture
+    the dialog ID before calling `select_account` or
+    `click_dialog_button`.
+
+## WebAudio
+
+The `WebAudio` domain inspects Web Audio API contexts — AudioContexts,
+realtime audio data, and context lifecycle events.
+
+```python
+await session.web_audio.enable()
+
+# Create an AudioContext in the page
+result = await session.runtime.evaluate(
+    "new AudioContext().id", return_by_value=True,
+)
+ctx_id = result["result"]["value"]
+
+if ctx_id:
+    realtime = await session.web_audio.get_realtime_data(ctx_id)
+    print(f"Context load: {realtime.get('contextLoadTime')}")
+
+await session.web_audio.disable()
+```
+
+## Ads
+
+The `Ads` domain provides ad metrics inspection capabilities.
+
+```python
+result = await session.ads.get_ad_metrics()
+print(result)
+```
+
+!!! note "Simple domain"
+    The `Ads` domain has a single method (`get_ad_metrics`) that
+    retrieves ad-related metrics for the current page.
+
+## CrashReportContext
+
+The `CrashReportContext` domain provides access to crash report
+context entries for the browser process.
+
+```python
+result = await session.crash_report_context.get_entries()
+for entry in result.get("entries", []):
+    print(entry)
+```
+
+## DigitalCredentials
+
+The `DigitalCredentials` domain simulates digital credentials API
+behavior for testing without real credential providers.
+
+```python
+await session.digital_credentials.set_virtual_wallet_behavior(
+    behavior="spare",
+)
+```
+
+## FileSystem
+
+The `FileSystem` domain provides access to the File System Access API.
+
+```python
+result = await session.file_system.get_directory()
+```
+
+!!! warning "Permissions required"
+    `FileSystem.getDirectory` requires the page to have been granted
+    file system access permissions. Calls without permission will
+    raise `CommandError`.
+
+## SmartCardEmulation
+
+The `SmartCardEmulation` domain simulates smart card operations for
+testing Web Smart Card API interactions. It provides methods to report
+results for various smart card operations.
+
+```python
+await session.smart_card_emulation.enable()
+
+# Report the result of establishing a context
+await session.smart_card_emulation.report_establish_context_result(
+    context_id="ctx-1",
+    result=0,
+)
+
+# Report the result of listing readers
+await session.smart_card_emulation.report_list_readers_result(
+    context_id="ctx-1",
+    readers=[{"name": "Reader 1", "state": 0}],
+)
+
+# Report the result of connecting to a card
+await session.smart_card_emulation.report_connect_result(
+    context_id="ctx-1",
+    reader="Reader 1",
+    card_handle="card-1",
+    active_protocol=1,
+    result=0,
+)
+
+# Report an error
+await session.smart_card_emulation.report_error(
+    context_id="ctx-1",
+    error=1,
+)
+
+await session.smart_card_emulation.disable()
+```
+
+!!! warning "Experimental domain"
+    `SmartCardEmulation` is experimental and may not be available in
+    all Chrome versions.
+
+## WebMCP
+
+The `WebMCP` domain integrates the Model Context Protocol with the
+browser, enabling AI-driven page interactions.
+
+```python
+await session.web_mcp.enable()
+
+# Invoke a tool registered by the page
+result = await session.web_mcp.invoke_tool(
+    tool_name="search",
+    arguments={"query": "hello"},
+)
+
+# Cancel an ongoing invocation
+await session.web_mcp.cancel_invocation(invocation_id="inv-1")
+
+await session.web_mcp.disable()
+```
+
+!!! warning "Experimental domain"
+    `WebMCP` is experimental and may not be available in all Chrome
+    versions.

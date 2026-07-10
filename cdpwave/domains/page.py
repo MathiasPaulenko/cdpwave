@@ -47,6 +47,7 @@ class PageDomain(BaseDomain):
 
         Returns:
             Response dict containing ``frameId`` and ``loaderId``.
+            Typed as ``PageNavigateResult`` for autocompletion.
         """
         params: dict[str, Any] = {"url": url}
         if referrer is not None:
@@ -465,3 +466,514 @@ class PageDomain(BaseDomain):
             Dict with ``data`` containing the MHTML content.
         """
         return await self._call("Page.captureSnapshot", {"format": format})
+
+    async def stop_loading(self) -> dict[str, Any]:
+        """Force the page to stop loading."""
+        return await self._call("Page.stopLoading")
+
+    async def set_lifecycle_events_enabled(self, enabled: bool) -> dict[str, Any]:
+        """Enable or disable lifecycle events.
+
+        Args:
+            enabled: Whether to emit lifecycle events.
+        """
+        return await self._call(
+            "Page.setLifecycleEventsEnabled",
+            {"enabled": enabled},
+        )
+
+    async def add_script_to_evaluate_on_load(
+        self,
+        source: str,
+    ) -> dict[str, Any]:
+        """Add a script to evaluate on page load.
+
+        Deprecated: Use ``add_script_to_evaluate_on_new_document`` instead.
+
+        Args:
+            source: JavaScript source code to evaluate.
+
+        Returns:
+            Dict with ``identifier``.
+        """
+        return await self._call(
+            "Page.addScriptToEvaluateOnLoad",
+            {"source": source},
+        )
+
+    async def remove_script_to_evaluate_on_load(
+        self,
+        identifier: str,
+    ) -> dict[str, Any]:
+        """Remove a script previously added with ``add_script_to_evaluate_on_load``.
+
+        Deprecated.
+
+        Args:
+            identifier: Script identifier from ``add_script_to_evaluate_on_load``.
+        """
+        return await self._call(
+            "Page.removeScriptToEvaluateOnLoad",
+            {"identifier": identifier},
+        )
+
+    async def start_screencast(
+        self,
+        format: str = "jpeg",
+        quality: int = 80,
+        max_width: int | None = None,
+        max_height: int | None = None,
+        every_nth_frame: int = 1,
+    ) -> dict[str, Any]:
+        """Start screencasting the page.
+
+        Emits ``Page.screencastFrame`` events containing base64-encoded
+        frames.
+
+        Args:
+            format: Image format (``"jpeg"`` or ``"png"``).
+            quality: JPEG quality (0-100). Ignored for PNG.
+            max_width: Optional max frame width in CSS pixels.
+            max_height: Optional max frame height in CSS pixels.
+            every_nth_frame: Capture every Nth frame (1 = every frame).
+        """
+        if format not in ("jpeg", "png"):
+            raise ValueError("format must be 'jpeg' or 'png'")
+        if not 0 <= quality <= 100:
+            raise ValueError("quality must be between 0 and 100")
+        params: dict[str, Any] = {
+            "format": format,
+            "quality": quality,
+            "everyNthFrame": every_nth_frame,
+        }
+        if max_width is not None:
+            params["maxWidth"] = max_width
+        if max_height is not None:
+            params["maxHeight"] = max_height
+        return await self._call("Page.startScreencast", params)
+
+    async def stop_screencast(self) -> dict[str, Any]:
+        """Stop screencasting the page."""
+        return await self._call("Page.stopScreencast")
+
+    async def screencast_frame_ack(self, session_id: int) -> dict[str, Any]:
+        """Acknowledge a screencast frame.
+
+        Must be called after each ``Page.screencastFrame`` event to
+        receive the next frame.
+
+        Args:
+            session_id: Session ID from the screencast frame event.
+        """
+        return await self._call(
+            "Page.screencastFrameAck",
+            {"sessionId": session_id},
+        )
+
+    async def search_in_resource(
+        self,
+        frame_id: str,
+        url: str,
+        query: str,
+        case_sensitive: bool = False,
+        is_regex: bool = False,
+    ) -> dict[str, Any]:
+        """Search within a resource content.
+
+        Args:
+            frame_id: Frame ID containing the resource.
+            url: URL of the resource to search.
+            query: Search query string.
+            case_sensitive: Whether the search is case sensitive.
+            is_regex: Whether the query is a regex.
+
+        Returns:
+            Dict with ``result`` list of matches.
+        """
+        params: dict[str, Any] = {
+            "frameId": frame_id,
+            "url": url,
+            "query": query,
+            "caseSensitive": case_sensitive,
+            "isRegex": is_regex,
+        }
+        return await self._call("Page.searchInResource", params)
+
+    async def set_device_metrics_override(
+        self,
+        width: int,
+        height: int,
+        device_scale_factor: float = 1.0,
+        mobile: bool = False,
+        scale: float = 1.0,
+        screen_width: int | None = None,
+        screen_height: int | None = None,
+        position_x: int | None = None,
+        position_y: int | None = None,
+        dont_set_visible_size: bool = False,
+        screen_orientation: dict[str, Any] | None = None,
+        viewport: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Override device metrics.
+
+        Args:
+            width: Override width in CSS pixels.
+            height: Override height in CSS pixels.
+            device_scale_factor: Override device scale factor.
+            mobile: Whether to emulate a mobile device.
+            scale: Scale to apply to visible size.
+            screen_width: Optional screen width override.
+            screen_height: Optional screen height override.
+            position_x: Optional X position override.
+            position_y: Optional Y position override.
+            dont_set_visible_size: If True, do not set visible size.
+            screen_orientation: Optional screen orientation override.
+            viewport: Optional viewport override.
+        """
+        params: dict[str, Any] = {
+            "width": width,
+            "height": height,
+            "deviceScaleFactor": device_scale_factor,
+            "mobile": mobile,
+            "scale": scale,
+        }
+        if screen_width is not None:
+            params["screenWidth"] = screen_width
+        if screen_height is not None:
+            params["screenHeight"] = screen_height
+        if position_x is not None:
+            params["positionX"] = position_x
+        if position_y is not None:
+            params["positionY"] = position_y
+        if dont_set_visible_size:
+            params["dontSetVisibleSize"] = True
+        if screen_orientation is not None:
+            params["screenOrientation"] = screen_orientation
+        if viewport is not None:
+            params["viewport"] = viewport
+        return await self._call("Page.setDeviceMetricsOverride", params)
+
+    async def clear_device_metrics_override(self) -> dict[str, Any]:
+        """Clear device metrics override."""
+        return await self._call("Page.clearDeviceMetricsOverride")
+
+    async def set_device_orientation_override(
+        self,
+        alpha: float,
+        beta: float,
+        gamma: float,
+    ) -> dict[str, Any]:
+        """Override device orientation.
+
+        Args:
+            alpha: Alpha angle in degrees.
+            beta: Beta angle in degrees.
+            gamma: Gamma angle in degrees.
+        """
+        return await self._call(
+            "Page.setDeviceOrientationOverride",
+            {"alpha": alpha, "beta": beta, "gamma": gamma},
+        )
+
+    async def clear_device_orientation_override(self) -> dict[str, Any]:
+        """Clear device orientation override."""
+        return await self._call("Page.clearDeviceOrientationOverride")
+
+    async def set_geolocation_override(
+        self,
+        latitude: float,
+        longitude: float,
+        accuracy: float = 0.0,
+    ) -> dict[str, Any]:
+        """Override geolocation.
+
+        Args:
+            latitude: Latitude in degrees.
+            longitude: Longitude in degrees.
+            accuracy: Accuracy in meters.
+        """
+        return await self._call(
+            "Page.setGeolocationOverride",
+            {
+                "latitude": latitude,
+                "longitude": longitude,
+                "accuracy": accuracy,
+            },
+        )
+
+    async def clear_geolocation_override(self) -> dict[str, Any]:
+        """Clear geolocation override."""
+        return await self._call("Page.clearGeolocationOverride")
+
+    async def set_touch_emulation_enabled(
+        self,
+        enabled: bool,
+        configuration: str | None = None,
+    ) -> dict[str, Any]:
+        """Enable or disable touch emulation.
+
+        Args:
+            enabled: Whether to enable touch emulation.
+            configuration: Optional touch configuration (``"mobile"`` or
+                ``"desktop"``).
+        """
+        params: dict[str, Any] = {"enabled": enabled}
+        if configuration is not None:
+            params["configuration"] = configuration
+        return await self._call("Page.setTouchEmulationEnabled", params)
+
+    async def set_download_behavior(
+        self,
+        behavior: str,
+        download_path: str | None = None,
+        events_enabled: bool = False,
+    ) -> dict[str, Any]:
+        """Set download behavior for the page.
+
+        Args:
+            behavior: ``"allow"``, ``"deny"``, or ``"default"``.
+            download_path: Path for downloads (when ``behavior`` is
+                ``"allow"``).
+            events_enabled: Whether to emit download events.
+        """
+        params: dict[str, Any] = {"behavior": behavior}
+        if download_path is not None:
+            params["downloadPath"] = download_path
+        if events_enabled:
+            params["eventsEnabled"] = True
+        return await self._call("Page.setDownloadBehavior", params)
+
+    async def set_font_families(
+        self,
+        font_family: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
+        """Set font families override.
+
+        Args:
+            font_family: Dict mapping font family names to overrides
+                (e.g. ``{"standard": "Arial"}``).
+        """
+        params: dict[str, Any] = {}
+        if font_family is not None:
+            params["fontFamilies"] = font_family
+        return await self._call("Page.setFontFamilies", params if params else None)
+
+    async def set_font_sizes(
+        self,
+        standard: int = 16,
+        fixed: int = 13,
+    ) -> dict[str, Any]:
+        """Set font sizes override.
+
+        Args:
+            standard: Standard font size in pixels.
+            fixed: Fixed font size in pixels.
+        """
+        return await self._call(
+            "Page.setFontSizes",
+            {"fontSizes": {"standard": standard, "fixed": fixed}},
+        )
+
+    async def set_ad_blocking_enabled(self, enabled: bool) -> dict[str, Any]:
+        """Enable or disable ad blocking.
+
+        Args:
+            enabled: Whether to enable ad blocking.
+        """
+        return await self._call(
+            "Page.setAdBlockingEnabled",
+            {"enabled": enabled},
+        )
+
+    async def set_prerendering_allowed(self, allowed: bool) -> dict[str, Any]:
+        """Enable or disable prerendering.
+
+        Args:
+            allowed: Whether prerendering is allowed.
+        """
+        return await self._call(
+            "Page.setPrerenderingAllowed",
+            {"allowed": allowed},
+        )
+
+    async def wait_for_debugger(self) -> dict[str, Any]:
+        """Pause the page until a debugger attaches."""
+        return await self._call("Page.waitForDebugger")
+
+    async def generate_test_report(
+        self,
+        message: str,
+        group: str | None = None,
+    ) -> dict[str, Any]:
+        """Generate a test report.
+
+        Args:
+            message: Report message.
+            group: Optional report group.
+        """
+        params: dict[str, Any] = {"message": message}
+        if group is not None:
+            params["group"] = group
+        return await self._call("Page.generateTestReport", params)
+
+    async def produce_compilation_cache(
+        self,
+        scripts: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Produce compilation cache for scripts.
+
+        Args:
+            scripts: Optional list of script dicts with ``url`` and
+                optional ``forced`` flag.
+        """
+        params: dict[str, Any] = {}
+        if scripts is not None:
+            params["scripts"] = scripts
+        return await self._call(
+            "Page.produceCompilationCache",
+            params if params else None,
+        )
+
+    async def add_compilation_cache(
+        self,
+        url: str,
+        data: str,
+    ) -> dict[str, Any]:
+        """Add compilation cache for a URL.
+
+        Args:
+            url: URL of the script.
+            data: Base64-encoded compilation cache data.
+        """
+        return await self._call(
+            "Page.addCompilationCache",
+            {"url": url, "data": data},
+        )
+
+    async def clear_compilation_cache(self) -> dict[str, Any]:
+        """Clear the compilation cache."""
+        return await self._call("Page.clearCompilationCache")
+
+    async def set_spc_transaction_mode(self, mode: str) -> dict[str, Any]:
+        """Set the SPC (Secure Payment Confirmation) transaction mode.
+
+        Args:
+            mode: Transaction mode (``"auto"``, ``"enforce"``, ``"opt-out"``).
+        """
+        return await self._call(
+            "Page.setSPCTransactionMode",
+            {"mode": mode},
+        )
+
+    async def set_rph_registration_mode(self, mode: str) -> dict[str, Any]:
+        """Set the RPH (Register Protocol Handler) registration mode.
+
+        Args:
+            mode: Registration mode (``"auto"``, ``"block"``).
+        """
+        return await self._call(
+            "Page.setRPHRegistrationMode",
+            {"mode": mode},
+        )
+
+    async def delete_cookie(
+        self,
+        cookie_name: str,
+        url: str,
+    ) -> dict[str, Any]:
+        """Delete a cookie by name and URL.
+
+        Args:
+            cookie_name: Name of the cookie to delete.
+            url: URL associated with the cookie.
+        """
+        return await self._call(
+            "Page.deleteCookie",
+            {"cookieName": cookie_name, "url": url},
+        )
+
+    async def get_manifest_icons(self) -> dict[str, Any]:
+        """Get manifest icons for the current page.
+
+        Returns:
+            Dict with ``primaryIcon`` (base64-encoded).
+        """
+        return await self._call("Page.getManifestIcons")
+
+    async def get_app_id(self) -> dict[str, Any]:
+        """Get the app ID for the current page.
+
+        Returns:
+            Dict with ``appId`` and ``recommendedId``.
+        """
+        return await self._call("Page.getAppId")
+
+    async def get_installability_errors(self) -> dict[str, Any]:
+        """Get installability errors for the current page.
+
+        Returns:
+            Dict with ``installabilityErrors`` list.
+        """
+        return await self._call("Page.getInstallabilityErrors")
+
+    async def get_ad_script_ancestry(
+        self,
+        frame_id: str,
+    ) -> dict[str, Any]:
+        """Get ad script ancestry for a frame.
+
+        Args:
+            frame_id: Frame ID to query.
+
+        Returns:
+            Dict with ``ancestry`` list.
+        """
+        return await self._call(
+            "Page.getAdScriptAncestry",
+            {"frameId": frame_id},
+        )
+
+    async def get_permissions_policy_state(
+        self,
+        frame_id: str,
+    ) -> dict[str, Any]:
+        """Get permissions policy state for a frame.
+
+        Args:
+            frame_id: Frame ID to query.
+
+        Returns:
+            Dict with ``states`` list of permission policy states.
+        """
+        return await self._call(
+            "Page.getPermissionsPolicyState",
+            {"frameId": frame_id},
+        )
+
+    async def get_origin_trials(
+        self,
+        frame_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get origin trials for the current page.
+
+        Args:
+            frame_id: Optional frame ID to query.
+
+        Returns:
+            Dict with ``trials`` list of origin trial descriptors.
+        """
+        params: dict[str, Any] = {}
+        if frame_id is not None:
+            params["frameId"] = frame_id
+        return await self._call(
+            "Page.getOriginTrials",
+            params if params else None,
+        )
+
+    async def get_annotated_page_content(self) -> dict[str, Any]:
+        """Get annotated page content.
+
+        Returns:
+            Dict with ``content`` containing annotated DOM tree.
+        """
+        return await self._call("Page.getAnnotatedPageContent")

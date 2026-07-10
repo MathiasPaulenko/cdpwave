@@ -56,6 +56,7 @@ class RuntimeDomain(BaseDomain):
 
         Returns:
             Response dict containing ``result`` with the evaluation result.
+            Typed as ``RuntimeEvaluateResult`` for autocompletion.
         """
         params: dict[str, Any] = {"expression": expression}
         if not return_by_value:
@@ -89,7 +90,6 @@ class RuntimeDomain(BaseDomain):
         """Call a function on a remote object or in a context.
 
         Either ``object_id`` or ``execution_context_id`` must be provided.
-        If neither is given, the function runs in the default context.
 
         Args:
             function_declaration: JavaScript function declaration string.
@@ -104,7 +104,15 @@ class RuntimeDomain(BaseDomain):
 
         Returns:
             Response dict containing ``result``.
+
+        Raises:
+            ValueError: If neither ``object_id`` nor ``execution_context_id``
+                is provided.
         """
+        if object_id is None and execution_context_id is None:
+            raise ValueError(
+                "Either object_id or execution_context_id must be provided"
+            )
         params: dict[str, Any] = {
             "functionDeclaration": function_declaration,
             "returnByValue": return_by_value,

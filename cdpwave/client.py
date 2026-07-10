@@ -10,25 +10,32 @@ from typing import Any
 from cdpwave.browser.discovery import TargetDiscovery, TargetInfo
 from cdpwave.browser.launcher import BrowserLauncher
 from cdpwave.domains.accessibility import AccessibilityDomain
+from cdpwave.domains.ads import AdsDomain
 from cdpwave.domains.animation import AnimationDomain
 from cdpwave.domains.audits import AuditsDomain
 from cdpwave.domains.autofill import AutofillDomain
 from cdpwave.domains.background_service import BackgroundServiceDomain
+from cdpwave.domains.bluetooth_emulation import BluetoothEmulationDomain
 from cdpwave.domains.browser import BrowserDomain
 from cdpwave.domains.cache_storage import CacheStorageDomain
 from cdpwave.domains.cast import CastDomain
 from cdpwave.domains.console import ConsoleDomain
+from cdpwave.domains.crash_report_context import CrashReportContextDomain
 from cdpwave.domains.css import CSSDomain
 from cdpwave.domains.debugger import DebuggerDomain
 from cdpwave.domains.device_access import DeviceAccessDomain
 from cdpwave.domains.device_orientation import DeviceOrientationDomain
+from cdpwave.domains.digital_credentials import DigitalCredentialsDomain
 from cdpwave.domains.dom import DOMDomain
 from cdpwave.domains.dom_debugger import DOMDebuggerDomain
 from cdpwave.domains.dom_snapshot import DOMSnapshotDomain
+from cdpwave.domains.dom_storage import DOMStorageDomain
 from cdpwave.domains.emulation import EmulationDomain
 from cdpwave.domains.event_breakpoints import EventBreakpointsDomain
 from cdpwave.domains.extensions import ExtensionsDomain
+from cdpwave.domains.fed_cm import FedCmDomain
 from cdpwave.domains.fetch import FetchDomain
+from cdpwave.domains.file_system import FileSystemDomain
 from cdpwave.domains.headless_experimental import HeadlessExperimentalDomain
 from cdpwave.domains.heap_profiler import HeapProfilerDomain
 from cdpwave.domains.indexed_db import IndexedDBDomain
@@ -52,6 +59,7 @@ from cdpwave.domains.schema import SchemaDomain
 from cdpwave.domains.security import SecurityDomain
 from cdpwave.domains.sensor import SensorDomain
 from cdpwave.domains.service_worker import ServiceWorkerDomain
+from cdpwave.domains.smart_card_emulation import SmartCardEmulationDomain
 from cdpwave.domains.storage import StorageDomain
 from cdpwave.domains.system_info import SystemInfoDomain
 from cdpwave.domains.target import TargetDomain
@@ -59,13 +67,14 @@ from cdpwave.domains.tethering import TetheringDomain
 from cdpwave.domains.tracing import TracingDomain
 from cdpwave.domains.web_audio import WebAudioDomain
 from cdpwave.domains.web_authn import WebAuthnDomain
+from cdpwave.domains.web_mcp import WebMCPDomain
 from cdpwave.domains.worker import WorkerDomain
 from cdpwave.events.dispatcher import EventDispatcher
 from cdpwave.events.handlers import EventHandler, Subscription
 from cdpwave.exceptions import SessionClosedError
 from cdpwave.session.manager import SessionManager
 from cdpwave.transport.connection import Connection
-from cdpwave.types import CommandSender
+from cdpwave.types import CommandSender, EventErrorCallback
 
 logger = logging.getLogger("cdpwave.client")
 
@@ -93,7 +102,15 @@ class CDPSession:
 
         if client is not None:
             client._session_dispatchers[session_id] = self._dispatcher
+            self._dispatcher = EventDispatcher(
+                strict_events=client._strict_events,
+                on_event_error=client._on_event_error,
+            )
+            client._session_dispatchers[session_id] = self._dispatcher
         self._client = client
+
+        self._sub_sessions: dict[str, CDPSession] = {}
+        self._auto_attach_enabled = False
 
         async def _send(
             method: str,
@@ -124,6 +141,7 @@ class CDPSession:
         self._audits = AuditsDomain(self._sender)
         self._accessibility = AccessibilityDomain(self._sender)
         self._storage = StorageDomain(self._sender)
+        self._dom_storage = DOMStorageDomain(self._sender)
         self._tracing = TracingDomain(self._sender)
         self._animation = AnimationDomain(self._sender)
         self._service_worker = ServiceWorkerDomain(self._sender)
@@ -156,6 +174,14 @@ class CDPSession:
         self._performance_timeline = PerformanceTimelineDomain(self._sender)
         self._autofill = AutofillDomain(self._sender)
         self._web_audio = WebAudioDomain(self._sender)
+        self._ads = AdsDomain(self._sender)
+        self._bluetooth_emulation = BluetoothEmulationDomain(self._sender)
+        self._crash_report_context = CrashReportContextDomain(self._sender)
+        self._digital_credentials = DigitalCredentialsDomain(self._sender)
+        self._fed_cm = FedCmDomain(self._sender)
+        self._file_system = FileSystemDomain(self._sender)
+        self._smart_card_emulation = SmartCardEmulationDomain(self._sender)
+        self._web_mcp = WebMCPDomain(self._sender)
 
     @property
     def page(self) -> PageDomain:
@@ -246,6 +272,11 @@ class CDPSession:
     def storage(self) -> StorageDomain:
         """Storage domain wrapper for cookies, IndexedDB, and cache storage."""
         return self._storage
+
+    @property
+    def dom_storage(self) -> DOMStorageDomain:
+        """DOMStorage domain wrapper for localStorage and sessionStorage."""
+        return self._dom_storage
 
     @property
     def tracing(self) -> TracingDomain:
@@ -408,6 +439,46 @@ class CDPSession:
         return self._web_audio
 
     @property
+    def ads(self) -> AdsDomain:
+        """Ads domain wrapper for ad metrics inspection."""
+        return self._ads
+
+    @property
+    def bluetooth_emulation(self) -> BluetoothEmulationDomain:
+        """BluetoothEmulation domain wrapper for Bluetooth testing."""
+        return self._bluetooth_emulation
+
+    @property
+    def crash_report_context(self) -> CrashReportContextDomain:
+        """CrashReportContext domain wrapper for crash report entries."""
+        return self._crash_report_context
+
+    @property
+    def digital_credentials(self) -> DigitalCredentialsDomain:
+        """DigitalCredentials domain wrapper for digital wallet behavior."""
+        return self._digital_credentials
+
+    @property
+    def fed_cm(self) -> FedCmDomain:
+        """FedCm domain wrapper for Federated Credential Management."""
+        return self._fed_cm
+
+    @property
+    def file_system(self) -> FileSystemDomain:
+        """FileSystem domain wrapper for File System Access API."""
+        return self._file_system
+
+    @property
+    def smart_card_emulation(self) -> SmartCardEmulationDomain:
+        """SmartCardEmulation domain wrapper for smart card testing."""
+        return self._smart_card_emulation
+
+    @property
+    def web_mcp(self) -> WebMCPDomain:
+        """WebMCP domain wrapper for Web MCP tool invocation."""
+        return self._web_mcp
+
+    @property
     def session_id(self) -> str:
         """The CDP session ID for this target."""
         return self._session_id
@@ -421,6 +492,69 @@ class CDPSession:
     def is_closed(self) -> bool:
         """Whether this session has been closed."""
         return self._closed
+
+    @property
+    def sub_sessions(self) -> list[CDPSession]:
+        """Sub-sessions for auto-attached iframes and workers."""
+        return list(self._sub_sessions.values())
+
+    async def _enable_auto_attach(self) -> None:
+        """Enable auto-attach to child targets (iframes, workers).
+
+        Uses ``Target.setAutoAttach`` with ``flatten=True`` so sub-sessions
+        share the same WebSocket. Incoming ``Target.attachedToTarget`` events
+        create sub-sessions automatically.
+        """
+        self._auto_attach_enabled = True
+        await self._target.set_auto_attach(
+            auto_attach=True,
+            flatten=True,
+            wait_for_debugger_on_start=False,
+        )
+
+    def _handle_attached_to_target(self, params: dict[str, Any]) -> None:
+        """Handle Target.attachedToTarget event for sub-session creation.
+
+        Args:
+            params: Event params with targetInfo and sessionId.
+        """
+        sub_session_id = params.get("sessionId")
+        target_info = params.get("targetInfo", {})
+        sub_target_id = target_info.get("targetId", "")
+        if sub_session_id is None:
+            return
+        sub_session = CDPSession(
+            connection=self._connection,
+            session_id=sub_session_id,
+            target_id=sub_target_id,
+            client=self._client,
+        )
+        self._sub_sessions[sub_session_id] = sub_session
+        if self._client is not None:
+            self._client._sessions[sub_session_id] = sub_session
+        logger.info(
+            "Sub-session %s attached (target=%s)",
+            sub_session_id,
+            sub_target_id,
+        )
+
+    def _handle_detached_from_target(self, params: dict[str, Any]) -> None:
+        """Handle Target.detachedFromTarget event for sub-session cleanup.
+
+        Args:
+            params: Event params with sessionId.
+        """
+        sub_session_id = params.get("sessionId")
+        if sub_session_id is None:
+            return
+        sub_session = self._sub_sessions.pop(sub_session_id, None)
+        if sub_session is not None:
+            sub_session._closed = True
+            sub_session._dispatcher.clear()
+            if self._client is not None:
+                self._client._session_dispatchers.pop(sub_session_id, None)
+                self._client._sessions.pop(sub_session_id, None)
+            logger.info("Sub-session %s detached", sub_session_id)
 
     async def send(
         self,
@@ -451,12 +585,22 @@ class CDPSession:
         If the session's target was created by this client (via
         ``new_page()``), the target is also closed. If the session
         was attached to an existing target (via ``connect_to_page()``),
-        only the session is detached.
+        only the session is detached. Sub-sessions from auto-attach are
+        also cleaned up.
         """
         if self._closed:
             return
         self._closed = True
         self._dispatcher.clear()
+
+        for sub_id, sub in list(self._sub_sessions.items()):
+            sub._closed = True
+            sub._dispatcher.clear()
+            if self._client is not None:
+                self._client._session_dispatchers.pop(sub_id, None)
+                self._client._sessions.pop(sub_id, None)
+        self._sub_sessions.clear()
+
         if self._client is not None:
             self._client._session_dispatchers.pop(self._session_id, None)
         with contextlib.suppress(Exception):
@@ -529,6 +673,86 @@ class CDPSession:
         finally:
             sub.unsubscribe()
 
+    async def wait_for_navigation(
+        self,
+        url: str | None = None,
+        timeout: float = 30.0,
+    ) -> dict[str, Any]:
+        """Wait for a navigation event.
+
+        Args:
+            url: Optional URL to wait for (substring match).
+            timeout: Maximum seconds to wait.
+
+        Returns:
+            The ``Page.frameNavigated`` event params.
+        """
+        from cdpwave.waiters import wait_for_navigation as _wait
+
+        return await _wait(self, url=url, timeout=timeout)
+
+    async def wait_for_load_state(
+        self,
+        state: str = "load",
+        timeout: float = 30.0,
+    ) -> dict[str, Any]:
+        """Wait for a specific page lifecycle event.
+
+        Args:
+            state: Lifecycle state (``"DOMContentLoaded"``, ``"load"``,
+                ``"networkIdle"``, etc.).
+            timeout: Maximum seconds to wait.
+
+        Returns:
+            The ``Page.lifecycleEvent`` event params.
+        """
+        from cdpwave.waiters import wait_for_load_state as _wait
+
+        return await _wait(self, state=state, timeout=timeout)
+
+    async def wait_for_selector(
+        self,
+        selector: str,
+        root_node_id: int = 1,
+        timeout: float = 30.0,
+        poll_interval: float = 0.1,
+    ) -> int:
+        """Wait for a CSS selector to appear in the DOM.
+
+        Args:
+            selector: CSS selector to wait for.
+            root_node_id: Root node ID to query from (default: document).
+            timeout: Maximum seconds to wait.
+            poll_interval: Seconds between polls.
+
+        Returns:
+            The DOM node ID of the matched element.
+        """
+        from cdpwave.waiters import wait_for_selector as _wait
+
+        return await _wait(
+            self,
+            selector,
+            root_node_id=root_node_id,
+            timeout=timeout,
+            poll_interval=poll_interval,
+        )
+
+    async def wait_for_network_idle(
+        self,
+        idle_time: float = 0.5,
+        timeout: float = 30.0,
+    ) -> None:
+        """Wait until network activity settles.
+
+        Args:
+            idle_time: Seconds of no new requests before resolving.
+            timeout: Maximum seconds to wait overall.
+        """
+        from cdpwave.waiters import wait_for_network_idle as _wait
+
+        await _wait(self, idle_time=idle_time, timeout=timeout)
+
     async def __aenter__(self) -> CDPSession:
         """Enter async context manager."""
         return self
@@ -572,6 +796,89 @@ class _LaunchContext:
             await self._client.close()
 
 
+class BrowserContext:
+    """Represents an isolated browser context (like an incognito profile).
+
+    Provides cookie, storage, and permission isolation. Create via
+    ``CDPClient.new_context()``. Use ``async with`` for automatic cleanup.
+    """
+
+    def __init__(
+        self,
+        client: CDPClient,
+        context_id: str,
+    ) -> None:
+        self._client = client
+        self._context_id = context_id
+        self._closed = False
+
+    @property
+    def context_id(self) -> str:
+        """The browser context ID."""
+        return self._context_id
+
+    @property
+    def is_closed(self) -> bool:
+        """Whether this context has been closed."""
+        return self._closed
+
+    async def new_page(self, url: str = "about:blank") -> CDPSession:
+        """Create a new page target within this browser context.
+
+        Args:
+            url: Initial URL for the new page.
+
+        Returns:
+            A CDPSession connected to the new page.
+        """
+        target_id = await self._client._session_manager.create_target(
+            url,
+            browser_context_id=self._context_id,
+        )
+        try:
+            session_id = await self._client._session_manager.attach_to_target(
+                target_id,
+            )
+        except Exception:
+            with contextlib.suppress(Exception):
+                await self._client._session_manager.close_target(target_id)
+            raise
+        self._client._managed_targets.add(target_id)
+        session = CDPSession(
+            connection=self._client._connection,
+            session_id=session_id,
+            target_id=target_id,
+            client=self._client,
+        )
+        self._client._sessions[session_id] = session
+        return session
+
+    async def close(self) -> None:
+        """Dispose the browser context and all its sessions."""
+        if self._closed:
+            return
+        self._closed = True
+        with contextlib.suppress(Exception):
+            await self._client._connection.send_command(
+                "Target.disposeBrowserContext",
+                {"browserContextId": self._context_id},
+            )
+        logger.info("Browser context %s disposed", self._context_id)
+
+    async def __aenter__(self) -> BrowserContext:
+        """Enter async context manager."""
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: object,
+        exc_val: object,
+        exc_tb: object,
+    ) -> None:
+        """Exit async context manager and close the context."""
+        await self.close()
+
+
 class CDPClient:
     """Main entry point for cdpwave.
 
@@ -585,12 +892,19 @@ class CDPClient:
         connection: Connection,
         launcher: BrowserLauncher | None = None,
         discovery: TargetDiscovery | None = None,
+        strict_events: bool = False,
+        on_event_error: EventErrorCallback | None = None,
     ) -> None:
         self._connection = connection
         self._launcher = launcher
         self._discovery = discovery
         self._session_manager = SessionManager(connection)
-        self._dispatcher = EventDispatcher()
+        self._dispatcher = EventDispatcher(
+            strict_events=strict_events,
+            on_event_error=on_event_error,
+        )
+        self._strict_events = strict_events
+        self._on_event_error = on_event_error
         self._session_dispatchers: dict[str, EventDispatcher] = {}
         self._sessions: dict[str, CDPSession] = {}
         self._managed_targets: set[str] = set()
@@ -604,11 +918,25 @@ class CDPClient:
         session_id: str | None,
     ) -> None:
         """Internal callback for routing CDP events to the correct dispatcher."""
+        if event_name == "Target.attachedToTarget":
+            parent_session_id = params.get("sessionId")
+            if parent_session_id is not None:
+                parent = self._sessions.get(parent_session_id)
+                if parent is not None:
+                    parent._handle_attached_to_target(params)
+                    return
+            return
+
         if event_name == "Target.detachedFromTarget":
             detached_session_id = params.get("sessionId")
             if detached_session_id is not None:
                 session = self._sessions.get(detached_session_id)
                 if session is not None:
+                    if session._auto_attach_enabled:
+                        parent = self._sessions.get(session_id) if session_id else None
+                        if parent is not None:
+                            parent._handle_detached_from_target(params)
+                            return
                     session._closed = True
                     session._dispatcher.clear()
                     self._session_dispatchers.pop(detached_session_id, None)
@@ -691,6 +1019,9 @@ class CDPClient:
         user_data_dir: str | None = None,
         extra_args: list[str] | None = None,
         timeout: float = 10.0,
+        max_retries: int = 0,
+        backoff_base: float = 1.0,
+        backoff_max: float = 30.0,
     ) -> _LaunchContext:
         """Launch a new browser and return a connected CDPClient.
 
@@ -704,6 +1035,9 @@ class CDPClient:
             user_data_dir: Optional user data directory.
             extra_args: Optional extra command-line arguments.
             timeout: Maximum seconds to wait for browser startup.
+            max_retries: Maximum WebSocket reconnection attempts (0 = no reconnect).
+            backoff_base: Initial reconnection backoff delay in seconds.
+            backoff_max: Maximum reconnection backoff delay in seconds.
 
         Returns:
             A _LaunchContext that resolves to a connected CDPClient.
@@ -719,21 +1053,15 @@ class CDPClient:
             )
             info = await launcher.launch(timeout=timeout)
             discovery = TargetDiscovery(port=info.port)
-            client = cls.__new__(cls)
-            client._connection = Connection(
+            connection = Connection(
                 info.web_socket_debugger_url,
-                event_callback=client._event_callback,
+                max_retries=max_retries,
+                backoff_base=backoff_base,
+                backoff_max=backoff_max,
             )
-            await client._connection.connect()
-            client._launcher = launcher
-            client._discovery = discovery
-            client._session_manager = SessionManager(client._connection)
-            client._dispatcher = EventDispatcher()
-            client._session_dispatchers = {}
-            client._sessions = {}
-            client._managed_targets = set()
-            client._closed = False
-            client._browser = BrowserDomain(client.send)
+            await connection.connect()
+            client = cls(connection, launcher=launcher, discovery=discovery)
+            connection._event_callback = client._event_callback
             return client
 
         return _LaunchContext(_do_launch())
@@ -744,6 +1072,9 @@ class CDPClient:
         host: str = "localhost",
         port: int = 9222,
         ws_url: str | None = None,
+        max_retries: int = 0,
+        backoff_base: float = 1.0,
+        backoff_max: float = 30.0,
     ) -> _LaunchContext:
         """Connect to an existing browser's CDP endpoint.
 
@@ -758,6 +1089,9 @@ class CDPClient:
             host: Host where the browser is running.
             port: Remote debugging port.
             ws_url: Optional direct WebSocket URL (skips discovery).
+            max_retries: Maximum WebSocket reconnection attempts (0 = no reconnect).
+            backoff_base: Initial reconnection backoff delay in seconds.
+            backoff_max: Maximum reconnection backoff delay in seconds.
 
         Returns:
             A _LaunchContext that resolves to a connected CDPClient.
@@ -770,36 +1104,41 @@ class CDPClient:
             else:
                 version = await discovery.get_version()
                 socket_url = version.web_socket_debugger_url
-            client = cls.__new__(cls)
-            client._connection = Connection(
+            connection = Connection(
                 socket_url,
-                event_callback=client._event_callback,
+                max_retries=max_retries,
+                backoff_base=backoff_base,
+                backoff_max=backoff_max,
             )
-            await client._connection.connect()
-            client._launcher = None
-            client._discovery = discovery
-            client._session_manager = SessionManager(client._connection)
-            client._dispatcher = EventDispatcher()
-            client._session_dispatchers = {}
-            client._sessions = {}
-            client._managed_targets = set()
-            client._closed = False
-            client._browser = BrowserDomain(client.send)
+            await connection.connect()
+            client = cls(connection, launcher=None, discovery=discovery)
+            connection._event_callback = client._event_callback
             return client
 
         return _LaunchContext(_do_connect())
 
-    async def new_page(self, url: str = "about:blank") -> CDPSession:
+    async def new_page(
+        self,
+        url: str = "about:blank",
+        auto_attach: bool = False,
+    ) -> CDPSession:
         """Create a new page target and return a CDPSession for it.
 
         Args:
             url: Initial URL for the new page.
+            auto_attach: If True, auto-attach to child targets (iframes,
+                workers) and expose them via ``session.sub_sessions``.
 
         Returns:
             A CDPSession connected to the new page.
         """
         target_id = await self._session_manager.create_target(url)
-        session_id = await self._session_manager.attach_to_target(target_id)
+        try:
+            session_id = await self._session_manager.attach_to_target(target_id)
+        except Exception:
+            with contextlib.suppress(Exception):
+                await self._session_manager.close_target(target_id)
+            raise
         self._managed_targets.add(target_id)
         session = CDPSession(
             connection=self._connection,
@@ -808,6 +1147,10 @@ class CDPClient:
             client=self,
         )
         self._sessions[session_id] = session
+
+        if auto_attach:
+            await session._enable_auto_attach()
+
         return session
 
     async def get_pages(self) -> list[TargetInfo]:
@@ -835,6 +1178,26 @@ class CDPClient:
         )
         self._sessions[session_id] = session
         return session
+
+    async def new_context(self) -> BrowserContext:
+        """Create a new isolated browser context.
+
+        Returns:
+            A BrowserContext that can be used to create pages with
+            isolated cookies, storage, and permissions.
+        """
+        result = await self._connection.send_command(
+            "Target.createBrowserContext",
+            {"disposeOnDetach": False},
+        )
+        context_id = result.get("browserContextId")
+        if context_id is None:
+            raise KeyError(
+                "Target.createBrowserContext response missing 'browserContextId'"
+            )
+        context = BrowserContext(self, str(context_id))
+        logger.info("Browser context %s created", context_id)
+        return context
 
     async def close(self) -> None:
         """Close all sessions, the WebSocket connection, and the browser process."""

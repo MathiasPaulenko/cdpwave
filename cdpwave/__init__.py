@@ -3,9 +3,9 @@
 Public API exports for the cdpwave package.
 """
 
-__version__ = "2.0.1"
+__version__ = "2.6.0"
 
-from cdpwave.client import CDPClient, CDPSession
+from cdpwave.client import BrowserContext, CDPClient, CDPSession
 from cdpwave.events.dispatcher import EventDispatcher
 from cdpwave.events.handlers import EventHandler, Subscription
 from cdpwave.exceptions import (
@@ -19,21 +19,44 @@ from cdpwave.exceptions import (
     LaunchTimeoutError,
     SessionClosedError,
 )
+from cdpwave.types import (
+    DOMGetDocumentResult,
+    DOMNode,
+    ExceptionDetails,
+    NetworkCookie,
+    NetworkGetCookiesResult,
+    PageNavigateResult,
+    RemoteObject,
+    RuntimeEvaluateResult,
+    TargetAttachToTargetResult,
+    TargetCreateTargetResult,
+)
 
 __all__ = [
+    "BrowserContext",
+    "BrowserNotFoundError",
     "CDPClient",
-    "CDPSession",
     "CDPError",
-    "ConnectionClosedError",
+    "CDPSession",
     "CommandError",
     "CommandTimeoutError",
-    "BrowserNotFoundError",
-    "SessionClosedError",
+    "ConnectionClosedError",
+    "DOMGetDocumentResult",
+    "DOMNode",
     "DiscoveryError",
     "EventDispatcher",
-    "Subscription",
     "EventHandler",
+    "ExceptionDetails",
     "LaunchError",
     "LaunchTimeoutError",
+    "NetworkCookie",
+    "NetworkGetCookiesResult",
+    "PageNavigateResult",
+    "RemoteObject",
+    "RuntimeEvaluateResult",
+    "SessionClosedError",
+    "Subscription",
+    "TargetAttachToTargetResult",
+    "TargetCreateTargetResult",
     "__version__",
 ]

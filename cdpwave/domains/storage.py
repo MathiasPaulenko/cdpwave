@@ -11,74 +11,9 @@ class StorageDomain(BaseDomain):
     Provides access to browser storage: cookies per origin, IndexedDB,
     cache storage, and storage quota tracking.
 
-    The Storage and DOMStorage domains do not require ``enable``/``disable``
-    calls — commands work directly.
+    For DOMStorage (localStorage/sessionStorage), use
+    ``DOMStorageDomain`` via ``session.dom_storage``.
     """
-
-    async def get_dom_storage_items(
-        self,
-        storage_id: dict[str, Any],
-    ) -> dict[str, Any]:
-        """Get DOM storage items.
-
-        Args:
-            storage_id: Dict with ``securityOrigin`` and ``isLocalStorage``.
-
-        Returns:
-            Dict with ``entries`` list of ``[key, value]`` pairs.
-        """
-        return await self._call(
-            "DOMStorage.getDOMStorageItems",
-            {"storageId": storage_id},
-        )
-
-    async def set_dom_storage_item(
-        self,
-        storage_id: dict[str, Any],
-        key: str,
-        value: str,
-    ) -> dict[str, Any]:
-        """Set a DOM storage item.
-
-        Args:
-            storage_id: Dict with ``securityOrigin`` and ``isLocalStorage``.
-            key: Item key.
-            value: Item value.
-        """
-        return await self._call(
-            "DOMStorage.setDOMStorageItem",
-            {"storageId": storage_id, "key": key, "value": value},
-        )
-
-    async def remove_dom_storage_item(
-        self,
-        storage_id: dict[str, Any],
-        key: str,
-    ) -> dict[str, Any]:
-        """Remove a DOM storage item.
-
-        Args:
-            storage_id: Dict with ``securityOrigin`` and ``isLocalStorage``.
-            key: Item key to remove.
-        """
-        return await self._call(
-            "DOMStorage.removeDOMStorageItem",
-            {"storageId": storage_id, "key": key},
-        )
-
-    async def clear_dom_storage_items(
-        self,
-        storage_id: dict[str, Any],
-    ) -> dict[str, Any]:
-        """Clear all DOM storage items.
-
-        Args:
-            storage_id: Dict with ``securityOrigin`` and ``isLocalStorage``.
-        """
-        return await self._call(
-            "DOMStorage.clear",
-            {"storageId": storage_id},
-        )
 
     async def get_cookies(
         self,
@@ -262,4 +197,319 @@ class StorageDomain(BaseDomain):
         return await self._call(
             "Storage.getStorageKeyForFrame",
             {"frameId": frame_id},
+        )
+
+    async def get_storage_key(self, frame_id: str) -> dict[str, Any]:
+        """Get the storage key for a frame.
+
+        Args:
+            frame_id: Frame ID to get the storage key for.
+
+        Returns:
+            Dict with ``storageKey``.
+        """
+        return await self._call(
+            "Storage.getStorageKey",
+            {"frameId": frame_id},
+        )
+
+    async def clear_data_for_storage_key(
+        self,
+        storage_key: str,
+        storage_types: str,
+    ) -> dict[str, Any]:
+        """Clear storage data for a storage key.
+
+        Args:
+            storage_key: Storage key to clear data for.
+            storage_types: Comma-separated storage types (e.g.
+                ``"cookies,local_storage,session_storage,indexeddb"``,
+                or ``"all"``).
+        """
+        return await self._call(
+            "Storage.clearDataForStorageKey",
+            {"storageKey": storage_key, "storageTypes": storage_types},
+        )
+
+    async def override_quota_for_origin(
+        self,
+        origin: str,
+        quota_size: int | None = None,
+    ) -> dict[str, Any]:
+        """Override storage quota for an origin.
+
+        Args:
+            origin: Security origin to override quota for.
+            quota_size: Quota size in bytes. If None, removes the override.
+        """
+        params: dict[str, Any] = {"origin": origin}
+        if quota_size is not None:
+            params["quotaSize"] = quota_size
+        return await self._call("Storage.overrideQuotaForOrigin", params)
+
+    async def track_indexed_db_for_storage_key(self, storage_key: str) -> dict[str, Any]:
+        """Start tracking IndexedDB for a storage key.
+
+        Args:
+            storage_key: Storage key to track.
+        """
+        return await self._call(
+            "Storage.trackIndexedDBForStorageKey",
+            {"storageKey": storage_key},
+        )
+
+    async def untrack_indexed_db_for_storage_key(self, storage_key: str) -> dict[str, Any]:
+        """Stop tracking IndexedDB for a storage key.
+
+        Args:
+            storage_key: Storage key to stop tracking.
+        """
+        return await self._call(
+            "Storage.untrackIndexedDBForStorageKey",
+            {"storageKey": storage_key},
+        )
+
+    async def track_cache_storage_for_storage_key(self, storage_key: str) -> dict[str, Any]:
+        """Start tracking Cache Storage for a storage key.
+
+        Args:
+            storage_key: Storage key to track.
+        """
+        return await self._call(
+            "Storage.trackCacheStorageForStorageKey",
+            {"storageKey": storage_key},
+        )
+
+    async def untrack_cache_storage_for_storage_key(self, storage_key: str) -> dict[str, Any]:
+        """Stop tracking Cache Storage for a storage key.
+
+        Args:
+            storage_key: Storage key to stop tracking.
+        """
+        return await self._call(
+            "Storage.untrackCacheStorageForStorageKey",
+            {"storageKey": storage_key},
+        )
+
+    async def get_interest_group_details(
+        self,
+        owner_origin: str,
+        name: str,
+    ) -> dict[str, Any]:
+        """Get details for an interest group.
+
+        Args:
+            owner_origin: Owner origin of the interest group.
+            name: Name of the interest group.
+
+        Returns:
+            Dict with ``details`` containing interest group info.
+        """
+        return await self._call(
+            "Storage.getInterestGroupDetails",
+            {"ownerOrigin": owner_origin, "name": name},
+        )
+
+    async def set_interest_group_tracking(self, enable: bool) -> dict[str, Any]:
+        """Enable or disable interest group tracking.
+
+        Args:
+            enable: Whether to track interest groups.
+        """
+        return await self._call(
+            "Storage.setInterestGroupTracking",
+            {"enable": enable},
+        )
+
+    async def set_interest_group_auction_tracking(self, enable: bool) -> dict[str, Any]:
+        """Enable or disable interest group auction tracking.
+
+        Args:
+            enable: Whether to track interest group auctions.
+        """
+        return await self._call(
+            "Storage.setInterestGroupAuctionTracking",
+            {"enable": enable},
+        )
+
+    async def get_shared_storage_metadata(
+        self,
+        owner_origin: str,
+    ) -> dict[str, Any]:
+        """Get metadata for a shared storage.
+
+        Args:
+            owner_origin: Owner origin of the shared storage.
+
+        Returns:
+            Dict with ``metadata`` containing ``creationTime`` and ``length``.
+        """
+        return await self._call(
+            "Storage.getSharedStorageMetadata",
+            {"ownerOrigin": owner_origin},
+        )
+
+    async def get_shared_storage_entries(
+        self,
+        owner_origin: str,
+    ) -> dict[str, Any]:
+        """Get entries from a shared storage.
+
+        Args:
+            owner_origin: Owner origin of the shared storage.
+
+        Returns:
+            Dict with ``entries`` list of ``{key, value}`` dicts.
+        """
+        return await self._call(
+            "Storage.getSharedStorageEntries",
+            {"ownerOrigin": owner_origin},
+        )
+
+    async def set_shared_storage_entry(
+        self,
+        owner_origin: str,
+        key: str,
+        value: str,
+        ignore_if_present: bool = False,
+    ) -> dict[str, Any]:
+        """Set an entry in a shared storage.
+
+        Args:
+            owner_origin: Owner origin of the shared storage.
+            key: Entry key.
+            value: Entry value.
+            ignore_if_present: If True, do not overwrite existing entries.
+        """
+        return await self._call(
+            "Storage.setSharedStorageEntry",
+            {
+                "ownerOrigin": owner_origin,
+                "key": key,
+                "value": value,
+                "ignoreIfPresent": ignore_if_present,
+            },
+        )
+
+    async def delete_shared_storage_entry(
+        self,
+        owner_origin: str,
+        key: str,
+    ) -> dict[str, Any]:
+        """Delete an entry from a shared storage.
+
+        Args:
+            owner_origin: Owner origin of the shared storage.
+            key: Entry key to delete.
+        """
+        return await self._call(
+            "Storage.deleteSharedStorageEntry",
+            {"ownerOrigin": owner_origin, "key": key},
+        )
+
+    async def clear_shared_storage_entries(self, owner_origin: str) -> dict[str, Any]:
+        """Clear all entries in a shared storage.
+
+        Args:
+            owner_origin: Owner origin of the shared storage.
+        """
+        return await self._call(
+            "Storage.clearSharedStorageEntries",
+            {"ownerOrigin": owner_origin},
+        )
+
+    async def reset_shared_storage_budget(
+        self,
+        owner_origin: str,
+        budget: float | None = None,
+    ) -> dict[str, Any]:
+        """Reset the shared storage budget for an origin.
+
+        Args:
+            owner_origin: Owner origin of the shared storage.
+            budget: Optional budget to set. If None, resets to default.
+        """
+        params: dict[str, Any] = {"ownerOrigin": owner_origin}
+        if budget is not None:
+            params["budget"] = budget
+        return await self._call("Storage.resetSharedStorageBudget", params)
+
+    async def set_shared_storage_tracking(self, enable: bool) -> dict[str, Any]:
+        """Enable or disable shared storage tracking.
+
+        Args:
+            enable: Whether to track shared storage operations.
+        """
+        return await self._call(
+            "Storage.setSharedStorageTracking",
+            {"enable": enable},
+        )
+
+    async def set_storage_bucket_tracking(
+        self,
+        storage_key: str,
+        enable: bool,
+    ) -> dict[str, Any]:
+        """Enable or disable storage bucket tracking.
+
+        Args:
+            storage_key: Storage key to track.
+            enable: Whether to track storage bucket updates.
+        """
+        return await self._call(
+            "Storage.setStorageBucketTracking",
+            {"storageKey": storage_key, "enable": enable},
+        )
+
+    async def delete_storage_bucket(
+        self,
+        storage_key: str,
+        bucket_name: str,
+    ) -> dict[str, Any]:
+        """Delete a storage bucket.
+
+        Args:
+            storage_key: Storage key of the bucket.
+            bucket_name: Name of the bucket to delete.
+        """
+        return await self._call(
+            "Storage.deleteStorageBucket",
+            {"storageKey": storage_key, "bucketName": bucket_name},
+        )
+
+    async def run_bounce_tracking_mitigations(self) -> dict[str, Any]:
+        """Run bounce tracking mitigations.
+
+        Removes trackers that have been identified as bounce trackers.
+        """
+        return await self._call("Storage.runBounceTrackingMitigations")
+
+    async def get_related_website_sets(self) -> dict[str, Any]:
+        """Get related website sets.
+
+        Returns:
+            Dict with ``sets`` list of related website set dicts.
+        """
+        return await self._call("Storage.getRelatedWebsiteSets")
+
+    async def set_protected_audience_k_anonymity(
+        self,
+        owner_origin: str,
+        name: str,
+        k_anonymity: bool,
+    ) -> dict[str, Any]:
+        """Set k-anonymity for a protected audience interest group.
+
+        Args:
+            owner_origin: Owner origin of the interest group.
+            name: Name of the interest group.
+            k_anonymity: Whether k-anonymity is satisfied.
+        """
+        return await self._call(
+            "Storage.setProtectedAudienceKAnonymity",
+            {
+                "ownerOrigin": owner_origin,
+                "name": name,
+                "kAnonymity": k_anonymity,
+            },
         )

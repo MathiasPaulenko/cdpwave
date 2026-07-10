@@ -14,7 +14,7 @@ cdpwave talks to Chrome over a raw WebSocket. No Node.js, no ChromeDriver, no br
 
 ## Why cdpwave?
 
-- **Full CDP coverage** — all 48 CDP domains implemented with 386 typed methods
+- **Full CDP coverage** — all 60 CDP domains implemented with 685 typed methods
 - **Direct WebSocket** — single connection to Chrome's DevTools Protocol, no intermediate layers
 - **Fully typed** — `mypy --strict` across the entire codebase, IDE autocomplete everywhere
 - **Async-first** — built on `asyncio`, no threading, no blocking calls
@@ -26,7 +26,7 @@ cdpwave talks to Chrome over a raw WebSocket. No Node.js, no ChromeDriver, no br
 - **Direct WebSocket URL** — `CDPClient.connect(ws_url=...)` bypasses HTTP discovery
 - **Event helpers** — `session.wait_for_event()` and `session.on()` for async event handling
 - **Multi-tab sessions** — `client.sessions` property tracks all active sessions
-- **MIT licensed** — permissive, compatible with any use
+- **Integration tested** — 322 integration tests against a real Chromium browser covering all domains
 
 ## Install
 

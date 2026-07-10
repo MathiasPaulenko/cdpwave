@@ -13,11 +13,23 @@ class SessionManager:
     def __init__(self, connection: Connection) -> None:
         self._connection = connection
 
-    async def create_target(self, url: str = "about:blank") -> str:
-        """Create a new browser target and return its target ID."""
+    async def create_target(
+        self,
+        url: str = "about:blank",
+        browser_context_id: str | None = None,
+    ) -> str:
+        """Create a new browser target and return its target ID.
+
+        Args:
+            url: The initial URL for the new target.
+            browser_context_id: Optional browser context ID for isolation.
+        """
+        params: dict[str, object] = {"url": url}
+        if browser_context_id is not None:
+            params["browserContextId"] = browser_context_id
         result = await self._connection.send_command(
             "Target.createTarget",
-            {"url": url},
+            params,
         )
         target_id = result.get("targetId")
         if target_id is None:

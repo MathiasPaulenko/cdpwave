@@ -99,3 +99,31 @@ class MemoryDomain(BaseDomain):
             Dict with ``samples`` and ``modules``.
         """
         return await self._call("Memory.getSamplingProfile")
+
+    async def forcibly_purge_javascript_memory(self) -> dict[str, Any]:
+        """Forcibly purge JavaScript memory across all V8 isolates."""
+        return await self._call("Memory.forciblyPurgeJavaScriptMemory")
+
+    async def get_all_time_sampling_profile(self) -> dict[str, Any]:
+        """Get the all-time memory sampling profile.
+
+        Returns:
+            Dict with ``samples`` and ``modules``.
+        """
+        return await self._call("Memory.getAllTimeSamplingProfile")
+
+    async def get_browser_sampling_profile(self) -> dict[str, Any]:
+        """Get the browser process memory sampling profile.
+
+        Returns:
+            Dict with ``samples`` and ``modules``.
+        """
+        return await self._call("Memory.getBrowserSamplingProfile")
+
+    async def get_dom_counters_for_leak_detection(self) -> dict[str, Any]:
+        """Get DOM counters for leak detection.
+
+        Returns:
+            Dict with ``counters`` list.
+        """
+        return await self._call("Memory.getDOMCountersForLeakDetection")

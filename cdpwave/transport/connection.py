@@ -2,6 +2,7 @@
 
 import asyncio
 import contextlib
+import json
 import logging
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -42,6 +43,14 @@ class Connection:
 
     Manages the WebSocket lifecycle, command correlation, and event
     dispatching. A single Connection serves all sessions (flatten mode).
+
+    Args:
+        url: WebSocket URL of the CDP endpoint.
+        event_callback: Async callback for CDP events.
+        default_timeout: Default timeout for commands in seconds.
+        max_retries: Maximum reconnection attempts (0 = no reconnect).
+        backoff_base: Initial backoff delay in seconds.
+        backoff_max: Maximum backoff delay in seconds.
     """
 
     def __init__(
@@ -49,6 +58,9 @@ class Connection:
         url: str,
         event_callback: EventCallback | None = None,
         default_timeout: float = 30.0,
+        max_retries: int = 0,
+        backoff_base: float = 1.0,
+        backoff_max: float = 30.0,
     ) -> None:
         self._url = url
         self._correlator = Correlator()
@@ -57,6 +69,10 @@ class Connection:
         self._closed = False
         self._event_callback = event_callback
         self._default_timeout = default_timeout
+        self._max_retries = max_retries
+        self._backoff_base = backoff_base
+        self._backoff_max = backoff_max
+        self._reconnect_lock = asyncio.Lock()
 
     async def connect(self) -> None:
         """Open the WebSocket connection and start the receive loop."""
@@ -138,6 +154,49 @@ class Connection:
         self._correlator.reject_all(ConnectionClosedError("Connection closed"))
         logger.info("Connection closed")
 
+    async def _reconnect(self) -> bool:
+        """Attempt to reconnect with exponential backoff.
+
+        Returns:
+            True if reconnection succeeded, False if all retries exhausted.
+        """
+        if self._max_retries <= 0:
+            return False
+
+        async with self._reconnect_lock:
+            for attempt in range(self._max_retries):
+                delay = min(
+                    self._backoff_base * (2 ** attempt),
+                    self._backoff_max,
+                )
+                logger.info(
+                    "Reconnect attempt %d/%d in %.1fs",
+                    attempt + 1,
+                    self._max_retries,
+                    delay,
+                )
+                await asyncio.sleep(delay)
+                try:
+                    self._ws = await websockets.connect(
+                        self._url,
+                        max_size=None,
+                        ping_interval=20,
+                        ping_timeout=20,
+                    )
+                    self._closed = False
+                    self._receive_task = asyncio.create_task(self._receive_loop())
+                    logger.info("Reconnected to %s", self._url)
+                    return True
+                except Exception as exc:
+                    logger.warning(
+                        "Reconnect attempt %d failed: %s",
+                        attempt + 1,
+                        exc,
+                    )
+
+            logger.error("All %d reconnection attempts exhausted", self._max_retries)
+            return False
+
     @property
     def url(self) -> str:
         """The WebSocket URL this connection is connected to."""
@@ -153,7 +212,11 @@ class Connection:
         assert self._ws is not None
         try:
             async for raw in self._ws:
-                data = deserialize_message(str(raw))
+                try:
+                    data = deserialize_message(str(raw))
+                except (json.JSONDecodeError, TypeError, ValueError):
+                    logger.warning("Received malformed WebSocket message, skipping")
+                    continue
 
                 if is_response(data):
                     cmd_id = data["id"]
@@ -189,5 +252,16 @@ class Connection:
             logger.info("WebSocket closed by remote")
         finally:
             if not self._closed:
-                self._closed = True
-            self._correlator.reject_all(ConnectionClosedError("WebSocket closed"))
+                self._correlator.reject_all(
+                    ConnectionClosedError("WebSocket closed"),
+                )
+                if self._max_retries > 0:
+                    reconnected = await self._reconnect()
+                    if not reconnected:
+                        self._closed = True
+                else:
+                    self._closed = True
+            else:
+                self._correlator.reject_all(
+                    ConnectionClosedError("WebSocket closed"),
+                )

@@ -43,7 +43,7 @@ class OverlayDomain(BaseDomain):
         """
         return await self._call(
             "Overlay.setShowPaintRects",
-            {"show": show},
+            {"result": show},
         )
 
     async def set_show_debug_borders(self, show: bool) -> dict[str, Any]:
@@ -298,3 +298,209 @@ class OverlayDomain(BaseDomain):
         if content_outline_color is not None:
             params["contentOutlineColor"] = content_outline_color
         return await self._call("Overlay.highlightFrame", params)
+
+    async def get_highlight_object_for_test(
+        self,
+        node_id: int,
+        include_distance: bool | None = None,
+        include_style: bool | None = None,
+        color_format: str | None = None,
+        show_accessibility_info: bool | None = None,
+    ) -> dict[str, Any]:
+        """Get highlight object for testing.
+
+        Args:
+            node_id: DOM node ID.
+            include_distance: Whether to include distance info.
+            include_style: Whether to include style info.
+            color_format: Color format (``"rgb"`` or ``"hex"``).
+            show_accessibility_info: Whether to show a11y info.
+
+        Returns:
+            Dict with ``highlight`` object.
+        """
+        params: dict[str, Any] = {"nodeId": node_id}
+        if include_distance is not None:
+            params["includeDistance"] = include_distance
+        if include_style is not None:
+            params["includeStyle"] = include_style
+        if color_format is not None:
+            params["colorFormat"] = color_format
+        if show_accessibility_info is not None:
+            params["showAccessibilityInfo"] = show_accessibility_info
+        return await self._call("Overlay.getHighlightObjectForTest", params)
+
+    async def get_grid_highlight_objects_for_test(
+        self,
+        node_ids: list[int],
+    ) -> dict[str, Any]:
+        """Get grid highlight objects for testing.
+
+        Args:
+            node_ids: List of DOM node IDs.
+
+        Returns:
+            Dict with ``highlights`` list.
+        """
+        return await self._call(
+            "Overlay.getGridHighlightObjectsForTest",
+            {"nodeIds": node_ids},
+        )
+
+    async def get_source_order_highlight_object_for_test(
+        self,
+        node_id: int,
+    ) -> dict[str, Any]:
+        """Get source order highlight object for testing.
+
+        Args:
+            node_id: DOM node ID.
+
+        Returns:
+            Dict with ``highlight`` object.
+        """
+        return await self._call(
+            "Overlay.getSourceOrderHighlightObjectForTest",
+            {"nodeId": node_id},
+        )
+
+    async def highlight_source_order(
+        self,
+        source_order_config: dict[str, Any],
+        node_id: int | None = None,
+        backend_node_id: int | None = None,
+        object_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Highlight source order of a node.
+
+        Args:
+            source_order_config: Source order config dict.
+            node_id: Optional DOM node ID.
+            backend_node_id: Optional backend node ID.
+            object_id: Optional remote object ID.
+        """
+        params: dict[str, Any] = {"sourceOrderConfig": source_order_config}
+        if node_id is not None:
+            params["nodeId"] = node_id
+        if backend_node_id is not None:
+            params["backendNodeId"] = backend_node_id
+        if object_id is not None:
+            params["objectId"] = object_id
+        return await self._call("Overlay.highlightSourceOrder", params)
+
+    async def set_show_ad_highlights(self, show: bool) -> dict[str, Any]:
+        """Toggle ad highlights overlay.
+
+        Args:
+            show: Whether to show ad highlights.
+        """
+        return await self._call(
+            "Overlay.setShowAdHighlights",
+            {"show": show},
+        )
+
+    async def set_show_grid_overlays(
+        self,
+        grid_node_highlight_configs: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Show grid overlays.
+
+        Args:
+            grid_node_highlight_configs: List of grid highlight configs.
+        """
+        return await self._call(
+            "Overlay.setShowGridOverlays",
+            {"gridNodeHighlightConfigs": grid_node_highlight_configs},
+        )
+
+    async def set_show_flex_overlays(
+        self,
+        flex_node_highlight_configs: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Show flex overlays.
+
+        Args:
+            flex_node_highlight_configs: List of flex highlight configs.
+        """
+        return await self._call(
+            "Overlay.setShowFlexOverlays",
+            {"flexNodeHighlightConfigs": flex_node_highlight_configs},
+        )
+
+    async def set_show_scroll_snap_overlays(
+        self,
+        scroll_snap_highlight_configs: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Show scroll snap overlays.
+
+        Args:
+            scroll_snap_highlight_configs: List of scroll snap configs.
+        """
+        return await self._call(
+            "Overlay.setShowScrollSnapOverlays",
+            {"scrollSnapHighlightConfigs": scroll_snap_highlight_configs},
+        )
+
+    async def set_show_container_query_overlays(
+        self,
+        container_query_highlight_configs: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Show container query overlays.
+
+        Args:
+            container_query_highlight_configs: List of container query configs.
+        """
+        return await self._call(
+            "Overlay.setShowContainerQueryOverlays",
+            {"containerQueryHighlightConfigs": container_query_highlight_configs},
+        )
+
+    async def set_show_inspected_element_anchor(
+        self,
+        inspected_element_anchor_config: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Show inspected element anchor.
+
+        Args:
+            inspected_element_anchor_config: Anchor config dict.
+        """
+        return await self._call(
+            "Overlay.setShowInspectedElementAnchor",
+            {"inspectedElementAnchorConfig": inspected_element_anchor_config},
+        )
+
+    async def set_show_layout_shift_regions(self, result: bool) -> dict[str, Any]:
+        """Toggle layout shift regions overlay.
+
+        Args:
+            result: Whether to show layout shift regions.
+        """
+        return await self._call(
+            "Overlay.setShowLayoutShiftRegions",
+            {"result": result},
+        )
+
+    async def set_show_hit_test_borders(self, show: bool) -> dict[str, Any]:
+        """Toggle hit test borders overlay.
+
+        Args:
+            show: Whether to show hit test borders.
+        """
+        return await self._call(
+            "Overlay.setShowHitTestBorders",
+            {"show": show},
+        )
+
+    async def set_show_display_cutout(
+        self,
+        display_cutout_config: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Show display cutout overlay.
+
+        Args:
+            display_cutout_config: Optional display cutout config dict.
+        """
+        params: dict[str, Any] = {}
+        if display_cutout_config is not None:
+            params["displayCutoutConfig"] = display_cutout_config
+        return await self._call("Overlay.setShowDisplayCutout", params)

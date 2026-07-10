@@ -43,6 +43,7 @@ class DOMDomain(BaseDomain):
 
         Returns:
             Response dict containing ``root`` node.
+            Typed as ``DOMGetDocumentResult`` for autocompletion.
         """
         if depth < -1:
             raise ValueError("depth must be >= -1")
@@ -613,5 +614,312 @@ class DOMDomain(BaseDomain):
         """
         return await self._call(
             "DOM.getInnerHTML",
+            {"nodeId": node_id},
+        )
+
+    async def undo(self) -> dict[str, Any]:
+        """Undo the last DOM modification."""
+        return await self._call("DOM.undo")
+
+    async def redo(self) -> dict[str, Any]:
+        """Redo the last undone DOM modification."""
+        return await self._call("DOM.redo")
+
+    async def mark_undoable_state(self) -> dict[str, Any]:
+        """Mark an undoable state in the DOM modification history."""
+        return await self._call("DOM.markUndoableState")
+
+    async def hide_highlight(self) -> dict[str, Any]:
+        """Hide any highlighted node."""
+        return await self._call("DOM.hideHighlight")
+
+    async def highlight_node(self, node_id: int) -> dict[str, Any]:
+        """Highlight a node in the browser.
+
+        Args:
+            node_id: Node ID to highlight.
+        """
+        return await self._call(
+            "DOM.highlightNode",
+            {"nodeId": node_id},
+        )
+
+    async def highlight_rect(
+        self,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+    ) -> dict[str, Any]:
+        """Highlight a rectangular area in the browser.
+
+        Args:
+            x: X coordinate.
+            y: Y coordinate.
+            width: Width of the rectangle.
+            height: Height of the rectangle.
+        """
+        return await self._call(
+            "DOM.highlightRect",
+            {"x": x, "y": y, "width": width, "height": height},
+        )
+
+    async def push_node_by_path_to_frontend(
+        self,
+        path: str,
+    ) -> dict[str, Any]:
+        """Push a node by path to the frontend.
+
+        Args:
+            path: Node path (e.g. ``"0,1,2,3"``).
+
+        Returns:
+            Dict with ``nodeId``.
+        """
+        return await self._call(
+            "DOM.pushNodeByPathToFrontend",
+            {"path": path},
+        )
+
+    async def push_nodes_by_backend_ids_to_frontend(
+        self,
+        backend_node_ids: list[int],
+    ) -> dict[str, Any]:
+        """Push nodes by backend IDs to the frontend.
+
+        Args:
+            backend_node_ids: List of backend node IDs.
+
+        Returns:
+            Dict with ``nodeIds`` list.
+        """
+        return await self._call(
+            "DOM.pushNodesByBackendIdsToFrontend",
+            {"backendNodeIds": backend_node_ids},
+        )
+
+    async def get_nodes_for_subtree_by_style(
+        self,
+        node_id: int,
+        computed_styles: list[str],
+        pierce: bool = False,
+    ) -> dict[str, Any]:
+        """Find nodes in a subtree that match computed styles.
+
+        Args:
+            node_id: Root node ID to search from.
+            computed_styles: List of CSS property names to match.
+            pierce: Whether to pierce shadow DOM.
+
+        Returns:
+            Dict with ``nodeIds`` list.
+        """
+        return await self._call(
+            "DOM.getNodesForSubtreeByStyle",
+            {
+                "nodeId": node_id,
+                "computedStyles": computed_styles,
+                "pierce": pierce,
+            },
+        )
+
+    async def get_relayout_boundary(self, node_id: int) -> dict[str, Any]:
+        """Get the relayout boundary for a node.
+
+        Args:
+            node_id: Node ID to query.
+
+        Returns:
+            Dict with ``relayoutBoundary`` node ID.
+        """
+        return await self._call(
+            "DOM.getRelayoutBoundary",
+            {"nodeId": node_id},
+        )
+
+    async def get_top_layer_elements(self) -> dict[str, Any]:
+        """Get elements in the top layer.
+
+        Returns:
+            Dict with ``nodeIds`` list.
+        """
+        return await self._call("DOM.getTopLayerElements")
+
+    async def get_element_by_relation(
+        self,
+        document_id: int,
+        relation: str,
+    ) -> dict[str, Any]:
+        """Get an element by ARIA relation.
+
+        Args:
+            document_id: Document node ID.
+            relation: ARIA relation type (e.g. ``"controlledby"``).
+
+        Returns:
+            Dict with ``nodeId``.
+        """
+        return await self._call(
+            "DOM.getElementByRelation",
+            {"documentId": document_id, "relation": relation},
+        )
+
+    async def set_node_stack_traces_enabled(
+        self,
+        enabled: bool,
+    ) -> dict[str, Any]:
+        """Enable or disable node stack traces.
+
+        Args:
+            enabled: Whether to capture stack traces for DOM nodes.
+        """
+        return await self._call(
+            "DOM.setNodeStackTracesEnabled",
+            {"enabled": enabled},
+        )
+
+    async def get_node_stack_traces(
+        self,
+        node_id: int,
+    ) -> dict[str, Any]:
+        """Get stack traces for a node.
+
+        Args:
+            node_id: Node ID to query.
+
+        Returns:
+            Dict with ``creation`` stack trace.
+        """
+        return await self._call(
+            "DOM.getNodeStackTraces",
+            {"nodeId": node_id},
+        )
+
+    async def get_file_info(self, file_id: str) -> dict[str, Any]:
+        """Get file info for a file input element.
+
+        Args:
+            file_id: File ID from a file input element.
+
+        Returns:
+            Dict with ``name``, ``size``, ``type``, and ``lastModified``.
+        """
+        return await self._call("DOM.getFileInfo", {"fileId": file_id})
+
+    async def get_detached_dom_nodes(self) -> dict[str, Any]:
+        """Get detached DOM nodes.
+
+        Returns:
+            Dict with ``detachedNodes`` list.
+        """
+        return await self._call("DOM.getDetachedDomNodes")
+
+    async def set_inspected_node(self, node_id: int) -> dict[str, Any]:
+        """Set the inspected node for console $0 reference.
+
+        Args:
+            node_id: Node ID to set as inspected.
+        """
+        return await self._call(
+            "DOM.setInspectedNode",
+            {"nodeId": node_id},
+        )
+
+    async def set_node_name(
+        self,
+        node_id: int,
+        name: str,
+    ) -> dict[str, Any]:
+        """Set the tag name of a node.
+
+        Args:
+            node_id: Node ID to rename.
+            name: New tag name.
+
+        Returns:
+            Dict with ``nodeId`` of the new node.
+        """
+        return await self._call(
+            "DOM.setNodeName",
+            {"nodeId": node_id, "name": name},
+        )
+
+    async def get_frame_owner(self, frame_id: str) -> dict[str, Any]:
+        """Get the owner node of a frame.
+
+        Args:
+            frame_id: Frame ID to find the owner for.
+
+        Returns:
+            Dict with ``nodeId``, ``backendNodeId``, and ``nodeId``.
+        """
+        return await self._call(
+            "DOM.getFrameOwner",
+            {"frameId": frame_id},
+        )
+
+    async def get_container_for_node(
+        self,
+        node_id: int,
+        container_name: str | None = None,
+    ) -> dict[str, Any]:
+        """Get the container node for a given node.
+
+        Args:
+            node_id: Node ID to find the container for.
+            container_name: Optional container name to match.
+
+        Returns:
+            Dict with ``nodeId`` of the container.
+        """
+        params: dict[str, Any] = {"nodeId": node_id}
+        if container_name is not None:
+            params["containerName"] = container_name
+        return await self._call("DOM.getContainerForNode", params)
+
+    async def get_querying_descendants_for_container(
+        self,
+        node_id: int,
+    ) -> dict[str, Any]:
+        """Get querying descendants for a container node.
+
+        Args:
+            node_id: Container node ID.
+
+        Returns:
+            Dict with ``nodeIds`` list.
+        """
+        return await self._call(
+            "DOM.getQueryingDescendantsForContainer",
+            {"nodeId": node_id},
+        )
+
+    async def get_anchor_element(
+        self,
+        node_id: int,
+        anchor_name: str | None = None,
+    ) -> dict[str, Any]:
+        """Get the anchor element for a node.
+
+        Args:
+            node_id: Node ID to find the anchor for.
+            anchor_name: Optional anchor name to match.
+
+        Returns:
+            Dict with ``anchorElement`` node ID.
+        """
+        params: dict[str, Any] = {"nodeId": node_id}
+        if anchor_name is not None:
+            params["anchorName"] = anchor_name
+        return await self._call("DOM.getAnchorElement", params)
+
+    async def force_show_popover(self, node_id: int) -> dict[str, Any]:
+        """Force show a popover element.
+
+        Args:
+            node_id: Node ID of the popover element.
+        """
+        return await self._call(
+            "DOM.forceShowPopover",
             {"nodeId": node_id},
         )

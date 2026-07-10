@@ -1,9 +1,6 @@
-"""Inspector domain: inspector lifecycle events.
+"""Inspector domain: inspector lifecycle events and commands."""
 
-The Inspector domain is event-only — it emits ``detached`` and
-``targetCrashed`` events but has no commands. This wrapper exists
-for API completeness and event documentation.
-"""
+from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
@@ -11,10 +8,18 @@ from cdpwave.domains.base import BaseDomain
 class InspectorDomain(BaseDomain):
     """Wrapper for the CDP Inspector domain.
 
-    The Inspector domain is event-only. It emits:
+    The Inspector domain emits:
     - ``Inspector.detached`` — when the inspector is detached.
     - ``Inspector.targetCrashed`` — when the target crashes.
 
     Use ``session.on("Inspector.detached", handler)``
     to subscribe to these events.
     """
+
+    async def enable(self) -> dict[str, Any]:
+        """Enable the Inspector domain."""
+        return await self._call("Inspector.enable")
+
+    async def disable(self) -> dict[str, Any]:
+        """Disable the Inspector domain."""
+        return await self._call("Inspector.disable")

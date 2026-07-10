@@ -100,3 +100,48 @@ async with await CDPClient.launch(headless=True) as client:
 - Catch `CommandTimeoutError` for slow pages or overloaded browsers
 - Let `CDPError` be the catch-all for unexpected cdpwave issues
 - Don't catch `SessionClosedError` unless you have recovery logic
+
+## Handling experimental domains
+
+Some CDP domains are experimental and may not be available in all Chrome
+versions. Use `CommandError` with code `-32601` (method not found) to
+detect and gracefully skip unavailable domains:
+
+```python
+from cdpwave import CDPClient, CommandError
+
+async with await CDPClient.launch(headless=True) as client:
+    session = await client.new_page()
+    try:
+        await session.bluetooth_emulation.enable()
+        await session.bluetooth_emulation.disable()
+    except CommandError as exc:
+        if exc.code == -32601:
+            print("BluetoothEmulation not available in this Chrome version")
+        else:
+            raise
+```
+
+### Helper pattern for multiple experimental domains
+
+```python
+def is_method_not_found(exc: Exception) -> bool:
+    return isinstance(exc, CommandError) and exc.code == -32601
+
+experimental_domains = [
+    "bluetooth_emulation",
+    "autofill",
+    "fed_cm",
+    "web_mcp",
+]
+
+for domain_name in experimental_domains:
+    domain = getattr(session, domain_name)
+    try:
+        await domain.enable()
+        await domain.disable()
+    except CommandError as exc:
+        if not is_method_not_found(exc):
+            raise
+        print(f"{domain_name} not available, skipping")
+```

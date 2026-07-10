@@ -55,8 +55,8 @@ class TestRuntimeAdvanced:
             object_id = obj["result"]["objectId"]
 
             result = await session.runtime.call_function_on(
-                object_id,
                 "function() { return this.x + this.y; }",
+                object_id=object_id,
                 return_by_value=True,
             )
             assert result["result"]["value"] == 30
@@ -75,8 +75,8 @@ class TestRuntimeAdvanced:
             object_id = result["result"]["objectId"]
 
             call_result = await session.runtime.call_function_on(
-                object_id,
                 "function(a, b) { return a * b; }",
+                object_id=object_id,
                 args=[
                     {"value": 6},
                     {"value": 7},

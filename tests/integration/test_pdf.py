@@ -23,11 +23,11 @@ class TestPDF:
     async def test_print_to_pdf(self, page: CDPSession) -> None:
         await _wait_for_page(page)
         result = await page.page.print_to_pdf(print_background=True)
-        data = base64.b64decode(result)
+        data = base64.b64decode(result["data"])
         assert data[:5] == b"%PDF-"
 
     async def test_landscape_pdf(self, page: CDPSession) -> None:
         await _wait_for_page(page)
         result = await page.page.print_to_pdf(landscape=True, print_background=True)
-        data = base64.b64decode(result)
+        data = base64.b64decode(result["data"])
         assert data[:5] == b"%PDF-"

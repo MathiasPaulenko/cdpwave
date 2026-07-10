@@ -84,25 +84,34 @@ class TestRuntimeCasuistics:
 
     async def test_call_function_on_with_return_by_value(self, page: CDPSession) -> None:
         await page.runtime.enable()
+        obj = await page.runtime.evaluate("this", return_by_value=False)
+        object_id = obj["result"]["objectId"]
         result = await page.runtime.call_function_on(
             "function() { return {a: 1}; }",
-            return_by_value=True
+            object_id=object_id,
+            return_by_value=True,
         )
         assert "result" in result
         assert "value" in result["result"]
 
     async def test_call_function_on_with_generate_preview(self, page: CDPSession) -> None:
         await page.runtime.enable()
+        obj = await page.runtime.evaluate("this", return_by_value=False)
+        object_id = obj["result"]["objectId"]
         result = await page.runtime.call_function_on(
             "function() { return {a: 1}; }",
-            generate_preview=True
+            object_id=object_id,
+            generate_preview=True,
         )
         assert "result" in result
 
     async def test_call_function_on_with_silent(self, page: CDPSession) -> None:
         await page.runtime.enable()
+        obj = await page.runtime.evaluate("this", return_by_value=False)
+        object_id = obj["result"]["objectId"]
         result = await page.runtime.call_function_on(
             "function() { console.log('test'); return 1; }",
-            silent=True
+            object_id=object_id,
+            silent=True,
         )
         assert "result" in result

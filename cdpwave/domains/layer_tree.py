@@ -122,3 +122,64 @@ class LayerTreeDomain(BaseDomain):
         if clip_rect is not None:
             params["clipRect"] = clip_rect
         return await self._call("LayerTree.profileSnapshot", params)
+
+    async def make_snapshot(
+        self,
+        layer_id: str,
+    ) -> dict[str, Any]:
+        """Make a snapshot of a layer.
+
+        Args:
+            layer_id: Layer ID to snapshot.
+
+        Returns:
+            Dict with ``snapshotId``.
+        """
+        return await self._call(
+            "LayerTree.makeSnapshot",
+            {"layerId": layer_id},
+        )
+
+    async def replay_snapshot(
+        self,
+        snapshot_id: str,
+        from_step: int | None = None,
+        to_step: int | None = None,
+        scale: float | None = None,
+    ) -> dict[str, Any]:
+        """Replay a layer snapshot.
+
+        Args:
+            snapshot_id: Snapshot ID to replay.
+            from_step: Optional starting step.
+            to_step: Optional ending step.
+            scale: Optional scale factor.
+
+        Returns:
+            Dict with ``dataURL``.
+        """
+        params: dict[str, Any] = {"snapshotId": snapshot_id}
+        if from_step is not None:
+            params["fromStep"] = from_step
+        if to_step is not None:
+            params["toStep"] = to_step
+        if scale is not None:
+            params["scale"] = scale
+        return await self._call("LayerTree.replaySnapshot", params)
+
+    async def snapshot_command_log(
+        self,
+        snapshot_id: str,
+    ) -> dict[str, Any]:
+        """Get the command log for a snapshot.
+
+        Args:
+            snapshot_id: Snapshot ID to query.
+
+        Returns:
+            Dict with ``commandLog`` list.
+        """
+        return await self._call(
+            "LayerTree.snapshotCommandLog",
+            {"snapshotId": snapshot_id},
+        )

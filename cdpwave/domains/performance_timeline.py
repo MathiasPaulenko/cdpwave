@@ -1,9 +1,6 @@
-"""PerformanceTimeline domain: timeline events for performance recordings.
+"""PerformanceTimeline domain: timeline events for performance recordings."""
 
-This is an event-only domain — it emits ``PerformanceTimeline.timelineEvent``
-events when enabled. There are no commands beyond what the browser
-sends automatically during timeline recordings.
-"""
+from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
@@ -11,8 +8,23 @@ from cdpwave.domains.base import BaseDomain
 class PerformanceTimelineDomain(BaseDomain):
     """Wrapper for the CDP PerformanceTimeline domain.
 
-    Event-only domain that emits ``PerformanceTimeline.timelineEvent``
-    events containing recorded timeline data (LCP, FID, CLS, etc.).
+    Emits ``PerformanceTimeline.timelineEvent`` events containing
+    recorded timeline data (LCP, FID, CLS, etc.).
 
     Subscribe to events via ``session.on("PerformanceTimeline.timelineEvent", handler)``.
     """
+
+    async def enable(
+        self,
+        event_types: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Enable performance timeline tracking.
+
+        Args:
+            event_types: List of event type filters, each with ``name``
+                and optional ``eventCategory``.
+        """
+        return await self._call(
+            "PerformanceTimeline.enable",
+            {"eventTypes": event_types},
+        )

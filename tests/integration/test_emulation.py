@@ -25,9 +25,7 @@ class TestEmulation:
             await CDPClient.launch(headless=True) as client,
             await client.new_page() as session,
         ):
-            await session.page.enable()
-            await session.page.navigate("https://example.com")
-            await asyncio.sleep(1.0)
+            await _wait_for_page(session)
 
             await session.emulation.set_device_metrics_override(
                 width=375,
@@ -37,12 +35,14 @@ class TestEmulation:
             )
             await asyncio.sleep(0.5)
 
-            result = await session.runtime.evaluate(
-                "({w: window.innerWidth, h: window.innerHeight})",
-                return_by_value=True,
+            w = await session.runtime.evaluate(
+                "window.innerWidth", return_by_value=True,
             )
-            assert result["result"]["value"]["w"] == 375
-            assert result["result"]["value"]["h"] == 812
+            h = await session.runtime.evaluate(
+                "window.innerHeight", return_by_value=True,
+            )
+            assert w["result"]["value"] == 375
+            assert h["result"]["value"] == 812
 
             await session.emulation.clear_device_metrics_override()
 

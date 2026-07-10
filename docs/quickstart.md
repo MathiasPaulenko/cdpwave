@@ -115,6 +115,6 @@ Even if an exception occurs inside the `async with` block, cleanup is guaranteed
 - [Guide: Performance & Profiling](guide/performance-profiling.md) — CPU profiling, heap snapshots, tracing
 - [Guide: Debugging](guide/debugging.md) — breakpoints, stepping, variable inspection
 - [Guide: Storage & Cache](guide/storage-cache.md) — cookies, IndexedDB, Cache API
-- [Guide: Advanced Domains](guide/advanced-domains.md) — Accessibility, CSS, Overlay, Security, WebAuthn
+- [Guide: Advanced Domains](guide/advanced-domains.md) — Accessibility, CSS, Overlay, Security, WebAuthn, DOMSnapshot, DOMStorage, FedCM, WebAudio, and more
 - [Cookbook: Escape Hatch](cookbook/escape-hatch.md) — send raw CDP commands
-- [API Reference](api/client.md) — full auto-generated API docs for all 48 domains
+- [API Reference](api/client.md) — full auto-generated API docs for all 60 domains

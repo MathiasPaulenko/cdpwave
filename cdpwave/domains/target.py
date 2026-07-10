@@ -177,3 +177,89 @@ class TargetDomain(BaseDomain):
             "Target.disposeBrowserContext",
             {"browserContextId": browser_context_id},
         )
+
+    async def get_browser_contexts(self) -> dict[str, Any]:
+        """List all browser contexts.
+
+        Returns:
+            Dict with ``browserContextIds`` list.
+        """
+        return await self._call("Target.getBrowserContexts")
+
+    async def attach_to_browser_target(self) -> dict[str, Any]:
+        """Attach to the browser target.
+
+        Returns:
+            Dict with ``sessionId``.
+        """
+        return await self._call("Target.attachToBrowserTarget")
+
+    async def send_message_to_target(
+        self,
+        message: str,
+        target_id: str | None = None,
+        session_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Send a raw CDP message to a target.
+
+        Deprecated: Use flatten mode and ``session.send()`` instead.
+
+        Args:
+            message: JSON-encoded CDP message string.
+            target_id: Optional target ID (legacy mode).
+            session_id: Optional session ID (flatten mode).
+        """
+        params: dict[str, Any] = {"message": message}
+        if target_id is not None:
+            params["targetId"] = target_id
+        if session_id is not None:
+            params["sessionId"] = session_id
+        return await self._call("Target.sendMessageToTarget", params)
+
+    async def auto_attach_related(
+        self,
+        target_id: str,
+        auto_attach: bool,
+        wait_for_debugger_on_start: bool = False,
+    ) -> dict[str, Any]:
+        """Auto-attach to related targets of a given target.
+
+        Args:
+            target_id: Target ID to auto-attach related targets for.
+            auto_attach: Whether to auto-attach to related targets.
+            wait_for_debugger_on_start: Whether to wait for debugger on start.
+        """
+        return await self._call(
+            "Target.autoAttachRelated",
+            {
+                "targetId": target_id,
+                "autoAttach": auto_attach,
+                "waitForDebuggerOnStart": wait_for_debugger_on_start,
+            },
+        )
+
+    async def set_remote_locations(
+        self,
+        locations: list[dict[str, str]],
+    ) -> dict[str, Any]:
+        """Set remote locations for target discovery.
+
+        Args:
+            locations: List of location dicts with ``host`` and ``port``.
+        """
+        return await self._call(
+            "Target.setRemoteLocations",
+            {"locations": locations},
+        )
+
+    async def get_dev_tools_target(self) -> dict[str, Any]:
+        """Get the DevTools target info.
+
+        Returns:
+            Dict with ``targetInfo``.
+        """
+        return await self._call("Target.getDevToolsTarget")
+
+    async def open_dev_tools(self) -> dict[str, Any]:
+        """Open the DevTools window for the current target."""
+        return await self._call("Target.openDevTools")

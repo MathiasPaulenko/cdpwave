@@ -84,3 +84,54 @@ class ExtensionsDomain(BaseDomain):
             "Extensions.clearStorageItems",
             {"id": id, "storageType": storage_type},
         )
+
+    async def get_extensions(self) -> dict[str, Any]:
+        """Get all installed extensions.
+
+        Returns:
+            Dict with ``extensions`` list.
+        """
+        return await self._call("Extensions.getExtensions")
+
+    async def set_storage_items(
+        self,
+        id: str,
+        storage_type: str,
+        values: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Set items in extension storage.
+
+        Args:
+            id: Extension ID.
+            storage_type: Storage type (``"local"``, ``"session"``,
+                ``"sync"``, ``"managed"``).
+            values: Key-value pairs to set.
+        """
+        return await self._call(
+            "Extensions.setStorageItems",
+            {"id": id, "storageType": storage_type, "values": values},
+        )
+
+    async def trigger_action(
+        self,
+        id: str,
+        target_id: str,
+    ) -> dict[str, Any]:
+        """Trigger an extension action.
+
+        Args:
+            id: Extension ID.
+            target_id: Target ID to trigger the action in.
+        """
+        return await self._call(
+            "Extensions.triggerAction",
+            {"id": id, "targetId": target_id},
+        )
+
+    async def uninstall(self, id: str) -> dict[str, Any]:
+        """Uninstall an extension.
+
+        Args:
+            id: Extension ID to uninstall.
+        """
+        return await self._call("Extensions.uninstall", {"id": id})

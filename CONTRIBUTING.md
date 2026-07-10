@@ -26,6 +26,12 @@ pip install -e ".[dev]"
 # Unit tests (no browser required)
 python -m pytest tests/unit/ -v --cov=cdpwave --cov-report=term-missing
 
+# Integration tests (requires Chrome installed)
+python -m pytest tests/integration/ -v --timeout=60
+
+# Run all tests
+python -m pytest tests/ -v
+
 # Manual smoke test (requires Chrome installed)
 python tests/manual_smoke.py
 
@@ -33,6 +39,26 @@ python tests/manual_smoke.py
 ruff check .
 mypy cdpwave/
 ```
+
+### Test Structure
+
+```
+tests/
+├── unit/               # Unit tests with mocks (FakeSender pattern)
+│   ├── domains/        # Per-domain unit tests
+│   ├── transport/      # Transport layer tests
+│   ├── fake_sender.py  # Fake command sender for mocking
+│   └── test_client.py  # Client and session tests
+├── integration/        # Integration tests against real Chrome
+│   ├── test_missing_domains.py      # Tests for experimental domains
+│   ├── test_expanded_casuistics.py  # Expanded parameter coverage
+│   └── ...                          # Per-domain integration tests
+└── manual_smoke.py     # Manual smoke test
+```
+
+Integration tests use `pytest.mark.integration` and require a
+Chromium-based browser installed. Experimental domains that may not
+exist in all Chrome versions are wrapped with graceful skip logic.
 
 ### Project Structure
 
@@ -43,11 +69,12 @@ cdpwave/
 │   ├── transport/        # WebSocket connection and message handling
 │   ├── session/          # Session management
 │   ├── events/           # Event dispatcher and handlers
-│   ├── domains/          # CDP domain wrappers (Page, Runtime, Network, etc.)
+│   ├── domains/          # CDP domain wrappers (60 domains, 685 methods)
 │   ├── client.py         # CDPClient and CDPSession (public API)
 │   └── exceptions.py     # Custom exceptions
 ├── tests/                # Test suite
-│   ├── unit/             # Unit tests with mocks
+│   ├── unit/             # Unit tests with mocks (1128 tests)
+│   ├── integration/      # Integration tests against real Chrome (322 tests)
 │   └── manual_smoke.py   # Manual integration test
 ├── docs/                 # MkDocs documentation
 └── pyproject.toml        # Project configuration

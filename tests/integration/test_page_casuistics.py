@@ -117,7 +117,7 @@ class TestPageCasuistics:
         await asyncio.sleep(1)
         
         result = await page.page.print_to_pdf(display_header_footer=True)
-        assert isinstance(result, str) and len(result) > 0
+        assert isinstance(result, dict) and "data" in result
 
     async def test_print_to_pdf_with_custom_header(self, page: CDPSession) -> None:
         await page.page.enable()
@@ -125,7 +125,7 @@ class TestPageCasuistics:
         await asyncio.sleep(1)
         
         result = await page.page.print_to_pdf(header_template="Test Header")
-        assert isinstance(result, str) and len(result) > 0
+        assert isinstance(result, dict) and "data" in result
 
     async def test_print_to_pdf_with_custom_footer(self, page: CDPSession) -> None:
         await page.page.enable()
@@ -133,7 +133,7 @@ class TestPageCasuistics:
         await asyncio.sleep(1)
         
         result = await page.page.print_to_pdf(footer_template="Test Footer")
-        assert isinstance(result, str) and len(result) > 0
+        assert isinstance(result, dict) and "data" in result
 
     async def test_print_to_pdf_with_prefer_css_page_size(self, page: CDPSession) -> None:
         await page.page.enable()
@@ -141,7 +141,7 @@ class TestPageCasuistics:
         await asyncio.sleep(1)
         
         result = await page.page.print_to_pdf(prefer_css_page_size=True)
-        assert isinstance(result, str) and len(result) > 0
+        assert isinstance(result, dict) and "data" in result
 
     async def test_print_to_pdf_with_scale(self, page: CDPSession) -> None:
         await page.page.enable()
@@ -149,7 +149,7 @@ class TestPageCasuistics:
         await asyncio.sleep(1)
         
         result = await page.page.print_to_pdf(scale=0.5)
-        assert isinstance(result, str) and len(result) > 0
+        assert isinstance(result, dict) and "data" in result
 
     async def test_print_to_pdf_with_paper_size(self, page: CDPSession) -> None:
         await page.page.enable()
@@ -157,7 +157,7 @@ class TestPageCasuistics:
         await asyncio.sleep(1)
         
         result = await page.page.print_to_pdf(paper_width=8.5, paper_height=11)
-        assert isinstance(result, str) and len(result) > 0
+        assert isinstance(result, dict) and "data" in result
 
     async def test_print_to_pdf_with_page_ranges(self, page: CDPSession) -> None:
         await page.page.enable()
@@ -165,7 +165,7 @@ class TestPageCasuistics:
         await asyncio.sleep(1)
         
         result = await page.page.print_to_pdf(page_ranges="1")
-        assert isinstance(result, str) and len(result) > 0
+        assert isinstance(result, dict) and "data" in result
 
     async def test_capture_screenshot_with_clip(self, page: CDPSession) -> None:
         await page.page.enable()

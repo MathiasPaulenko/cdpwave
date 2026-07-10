@@ -108,6 +108,7 @@ class NetworkDomain(BaseDomain):
 
         Returns:
             Response dict containing ``cookies`` list.
+            Typed as ``NetworkGetCookiesResult`` for autocompletion.
         """
         params: dict[str, Any] = {}
         if urls is not None:
@@ -318,3 +319,348 @@ class NetworkDomain(BaseDomain):
             Dict with ``result`` boolean.
         """
         return await self._call("Network.canEmulateNetworkConditions")
+
+    async def can_clear_browser_cache(self) -> dict[str, Any]:
+        """Check if the browser cache can be cleared.
+
+        Returns:
+            Dict with ``result`` boolean.
+        """
+        return await self._call("Network.canClearBrowserCache")
+
+    async def can_clear_browser_cookies(self) -> dict[str, Any]:
+        """Check if browser cookies can be cleared.
+
+        Returns:
+            Dict with ``result`` boolean.
+        """
+        return await self._call("Network.canClearBrowserCookies")
+
+    async def set_cookies(
+        self,
+        cookies: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Set multiple cookies at once.
+
+        Args:
+            cookies: List of cookie dicts with ``name``, ``value``,
+                ``domain``, ``path``, etc.
+        """
+        return await self._call("Network.setCookies", {"cookies": cookies})
+
+    async def emulate_network_conditions_by_rule(
+        self,
+        network_id: str,
+    ) -> dict[str, Any]:
+        """Emulate network conditions by a pre-defined rule ID.
+
+        Args:
+            network_id: Network rule ID (e.g. ``"Slow 3G"``).
+        """
+        return await self._call(
+            "Network.emulateNetworkConditionsByRule",
+            {"networkId": network_id},
+        )
+
+    async def override_network_state(
+        self,
+        network_id: str,
+    ) -> dict[str, Any]:
+        """Override the network state by a pre-defined rule ID.
+
+        Args:
+            network_id: Network rule ID.
+        """
+        return await self._call(
+            "Network.overrideNetworkState",
+            {"networkId": network_id},
+        )
+
+    async def set_accepted_encodings(
+        self,
+        encodings: list[str],
+    ) -> dict[str, Any]:
+        """Set accepted content encodings.
+
+        Args:
+            encodings: List of accepted encodings (e.g.
+                ``["gzip", "deflate", "br"]``).
+        """
+        return await self._call(
+            "Network.setAcceptedEncodings",
+            {"encodings": encodings},
+        )
+
+    async def clear_accepted_encodings_override(self) -> dict[str, Any]:
+        """Clear the accepted encodings override."""
+        return await self._call("Network.clearAcceptedEncodingsOverride")
+
+    async def get_certificate(self, origin: str) -> dict[str, Any]:
+        """Get the certificate for a given origin.
+
+        Args:
+            origin: Security origin to query.
+
+        Returns:
+            Dict with ``tableNames`` list.
+        """
+        return await self._call("Network.getCertificate", {"origin": origin})
+
+    async def get_security_isolation_status(
+        self,
+        frame_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get the security isolation status of a page.
+
+        Args:
+            frame_id: Optional frame ID to query.
+
+        Returns:
+            Dict with ``status`` containing COEP, CORP, and CSP info.
+        """
+        params: dict[str, Any] = {}
+        if frame_id is not None:
+            params["frameId"] = frame_id
+        return await self._call(
+            "Network.getSecurityIsolationStatus",
+            params if params else None,
+        )
+
+    async def enable_reporting_api(self, enable: bool) -> dict[str, Any]:
+        """Enable or disable the Reporting API.
+
+        Args:
+            enable: Whether to enable the Reporting API.
+        """
+        return await self._call(
+            "Network.enableReportingApi",
+            {"enable": enable},
+        )
+
+    async def replay_xhr(self, request_id: str) -> dict[str, Any]:
+        """Replay an XHR request.
+
+        Args:
+            request_id: The request ID to replay.
+        """
+        return await self._call("Network.replayXHR", {"requestId": request_id})
+
+    async def search_in_response_body(
+        self,
+        request_id: str,
+        query: str,
+        case_sensitive: bool = False,
+        is_regex: bool = False,
+    ) -> dict[str, Any]:
+        """Search in a response body.
+
+        Args:
+            request_id: Request ID from a network event.
+            query: Search query string.
+            case_sensitive: Whether the search is case sensitive.
+            is_regex: Whether the query is a regex.
+
+        Returns:
+            Dict with ``result`` list of matches.
+        """
+        params: dict[str, Any] = {
+            "requestId": request_id,
+            "query": query,
+            "caseSensitive": case_sensitive,
+            "isRegex": is_regex,
+        }
+        return await self._call("Network.searchInResponseBody", params)
+
+    async def set_attach_debug_stack(self, attach: bool) -> dict[str, Any]:
+        """Enable or disable attaching debug stack traces to requests.
+
+        Args:
+            attach: Whether to attach debug stacks.
+        """
+        return await self._call(
+            "Network.setAttachDebugStack",
+            {"attach": attach},
+        )
+
+    async def set_request_interception(
+        self,
+        patterns: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Set up request interception.
+
+        Args:
+            patterns: List of interception pattern dicts with
+                ``urlPattern``, ``resourceType``, ``interceptionStage``.
+        """
+        return await self._call(
+            "Network.setRequestInterception",
+            {"patterns": patterns},
+        )
+
+    async def continue_intercepted_request(
+        self,
+        interception_id: str,
+        error_reason: str | None = None,
+        raw_response: str | None = None,
+        url: str | None = None,
+        method: str | None = None,
+        headers: dict[str, str] | None = None,
+        post_data: str | None = None,
+    ) -> dict[str, Any]:
+        """Continue an intercepted request.
+
+        Args:
+            interception_id: Interception ID from ``Network.requestIntercepted``.
+            error_reason: Optional error reason to fail the request.
+            raw_response: Optional raw HTTP response to return.
+            url: Optional URL override.
+            method: Optional HTTP method override.
+            headers: Optional headers override.
+            post_data: Optional POST data override.
+        """
+        params: dict[str, Any] = {"interceptionId": interception_id}
+        if error_reason is not None:
+            params["errorReason"] = error_reason
+        if raw_response is not None:
+            params["rawResponse"] = raw_response
+        if url is not None:
+            params["url"] = url
+        if method is not None:
+            params["method"] = method
+        if headers is not None:
+            params["headers"] = headers
+        if post_data is not None:
+            params["postData"] = post_data
+        return await self._call("Network.continueInterceptedRequest", params)
+
+    async def get_response_body_for_interception(
+        self,
+        interception_id: str,
+    ) -> dict[str, Any]:
+        """Get the response body for an intercepted request.
+
+        Args:
+            interception_id: Interception ID.
+
+        Returns:
+            Dict with ``body`` and ``base64Encoded``.
+        """
+        return await self._call(
+            "Network.getResponseBodyForInterception",
+            {"interceptionId": interception_id},
+        )
+
+    async def take_response_body_for_interception_as_stream(
+        self,
+        interception_id: str,
+    ) -> dict[str, Any]:
+        """Take the response body for an intercepted request as a stream.
+
+        Args:
+            interception_id: Interception ID.
+
+        Returns:
+            Dict with ``stream`` handle.
+        """
+        return await self._call(
+            "Network.takeResponseBodyForInterceptionAsStream",
+            {"interceptionId": interception_id},
+        )
+
+    async def stream_resource_content(
+        self,
+        request_id: str,
+    ) -> dict[str, Any]:
+        """Stream resource content for a request.
+
+        Args:
+            request_id: Request ID from a network event.
+
+        Returns:
+            Dict with ``bufferedData``.
+        """
+        return await self._call(
+            "Network.streamResourceContent",
+            {"requestId": request_id},
+        )
+
+    async def fetch_schemeful_site(
+        self,
+        request_id: str,
+    ) -> dict[str, Any]:
+        """Fetch the schemeful site for a request.
+
+        Args:
+            request_id: Request ID from a network event.
+
+        Returns:
+            Dict with ``schemefulSite`` string.
+        """
+        return await self._call(
+            "Network.fetchSchemefulSite",
+            {"requestId": request_id},
+        )
+
+    async def set_cookie_controls(
+        self,
+        enable_third_party_cookie_restriction: bool = False,
+        enable_same_site_by_default: bool = False,
+        without_same_site_lax_by_default: bool = False,
+    ) -> dict[str, Any]:
+        """Set cookie controls.
+
+        Args:
+            enable_third_party_cookie_restriction: Block third-party cookies.
+            enable_same_site_by_default: Enable SameSite by default.
+            without_same_site_lax_by_default: Disable SameSite=Lax by default.
+        """
+        return await self._call(
+            "Network.setCookieControls",
+            {
+                "enableThirdPartyCookieRestriction": enable_third_party_cookie_restriction,
+                "enableSameSiteByDefault": enable_same_site_by_default,
+                "withoutSameSiteLaxByDefault": without_same_site_lax_by_default,
+            },
+        )
+
+    async def enable_device_bound_sessions(self, enable: bool) -> dict[str, Any]:
+        """Enable or disable device bound sessions.
+
+        Args:
+            enable: Whether to enable device bound sessions.
+        """
+        return await self._call(
+            "Network.enableDeviceBoundSessions",
+            {"enable": enable},
+        )
+
+    async def delete_device_bound_session(
+        self,
+        session_id: str,
+    ) -> dict[str, Any]:
+        """Delete a device bound session.
+
+        Args:
+            session_id: Session ID to delete.
+        """
+        return await self._call(
+            "Network.deleteDeviceBoundSession",
+            {"sessionId": session_id},
+        )
+
+    async def configure_durable_messages(
+        self,
+        max_messages: int | None = None,
+    ) -> dict[str, Any]:
+        """Configure durable messages.
+
+        Args:
+            max_messages: Optional max number of durable messages.
+        """
+        params: dict[str, Any] = {}
+        if max_messages is not None:
+            params["maxMessages"] = max_messages
+        return await self._call(
+            "Network.configureDurableMessages",
+            params if params else None,
+        )

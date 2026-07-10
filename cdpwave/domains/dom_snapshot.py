@@ -62,3 +62,32 @@ class DOMSnapshotDomain(BaseDomain):
         if include_text_color_opacities is not None:
             params["includeTextColorOpacities"] = include_text_color_opacities
         return await self._call("DOMSnapshot.captureSnapshot", params)
+
+    async def get_snapshot(
+        self,
+        computed_style_whitelist: list[str],
+        include_event_listeners: bool | None = None,
+        include_paint_order: bool | None = None,
+        include_user_agent_shadow_tree: bool | None = None,
+    ) -> dict[str, Any]:
+        """Get a DOM snapshot (deprecated, prefer ``capture_snapshot``).
+
+        Args:
+            computed_style_whitelist: Whitelist of computed style names.
+            include_event_listeners: Whether to include event listeners.
+            include_paint_order: Whether to include paint order.
+            include_user_agent_shadow_tree: Whether to include UA shadow tree.
+
+        Returns:
+            Dict with ``domNodes``, ``layoutTreeNodes``, ``computedStyles``.
+        """
+        params: dict[str, Any] = {
+            "computedStyleWhitelist": computed_style_whitelist,
+        }
+        if include_event_listeners is not None:
+            params["includeEventListeners"] = include_event_listeners
+        if include_paint_order is not None:
+            params["includePaintOrder"] = include_paint_order
+        if include_user_agent_shadow_tree is not None:
+            params["includeUserAgentShadowTree"] = include_user_agent_shadow_tree
+        return await self._call("DOMSnapshot.getSnapshot", params)

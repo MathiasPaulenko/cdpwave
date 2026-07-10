@@ -3,6 +3,7 @@
 import asyncio
 import contextlib
 import json
+import logging
 import os
 import shutil
 import socket
@@ -12,6 +13,8 @@ from dataclasses import dataclass
 
 from cdpwave.browser.finder import find_browser
 from cdpwave.exceptions import LaunchError, LaunchTimeoutError
+
+logger = logging.getLogger("cdpwave.browser.launcher")
 
 _DEFAULT_FLAGS = [
     "--no-first-run",
@@ -131,16 +134,40 @@ class BrowserLauncher:
         if self._process is not None:
             raise RuntimeError("Browser is already running")
 
-        args = self._build_args()
+        max_retries = 3 if self._port == 0 else 1
+        for attempt in range(max_retries):
+            if attempt > 0:
+                self._port = 0
+                self._user_data_dir = None
+            args = self._build_args()
 
-        self._process = await asyncio.create_subprocess_exec(
-            *args,
-            stdout=asyncio.subprocess.DEVNULL,
-            stderr=asyncio.subprocess.PIPE,
-        )
+            self._process = await asyncio.create_subprocess_exec(
+                *args,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.PIPE,
+            )
 
-        self._info = await self._wait_for_endpoint(timeout=timeout)
-        return self._info
+            try:
+                self._info = await self._wait_for_endpoint(timeout=timeout)
+                return self._info
+            except LaunchError:
+                if self._process is not None:
+                    with contextlib.suppress(Exception):
+                        self._process.terminate()
+                    with contextlib.suppress(Exception):
+                        await asyncio.wait_for(self._process.wait(), timeout=2.0)
+                self._process = None
+                if self._temp_dir is not None:
+                    shutil.rmtree(self._temp_dir, ignore_errors=True)
+                    self._temp_dir = None
+                if attempt + 1 >= max_retries:
+                    raise
+                logger.warning(
+                    "Browser launch attempt %d failed, retrying with new port",
+                    attempt + 1,
+                )
+
+        raise LaunchError("Failed to launch browser after retries")
 
     async def _wait_for_endpoint(self, timeout: float = 10.0) -> BrowserInfo:
         """Poll the HTTP discovery endpoint until the browser is ready."""

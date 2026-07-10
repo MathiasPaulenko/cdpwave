@@ -1,6 +1,6 @@
 # Escape Hatch
 
-cdpwave covers all 48 CDP domains with 386 typed methods. For any CDP command
+cdpwave covers all 60 CDP domains with 685 typed methods. For any CDP command
 that doesn't have a dedicated wrapper — or for experimental/new commands —
 use `session.send()` — the escape hatch.
 
@@ -110,7 +110,7 @@ except CommandError as e:
 | IDE autocomplete | Yes | No |
 | Validation | Pythonic params | Manual dict |
 | Documentation | Docstrings | CDP spec |
-| Coverage | 386 methods | All CDP commands |
+| Coverage | 685 methods | All CDP commands |
 
 Prefer typed wrappers when available. Use `send()` only for commands without
 a wrapper or when you need raw control.

@@ -286,8 +286,8 @@ class TestEmulationDomain:
         domain = EmulationDomain(fake)
         await domain.clear_default_background_color_override()
         assert fake.last_call == (
-            "Emulation.clearDefaultBackgroundColorOverride",
-            None,
+            "Emulation.setDefaultBackgroundColorOverride",
+            {},
         )
 
     async def test_set_idle_override(self) -> None:
