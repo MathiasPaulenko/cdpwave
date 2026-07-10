@@ -156,7 +156,6 @@ await session.emulation.set_device_metrics_override(
 
 ## See also
 
-- [Migration from pyppeteer](pyppeteer.md)
-- [Migration from pychrome](pychrome.md)
+- [Migration from pyppeteer](../migration/pyppeteer.md)
+- [Migration from pychrome](../migration/pychrome.md)
 - [Quickstart](../quickstart.md)
-- [Cookbook](../cookbook/)

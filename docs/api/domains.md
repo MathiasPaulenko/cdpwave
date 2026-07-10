@@ -222,7 +222,7 @@
 
 ## FedCM
 
-::: cdpwave.domains.fed_cm.FedCMDomain
+::: cdpwave.domains.fed_cm.FedCmDomain
 
 ## FileSystem
 

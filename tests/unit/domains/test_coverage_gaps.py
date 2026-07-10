@@ -665,7 +665,9 @@ class TestOverlayCoverage:
         domain = OverlayDomain(fake)
         color = {"r": 255, "g": 0, "b": 0, "a": 0.5}
         outline = {"r": 0, "g": 0, "b": 255, "a": 1.0}
-        await domain.highlight_quad([0, 0, 100, 0, 100, 100, 0, 100], color=color, outline_color=outline)
+        await domain.highlight_quad(
+            [0, 0, 100, 0, 100, 100, 0, 100], color=color, outline_color=outline,
+        )
         method, params = fake.last_call
         assert method == "Overlay.highlightQuad"
         assert params is not None
@@ -1179,7 +1181,9 @@ class TestFetchCoverage:
     async def test_continue_with_auth_username_and_password(self) -> None:
         fake = FakeSender({})
         domain = FetchDomain(fake)
-        await domain.continue_with_auth("req1", "ProvideCredentials", username="user", password="pass")
+        await domain.continue_with_auth(
+            "req1", "ProvideCredentials", username="user", password="pass",
+        )
         method, params = fake.last_call
         assert method == "Fetch.continueWithAuth"
         assert params is not None
