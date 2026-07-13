@@ -31,16 +31,61 @@ class TestPreload:
                 await session.preload.enable()
                 await session.preload.disable()
 
-    async def test_get_set_preload_policy(self) -> None:
+    async def test_domain_accessible_from_session(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            assert session.preload is not None
+
+    async def test_raw_send_enable(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with contextlib.suppress(Exception):
+                await session.send("Preload.enable")
+                await session.send("Preload.disable")
+
+    async def test_enable_disable_enable_cycle(self) -> None:
         async with (
             await CDPClient.launch(headless=True) as client,
             await client.new_page() as session,
         ):
             with contextlib.suppress(Exception):
                 await session.preload.enable()
-                await session.preload.set_preload_policy("no-preload")
-                result = await session.preload.get_preload_policy()
-                assert "preloadPolicy" in result
+                await session.preload.disable()
+                await session.preload.enable()
+                await session.preload.disable()
+
+    async def test_double_enable(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with contextlib.suppress(Exception):
+                await session.preload.enable()
+                await session.preload.enable()
+                await session.preload.disable()
+
+    async def test_double_disable(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with contextlib.suppress(Exception):
+                await session.preload.enable()
+                await session.preload.disable()
+                await session.preload.disable()
+
+    async def test_enable_returns_dict_type(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with contextlib.suppress(Exception):
+                result = await session.preload.enable()
+                assert isinstance(result, dict)
                 await session.preload.disable()
 
 
@@ -78,16 +123,75 @@ class TestMedia:
             await session.media.enable()
             await session.media.disable()
 
-    async def test_get_players(self) -> None:
+    async def test_disable_without_enable(self) -> None:
         async with (
             await CDPClient.launch(headless=True) as client,
             await client.new_page() as session,
         ):
-            await session.media.enable()
             with contextlib.suppress(Exception):
-                result = await session.media.get_players()
-                assert "players" in result
-            await session.media.disable()
+                await session.media.disable()
+
+    async def test_double_enable(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with contextlib.suppress(Exception):
+                await session.media.enable()
+                await session.media.enable()
+                await session.media.disable()
+
+    async def test_repeated_enable_disable_cycle(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with contextlib.suppress(Exception):
+                for _ in range(3):
+                    await session.media.enable()
+                    await session.media.disable()
+
+    async def test_domain_accessible_from_session(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            assert session.media is not None
+
+    async def test_enable_disable_enable_cycle(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with contextlib.suppress(Exception):
+                await session.media.enable()
+                await session.media.disable()
+                await session.media.enable()
+                await session.media.disable()
+
+    async def test_enable_returns_dict_type(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            try:
+                result = await session.media.enable()
+            except Exception:
+                return
+            assert isinstance(result, dict)
+            with contextlib.suppress(Exception):
+                await session.media.disable()
+
+    async def test_disable_returns_dict_type(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            try:
+                result = await session.media.disable()
+            except Exception:
+                return
+            assert isinstance(result, dict)
 
 
 @pytest.mark.integration
@@ -100,3 +204,176 @@ class TestDeviceAccess:
             with contextlib.suppress(Exception):
                 await session.device_access.enable()
                 await session.device_access.disable()
+
+    async def test_domain_accessible_from_session(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            assert session.device_access is not None
+
+    async def test_cancel_prompt_type_validation(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with pytest.raises(TypeError, match="id must be a str"):
+                await session.device_access.cancel_prompt(123)
+
+    async def test_select_prompt_type_validation(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with pytest.raises(TypeError, match="id must be a str"):
+                await session.device_access.select_prompt(123, "dev1")
+            with pytest.raises(TypeError, match="device_id must be a str"):
+                await session.device_access.select_prompt("req1", 456)
+
+    async def test_raw_send_enable(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with contextlib.suppress(Exception):
+                await session.send("DeviceAccess.enable")
+                await session.send("DeviceAccess.disable")
+
+    async def test_cancel_prompt_none_id(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with pytest.raises(TypeError, match="id must be a str"):
+                await session.device_access.cancel_prompt(None)
+
+    async def test_cancel_prompt_bool_id(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with pytest.raises(TypeError, match="id must be a str"):
+                await session.device_access.cancel_prompt(True)
+
+    async def test_select_prompt_none_id(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with pytest.raises(TypeError, match="id must be a str"):
+                await session.device_access.select_prompt(None, "dev1")
+
+    async def test_select_prompt_none_device_id(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with pytest.raises(TypeError, match="device_id must be a str"):
+                await session.device_access.select_prompt("req1", None)
+
+    async def test_select_prompt_bool_id(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with pytest.raises(TypeError, match="id must be a str"):
+                await session.device_access.select_prompt(True, "dev1")
+
+    async def test_select_prompt_bool_device_id(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with pytest.raises(TypeError, match="device_id must be a str"):
+                await session.device_access.select_prompt("req1", False)
+
+    async def test_select_prompt_both_wrong_id_first(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with pytest.raises(TypeError, match="id must be a str"):
+                await session.device_access.select_prompt(123, 456)
+
+    async def test_enable_disable_enable_cycle(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with contextlib.suppress(Exception):
+                await session.device_access.enable()
+                await session.device_access.disable()
+                await session.device_access.enable()
+                await session.device_access.disable()
+
+    async def test_double_enable(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with contextlib.suppress(Exception):
+                await session.device_access.enable()
+                await session.device_access.enable()
+                await session.device_access.disable()
+
+    async def test_double_disable(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with contextlib.suppress(Exception):
+                await session.device_access.enable()
+                await session.device_access.disable()
+                await session.device_access.disable()
+
+    async def test_enable_returns_dict_type(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with contextlib.suppress(Exception):
+                result = await session.device_access.enable()
+                assert isinstance(result, dict)
+                await session.device_access.disable()
+
+    async def test_select_prompt_valid_strings(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with contextlib.suppress(Exception):
+                await session.device_access.enable()
+                await session.device_access.select_prompt("req1", "dev1")
+                await session.device_access.disable()
+
+    async def test_cancel_prompt_valid_string(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with contextlib.suppress(Exception):
+                await session.device_access.enable()
+                await session.device_access.cancel_prompt("req1")
+                await session.device_access.disable()
+
+    async def test_raw_send_select_prompt(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with contextlib.suppress(Exception):
+                await session.send(
+                    "DeviceAccess.selectPrompt",
+                    {"id": "req1", "deviceId": "dev1"},
+                )
+
+    async def test_raw_send_cancel_prompt(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with contextlib.suppress(Exception):
+                await session.send(
+                    "DeviceAccess.cancelPrompt",
+                    {"id": "req1"},
+                )

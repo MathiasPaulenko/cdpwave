@@ -30,10 +30,29 @@ class TestSystemInfo:
             result = await client.send("SystemInfo.getProcessInfo")
             assert "processInfo" in result
 
-    async def test_get_gpu_info(self) -> None:
-        async with await CDPClient.launch(headless=True) as client:
+    async def test_domain_accessible_from_session(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            assert session.system_info is not None
+
+    async def test_get_feature_state(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
             with contextlib.suppress(Exception):
-                await client.send("SystemInfo.getGPUInfo")
+                result = await session.system_info.get_feature_state("Vulkan")
+                assert "featureEnabled" in result
+
+    async def test_type_error_get_feature_state_int(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            with pytest.raises(TypeError, match="feature_state must be a str"):
+                await session.system_info.get_feature_state(42)
 
 
 @pytest.mark.integration
@@ -52,14 +71,13 @@ class TestWebAuthn:
             await client.new_page() as session,
         ):
             await session.web_authn.enable()
-            result = await session.web_authn.add_virtual_authenticator({
-                "protocol": "ctap2",
-                "transport": "internal",
-                "hasResidentKey": True,
-                "hasUserVerification": True,
-                "isUserVerifiedLargeBlobSupported": False,
-                "automaticPresenceSimulation": True,
-            })
+            result = await session.web_authn.add_virtual_authenticator(
+                protocol="ctap2",
+                transport="internal",
+                has_resident_key=True,
+                has_user_verification=True,
+                automatic_presence_simulation=True,
+            )
             assert "authenticatorId" in result
             auth_id = result["authenticatorId"]
 

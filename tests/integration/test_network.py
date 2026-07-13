@@ -78,6 +78,7 @@ class TestNetwork:
             await session.network.clear_browser_cache()
 
             await session.page.navigate("https://example.com")
+            await asyncio.sleep(1)
             result = await session.runtime.evaluate(
                 "document.title", return_by_value=True
             )

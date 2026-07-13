@@ -238,3 +238,117 @@ class TestInput:
 
             result = await session.input.ime_set_composition("text", 0, 4)
             assert result == {}
+
+    async def test_dispatch_key_event_with_key_identifier(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable()
+            await session.page.navigate("https://example.com")
+            await _wait_for_page(session)
+
+            await session.runtime.evaluate(
+                """
+                const input = document.createElement('input');
+                input.id = 'keyid-input';
+                input.type = 'text';
+                document.body.appendChild(input);
+                input.focus();
+                """
+            )
+
+            await session.input.dispatch_key_event(
+                "keyDown", key="a", code="KeyA", key_identifier="U+0041",
+                windows_virtual_key_code=65, native_virtual_key_code=65,
+                text="a",
+            )
+            await session.input.dispatch_key_event(
+                "keyUp", key="a", code="KeyA", key_identifier="U+0041",
+                windows_virtual_key_code=65, native_virtual_key_code=65,
+            )
+
+            result = await session.runtime.evaluate(
+                "document.getElementById('keyid-input').value",
+                return_by_value=True,
+            )
+            assert result["result"]["value"] == "a"
+
+    async def test_dispatch_mouse_event_with_stylus_params(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable()
+            await session.page.navigate("https://example.com")
+            await _wait_for_page(session)
+
+            result = await session.input.dispatch_mouse_event(
+                "mousePressed", 50.0, 50.0,
+                button="left", click_count=1,
+                force=0.5, tangential_pressure=0.3,
+                tilt_x=45.0, tilt_y=-30.0,
+                twist=90, pointer_type="pen",
+            )
+            assert result == {}
+
+            result = await session.input.dispatch_mouse_event(
+                "mouseReleased", 50.0, 50.0,
+                button="left", click_count=1,
+                force=0.5, tangential_pressure=0.3,
+                tilt_x=45.0, tilt_y=-30.0,
+                twist=90, pointer_type="pen",
+            )
+            assert result == {}
+
+    async def test_emulate_touch_from_mouse_event_int_coords(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable()
+            await session.page.navigate("https://example.com")
+            await _wait_for_page(session)
+
+            result = await session.input.emulate_touch_from_mouse_event(
+                "mousePressed", 10, 20, button="left", click_count=1,
+            )
+            assert result == {}
+
+    async def test_synthesize_scroll_with_interaction_marker(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable()
+            await session.page.navigate("https://example.com")
+            await _wait_for_page(session)
+
+            result = await session.input.synthesize_scroll_gesture(
+                50.0, 50.0, y_distance=200.0,
+                interaction_marker_name="test-marker",
+            )
+            assert result == {}
+
+    async def test_ime_set_composition_with_replacement_range(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable()
+            await session.page.navigate("https://example.com")
+            await _wait_for_page(session)
+
+            await session.runtime.evaluate(
+                """
+                const input = document.createElement('input');
+                input.id = 'ime-replace-input';
+                document.body.appendChild(input);
+                input.focus();
+                """
+            )
+
+            result = await session.input.ime_set_composition(
+                "text", 0, 4, replacement_start=0, replacement_end=4,
+            )
+            assert result == {}

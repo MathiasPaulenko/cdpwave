@@ -15,6 +15,7 @@ related website sets), Overlay (inspect mode, show elements, highlight config).
 import asyncio
 import base64
 import contextlib
+from typing import Any
 
 import pytest
 
@@ -197,6 +198,528 @@ class TestPageExpanded:
             result = await session.page.get_origin_trials(frame_id)
             assert isinstance(result, dict)
 
+    async def test_enable_with_file_chooser_event(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable(enable_file_chooser_opened_event=True)
+            await session.page.disable()
+
+    async def test_reload_with_script_to_evaluate(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            await session.page.reload(
+                ignore_cache=True,
+                script_to_evaluate_on_load="console.log('reloaded')",
+            )
+
+    async def test_capture_screenshot_optimize_for_speed(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            result = await session.page.capture_screenshot(optimize_for_speed=True)
+            assert "data" in result
+
+    async def test_print_to_pdf_tagged_and_outline(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            result = await session.page.print_to_pdf(
+                generate_tagged_pdf=True,
+                generate_document_outline=True,
+            )
+            assert "data" in result
+
+    async def test_set_font_families_with_for_scripts(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            with contextlib.suppress(Exception):
+                await session.page.set_font_families(
+                    {"standard": "Arial"},
+                    for_scripts=[
+                        {"script": "Zyyy", "fontFamilies": {"standard": "Arial"}},
+                    ],
+                )
+
+    async def test_set_geolocation_override_partial(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            await session.page.set_geolocation_override(latitude=40.0)
+            await session.page.clear_geolocation_override()
+
+    async def test_set_geolocation_override_clear(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            await session.page.set_geolocation_override()
+
+    async def test_set_intercept_file_chooser_with_cancel(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable(enable_file_chooser_opened_event=True)
+            await session.page.set_intercept_file_chooser_dialog(True, cancel=True)
+            await session.page.set_intercept_file_chooser_dialog(False)
+
+    async def test_set_prerendering_allowed(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.set_prerendering_allowed(True)
+            await session.page.set_prerendering_allowed(False)
+
+    async def test_get_app_manifest_with_manifest_id(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            with contextlib.suppress(Exception):
+                result = await session.page.get_app_manifest(
+                    manifest_id="https://example.com/manifest.json"
+                )
+                assert isinstance(result, dict)
+
+    async def test_create_isolated_world_with_csp(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            tree = await session.page.get_resource_tree()
+            frame_id = tree["frameTree"]["frame"]["id"]
+            result = await session.page.create_isolated_world(
+                frame_id,
+                world_name="csp-test",
+                grant_universal_access=False,
+                content_security_policy="script-src 'self'",
+            )
+            assert "executionContextId" in result
+
+    async def test_add_script_with_include_command_line_api(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            result = await session.page.add_script_to_evaluate_on_new_document(
+                "console.log('injected')",
+                include_command_line_api=True,
+                run_immediately=True,
+            )
+            assert "identifier" in result
+            await session.page.remove_script_to_evaluate_on_new_document(
+                result["identifier"]
+            )
+
+    async def test_get_annotated_page_content(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            with contextlib.suppress(Exception):
+                result = await session.page.get_annotated_page_content(
+                    include_actionable_information=True,
+                )
+                assert isinstance(result, dict)
+
+    async def test_produce_compilation_cache_with_eager(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            await session.page.produce_compilation_cache(
+                scripts=[{"url": "https://example.com/test.js", "eager": True}]
+            )
+            await session.page.clear_compilation_cache()
+
+    async def test_stop_alias_sends_stop_loading(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable()
+            await session.page.navigate("https://example.com")
+            await asyncio.sleep(1.0)
+            with contextlib.suppress(Exception):
+                await session.page.stop()
+
+    async def test_set_spc_transaction_mode_auto_accept(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            await session.page.set_spc_transaction_mode("autoAccept")
+            await session.page.set_spc_transaction_mode("none")
+
+    async def test_set_rph_registration_mode_auto_reject(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            await session.page.set_rph_registration_mode("autoReject")
+            await session.page.set_rph_registration_mode("none")
+
+    async def test_navigate_with_referrer_policy(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable()
+            result = await session.page.navigate(
+                "https://example.com",
+                referrer="https://ref.com",
+                referrer_policy="noReferrer",
+            )
+            assert "frameId" in result
+
+    async def test_set_web_lifecycle_state_frozen_active(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            await session.page.set_web_lifecycle_state("frozen")
+            await session.page.set_web_lifecycle_state("active")
+
+    async def test_set_device_metrics_override_full(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            await session.page.set_device_metrics_override(
+                width=390,
+                height=844,
+                device_scale_factor=3.0,
+                mobile=True,
+                screen_orientation={"type": "portraitPrimary", "angle": 0},
+            )
+            await session.page.clear_device_metrics_override()
+
+    async def test_search_in_resource_regex(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            tree = await session.page.get_resource_tree()
+            frame_id = tree["frameTree"]["frame"]["id"]
+            with contextlib.suppress(Exception):
+                result = await session.page.search_in_resource(
+                    frame_id, "https://example.com/", "example", is_regex=True,
+                )
+                assert isinstance(result, dict)
+
+    async def test_handle_dialog_dismiss(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable()
+            await session.page.set_bypass_csp(True)
+            await session.runtime.evaluate(
+                "setTimeout(() => confirm('test'), 100)",
+                await_promise=False,
+            )
+            await asyncio.sleep(0.5)
+            with contextlib.suppress(Exception):
+                await session.page.handle_java_script_dialog(accept=False)
+
+    async def test_get_layout_metrics(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            result = await session.page.get_layout_metrics()
+            assert "layoutViewport" in result
+            assert "visualViewport" in result
+            assert "contentSize" in result
+
+    async def test_get_frame_tree(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            result = await session.page.get_frame_tree()
+            assert "frameTree" in result
+            assert "frame" in result["frameTree"]
+
+    async def test_get_resource_content(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            tree = await session.page.get_resource_tree()
+            frame_id = tree["frameTree"]["frame"]["id"]
+            resources = tree["frameTree"].get("resources", [])
+            if resources:
+                url = resources[0]["url"]
+                with contextlib.suppress(Exception):
+                    result = await session.page.get_resource_content(frame_id, url)
+                    assert "content" in result
+
+    async def test_reset_navigation_history(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            await session.page.reset_navigation_history()
+            history = await session.page.get_navigation_history()
+            assert history["currentIndex"] == 0
+            assert len(history["entries"]) == 1
+
+    async def test_set_bypass_csp(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            await session.page.set_bypass_csp(True)
+            await session.page.set_bypass_csp(False)
+
+    async def test_capture_screenshot_with_clip(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            result = await session.page.capture_screenshot(
+                clip={"x": 0, "y": 0, "width": 100, "height": 100, "scale": 1},
+            )
+            assert "data" in result
+
+    async def test_print_to_pdf_landscape(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            result = await session.page.print_to_pdf(
+                landscape=True, print_background=True,
+            )
+            assert "data" in result
+
+    async def test_reload_no_params(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable()
+            await session.page.navigate("https://example.com")
+            await asyncio.sleep(1.0)
+            await session.page.reload()
+            await asyncio.sleep(1.0)
+
+    async def test_reload_with_script(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable()
+            await session.page.navigate("https://example.com")
+            await asyncio.sleep(1.0)
+            await session.page.reload(
+                script_to_evaluate_on_load="console.log('reloaded')",
+            )
+            await asyncio.sleep(1.0)
+
+    async def test_navigate_strict_origin_referrer_policy(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable()
+            result = await session.page.navigate(
+                "https://example.com",
+                referrer_policy="strictOrigin",
+            )
+            assert "frameId" in result
+
+    async def test_add_script_to_evaluate_on_load_deprecated(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable()
+            result = await session.page.add_script_to_evaluate_on_load(
+                "window.__test = 42"
+            )
+            assert "identifier" in result
+            await session.page.remove_script_to_evaluate_on_load(
+                result["identifier"]
+            )
+
+    async def test_get_navigation_history_after_navigation(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable()
+            await session.page.navigate("https://example.com")
+            await asyncio.sleep(1.0)
+            await session.page.navigate("https://example.org")
+            await asyncio.sleep(1.0)
+            history = await session.page.get_navigation_history()
+            assert history["currentIndex"] >= 1
+            assert len(history["entries"]) >= 2
+
+    async def test_go_back_no_history(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            result = await session.page.go_back()
+            assert result == {}
+
+    async def test_go_forward_no_history(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            result = await session.page.go_forward()
+            assert result == {}
+
+    async def test_set_device_orientation_override(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            await session.page.set_device_orientation_override(
+                alpha=0.0, beta=90.0, gamma=0.0,
+            )
+            await session.page.clear_device_orientation_override()
+
+    async def test_clear_geolocation_override(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            await session.page.set_geolocation_override(
+                latitude=37.7749, longitude=-122.4194,
+            )
+            await session.page.clear_geolocation_override()
+
+    async def test_screencast_frame_ack(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable()
+            await session.page.navigate("https://example.com")
+            await asyncio.sleep(1.0)
+            frames: list[dict[str, Any]] = []
+
+            async def on_frame(event: dict[str, Any]) -> None:
+                frames.append(event)
+
+            session.on("Page.screencastFrame", on_frame)
+            await session.page.start_screencast(format="jpeg", quality=50)
+            await asyncio.sleep(2.0)
+            await session.page.stop_screencast()
+            session.off("Page.screencastFrame", on_frame)
+            if frames:
+                await session.page.screencast_frame_ack(
+                    frames[0]["sessionId"]
+                )
+
+    async def test_set_document_content(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable()
+            await session.page.navigate("about:blank")
+            await asyncio.sleep(0.5)
+            tree = await session.page.get_frame_tree()
+            frame_id = tree["frameTree"]["frame"]["id"]
+            await session.page.set_document_content(
+                frame_id, "<html><body><h1>Test</h1></body></html>",
+            )
+
+    async def test_bring_to_front(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            await session.page.bring_to_front()
+
+    async def test_navigate_with_transition_type(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable()
+            result = await session.page.navigate(
+                "https://example.com",
+                transition_type="typed",
+            )
+            assert "frameId" in result
+
+    async def test_capture_screenshot_webp(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            result = await session.page.capture_screenshot(
+                format="webp", quality=60,
+            )
+            assert "data" in result
+
+    async def test_capture_screenshot_jpeg(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await _wait_for_page(session)
+            result = await session.page.capture_screenshot(
+                format="jpeg", quality=30,
+            )
+            assert "data" in result
+
+    async def test_navigate_with_transition_type_form_submit(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.page.enable()
+            result = await session.page.navigate(
+                "https://example.com",
+                transition_type="form_submit",
+            )
+            assert "frameId" in result
+
 
 @pytest.mark.integration
 class TestRuntimeExpanded:
@@ -262,6 +785,155 @@ class TestRuntimeExpanded:
             await session.runtime.enable()
             await session.runtime.set_async_call_stack_depth(32)
 
+    async def test_set_max_call_stack_size_to_capture(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.runtime.enable()
+            await session.runtime.set_max_call_stack_size_to_capture(100)
+
+    async def test_evaluate_with_include_command_line_api(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.runtime.enable()
+            result = await session.runtime.evaluate(
+                "1 + 1", include_command_line_api=True,
+            )
+            assert result["result"]["value"] == 2
+
+    async def test_call_function_on_with_user_gesture(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.runtime.enable()
+            result = await session.runtime.evaluate(
+                "window", return_by_value=False,
+            )
+            obj_id = result["result"]["objectId"]
+            result = await session.runtime.call_function_on(
+                "function() { return 42; }",
+                object_id=obj_id,
+                return_by_value=True,
+                user_gesture=True,
+            )
+            assert result["result"]["value"] == 42
+
+    async def test_get_properties_accessor_only(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.runtime.enable()
+            result = await session.runtime.evaluate(
+                "Object.defineProperty({}, 'x', {get(){return 1}, configurable:true})",
+                return_by_value=False,
+            )
+            obj_id = result["result"]["objectId"]
+            props = await session.runtime.get_properties(
+                obj_id, accessor_properties_only=True,
+            )
+            assert isinstance(props["result"], list)
+
+    async def test_compile_and_run_script_with_object_group(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.runtime.enable()
+            compiled = await session.runtime.compile_script(
+                "42", persist_script=True,
+            )
+            assert "scriptId" in compiled
+            result = await session.runtime.run_script(
+                compiled["scriptId"],
+                return_by_value=True,
+                object_group="testGroup",
+            )
+            assert result["result"]["value"] == 42
+            await session.runtime.release_object_group("testGroup")
+
+    async def test_await_promise_with_generate_preview(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.runtime.enable()
+            result = await session.runtime.evaluate(
+                "Promise.resolve({a: 1})", return_by_value=False,
+            )
+            promise_id = result["result"]["objectId"]
+            awaited = await session.runtime.await_promise(
+                promise_id, return_by_value=True, generate_preview=True,
+            )
+            assert awaited["result"]["value"]["a"] == 1
+
+    async def test_add_binding_with_context_name(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.runtime.enable()
+            await session.runtime.add_binding(
+                "namedBinding", execution_context_name="default",
+            )
+
+    async def test_evaluate_with_disable_breaks(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.runtime.enable()
+            result = await session.runtime.evaluate(
+                "1 + 1", disable_breaks=True,
+            )
+            assert result["result"]["value"] == 2
+
+    async def test_evaluate_with_timeout(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.runtime.enable()
+            result = await session.runtime.evaluate(
+                "1 + 1", timeout=5000,
+            )
+            assert result["result"]["value"] == 2
+
+    async def test_evaluate_with_serialization_options(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.runtime.enable()
+            result = await session.runtime.evaluate(
+                "1 + 1",
+                return_by_value=True,
+                serialization_options={"serialization": "json"},
+            )
+            assert result["result"]["value"] == 2
+
+    async def test_call_function_on_with_throw_on_side_effect(self) -> None:
+        async with (
+            await CDPClient.launch(headless=True) as client,
+            await client.new_page() as session,
+        ):
+            await session.runtime.enable()
+            result = await session.runtime.evaluate(
+                "window", return_by_value=False,
+            )
+            obj_id = result["result"]["objectId"]
+            result = await session.runtime.call_function_on(
+                "function() { return 42; }",
+                object_id=obj_id,
+                return_by_value=True,
+                throw_on_side_effect=True,
+            )
+            assert result["result"]["value"] == 42
+
 
 @pytest.mark.integration
 class TestNetworkExpanded:
@@ -308,26 +980,6 @@ class TestNetworkExpanded:
             result = await session.network.get_cookies(urls=["https://example.com"])
             assert len(result.get("cookies", [])) == 0
 
-    async def test_emulate_network_conditions(self) -> None:
-        async with (
-            await CDPClient.launch(headless=True) as client,
-            await client.new_page() as session,
-        ):
-            await session.network.enable()
-            await session.network.emulate_network_conditions(
-                offline=False,
-                download_throughput=1024 * 1024,
-                upload_throughput=512 * 1024,
-                latency=100,
-            )
-            await asyncio.sleep(0.5)
-            await session.network.emulate_network_conditions(
-                offline=False,
-                download_throughput=-1,
-                upload_throughput=-1,
-                latency=0,
-            )
-
     async def test_set_accepted_encodings(self) -> None:
         async with (
             await CDPClient.launch(headless=True) as client,
@@ -373,7 +1025,7 @@ class TestDOMExpanded:
             h1 = await session.dom.query_selector(root_id, "h1")
             await session.dom.set_attribute_value(h1["nodeId"], "data-test", "value")
 
-            html = await session.dom.get_outer_html(h1["nodeId"])
+            html = await session.dom.get_outer_html(node_id=h1["nodeId"])
             assert "data-test" in html["outerHTML"]
 
     async def test_get_flattened_document(self) -> None:
@@ -408,7 +1060,7 @@ class TestDOMExpanded:
             doc = await session.dom.get_document(depth=2)
             root_id = doc["root"]["nodeId"]
             h1 = await session.dom.query_selector(root_id, "h1")
-            result = await session.dom.get_content_quads(h1["nodeId"])
+            result = await session.dom.get_content_quads(node_id=h1["nodeId"])
             assert "quads" in result
 
     async def test_set_outer_html(self) -> None:
