@@ -4,6 +4,8 @@ Covers Page, Runtime, DOM, Network, Debugger, Target, Emulation,
 CSS, Storage, Overlay, Fetch.
 """
 
+from typing import Any
+
 import pytest
 
 from cdpwave.domains.css import CSSDomain
@@ -96,7 +98,7 @@ class TestPageExpanded:
         method, params = fake.last_call
         assert params is not None
         assert params["frameId"] == "frame1"
-        assert params["grantUniversalAccess"] is True
+        assert params["grantUniveralAccess"] is True
 
     async def test_set_document_content(self) -> None:
         fake = FakeSender({})
@@ -338,8 +340,8 @@ class TestDOMExpanded:
     async def test_request_node(self) -> None:
         fake = FakeSender({"node": {}})
         domain = DOMDomain(fake)
-        await domain.request_node(1)
-        assert fake.last_call == ("DOM.requestNode", {"nodeId": 1})
+        await domain.request_node("OBJ-1")
+        assert fake.last_call == ("DOM.requestNode", {"objectId": "OBJ-1"})
 
     async def test_perform_search(self) -> None:
         fake = FakeSender({"searchId": "s1", "resultCount": 3})
@@ -398,16 +400,10 @@ class TestDOMExpanded:
 
 @pytest.mark.unit
 class TestNetworkExpanded:
-    async def test_get_all_cookies(self) -> None:
-        fake = FakeSender({"cookies": []})
-        domain = NetworkDomain(fake)
-        await domain.get_all_cookies()
-        assert fake.last_call == ("Network.getAllCookies", None)
-
     async def test_set_blocked_urls(self) -> None:
         fake = FakeSender({})
         domain = NetworkDomain(fake)
-        await domain.set_blocked_urls(["*://evil.com/*"])
+        await domain.set_blocked_urls(urls=["*://evil.com/*"])
         assert fake.last_call == (
             "Network.setBlockedURLs",
             {"urls": ["*://evil.com/*"]},
@@ -434,23 +430,29 @@ class TestNetworkExpanded:
     async def test_load_network_resource_defaults(self) -> None:
         fake = FakeSender({"resource": {}})
         domain = NetworkDomain(fake)
-        await domain.load_network_resource("frame1", "https://example.com/data")
-        assert fake.last_call == (
-            "Network.loadNetworkResource",
-            {"frameId": "frame1", "url": "https://example.com/data"},
+        await domain.load_network_resource(
+            "https://example.com/data",
+            {"disableCache": False},
+            frame_id="frame1",
         )
+        method, params = fake.last_call
+        assert method == "Network.loadNetworkResource"
+        assert params is not None
+        assert params["url"] == "https://example.com/data"
+        assert params["options"] == {"disableCache": False}
+        assert params["frameId"] == "frame1"
 
     async def test_load_network_resource_with_options(self) -> None:
         fake = FakeSender({"resource": {}})
         domain = NetworkDomain(fake)
         await domain.load_network_resource(
-            "frame1",
             "https://example.com/data",
-            options={"disableCache": True},
+            {"disableCache": True},
         )
         method, params = fake.last_call
         assert params is not None
         assert params["options"] == {"disableCache": True}
+        assert "frameId" not in params
 
 
 @pytest.mark.unit
@@ -546,7 +548,7 @@ class TestTargetExpanded:
         await domain.expose_dev_tools_protocol("t1")
         assert fake.last_call == (
             "Target.exposeDevToolsProtocol",
-            {"targetId": "t1", "bindingName": "cdp"},
+            {"targetId": "t1", "inheritPermissions": False},
         )
 
     async def test_expose_dev_tools_protocol_custom_name(self) -> None:
@@ -558,6 +560,7 @@ class TestTargetExpanded:
         assert params is not None
         assert params["targetId"] == "t1"
         assert params["bindingName"] == "custom"
+        assert params["inheritPermissions"] is False
 
 
 @pytest.mark.unit
@@ -569,15 +572,6 @@ class TestEmulationExpanded:
         assert fake.last_call == (
             "Emulation.setScrollbarsHidden",
             {"hidden": True},
-        )
-
-    async def test_set_javascript_disabled(self) -> None:
-        fake = FakeSender({})
-        domain = EmulationDomain(fake)
-        await domain.set_javascript_disabled(True)
-        assert fake.last_call == (
-            "Emulation.setJavaScriptDisabled",
-            {"disabled": True},
         )
 
     async def test_set_auto_dark_mode_override(self) -> None:
@@ -595,10 +589,11 @@ class TestCSSExpanded:
     async def test_add_rule(self) -> None:
         fake = FakeSender({"rule": {}})
         domain = CSSDomain(fake)
-        await domain.add_rule("ss1", ".cls { color: red; }")
+        loc = {"startLine": 0, "startColumn": 0, "endLine": 0, "endColumn": 5}
+        await domain.add_rule("ss1", ".cls { color: red; }", loc)
         assert fake.last_call == (
             "CSS.addRule",
-            {"styleSheetId": "ss1", "ruleText": ".cls { color: red; }"},
+            {"styleSheetId": "ss1", "ruleText": ".cls { color: red; }", "location": loc},
         )
 
     async def test_create_style_sheet(self) -> None:
@@ -607,7 +602,7 @@ class TestCSSExpanded:
         await domain.create_style_sheet("frame1")
         assert fake.last_call == (
             "CSS.createStyleSheet",
-            {"frameId": "frame1"},
+            {"frameId": "frame1", "force": False},
         )
 
     async def test_force_pseudo_state(self) -> None:
@@ -670,6 +665,14 @@ class TestOverlayExpanded:
             {"message": "Paused!"},
         )
 
+    async def test_set_paused_in_debugger_message_none(self) -> None:
+        fake = FakeSender({})
+        domain = OverlayDomain(fake)
+        await domain.set_paused_in_debugger_message(None)
+        method, params = fake.last_call
+        assert method == "Overlay.setPausedInDebuggerMessage"
+        assert params is None
+
     async def test_set_show_viewport_size_on_resize(self) -> None:
         fake = FakeSender({})
         domain = OverlayDomain(fake)
@@ -689,4 +692,179 @@ class TestFetchExpanded:
         assert fake.last_call == (
             "Fetch.getRequestPostData",
             {"requestId": "req1"},
+        )
+
+
+# ── Edge cases & error behavior ────────────────────────────────────────────
+
+
+@pytest.mark.unit
+class TestFetchEdgeCases:
+    async def test_enable_no_patterns(self) -> None:
+        fake = FakeSender({})
+        domain = FetchDomain(fake)
+        await domain.enable()
+        method, params = fake.last_call
+        assert method == "Fetch.enable"
+        assert params is not None
+        assert params["handleAuthRequests"] is False
+        assert "patterns" not in params
+
+    async def test_enable_with_patterns_and_auth(self) -> None:
+        fake = FakeSender({})
+        domain = FetchDomain(fake)
+        patterns: list[dict[str, Any]] = [{"urlPattern": "*api*"}]
+        await domain.enable(patterns=patterns, handle_auth_requests=True)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["patterns"] == patterns
+        assert params["handleAuthRequests"] is True
+
+    async def test_continue_request_minimal(self) -> None:
+        fake = FakeSender({})
+        domain = FetchDomain(fake)
+        await domain.continue_request("req1")
+        assert fake.last_call == (
+            "Fetch.continueRequest",
+            {"requestId": "req1", "interceptResponse": False},
+        )
+
+    async def test_continue_request_full(self) -> None:
+        fake = FakeSender({})
+        domain = FetchDomain(fake)
+        await domain.continue_request(
+            "req1",
+            url="https://modified.com",
+            method="POST",
+            post_data="abc=1",
+            headers=[{"name": "X-Custom", "value": "yes"}],
+            intercept_response=True,
+        )
+        method, params = fake.last_call
+        assert params is not None
+        assert params["url"] == "https://modified.com"
+        assert params["method"] == "POST"
+        assert params["postData"] == "abc=1"
+        assert params["headers"] == [{"name": "X-Custom", "value": "yes"}]
+        assert params["interceptResponse"] is True
+
+    async def test_fail_request(self) -> None:
+        fake = FakeSender({})
+        domain = FetchDomain(fake)
+        await domain.fail_request("req1", "Aborted")
+        assert fake.last_call == (
+            "Fetch.failRequest",
+            {"requestId": "req1", "errorReason": "Aborted"},
+        )
+
+    async def test_get_response_body(self) -> None:
+        fake = FakeSender({"body": "base64data", "base64Encoded": True})
+        domain = FetchDomain(fake)
+        await domain.get_response_body("req1")
+        assert fake.last_call == (
+            "Fetch.getResponseBody",
+            {"requestId": "req1"},
+        )
+
+
+@pytest.mark.unit
+class TestDebuggerEdgeCases:
+    async def test_set_breakpoint_with_condition(self) -> None:
+        fake = FakeSender({"breakpointId": "bp1"})
+        domain = DebuggerDomain(fake)
+        location: dict[str, Any] = {"scriptId": "s1", "lineNumber": 10}
+        await domain.set_breakpoint(location, condition="x > 5")
+        method, params = fake.last_call
+        assert method == "Debugger.setBreakpoint"
+        assert params is not None
+        assert params["location"] == location
+        assert params["condition"] == "x > 5"
+
+    async def test_set_breakpoint_no_condition(self) -> None:
+        fake = FakeSender({"breakpointId": "bp1"})
+        domain = DebuggerDomain(fake)
+        location: dict[str, Any] = {"scriptId": "s1", "lineNumber": 10}
+        await domain.set_breakpoint(location)
+        method, params = fake.last_call
+        assert params is not None
+        assert "condition" not in params
+
+    async def test_set_pause_on_exceptions_all(self) -> None:
+        fake = FakeSender({})
+        domain = DebuggerDomain(fake)
+        await domain.set_pause_on_exceptions("all")
+        assert fake.last_call == (
+            "Debugger.setPauseOnExceptions",
+            {"state": "all"},
+        )
+
+    async def test_set_pause_on_exceptions_none(self) -> None:
+        fake = FakeSender({})
+        domain = DebuggerDomain(fake)
+        await domain.set_pause_on_exceptions("none")
+        assert fake.last_call == (
+            "Debugger.setPauseOnExceptions",
+            {"state": "none"},
+        )
+
+    async def test_set_breakpoints_active_false(self) -> None:
+        fake = FakeSender({})
+        domain = DebuggerDomain(fake)
+        await domain.set_breakpoints_active(False)
+        assert fake.last_call == (
+            "Debugger.setBreakpointsActive",
+            {"active": False},
+        )
+
+
+@pytest.mark.unit
+class TestRuntimeEdgeCasesExpanded:
+    async def test_evaluate_with_object_group(self) -> None:
+        fake = FakeSender({"result": {"type": "object", "objectId": "OBJ-1"}})
+        domain = RuntimeDomain(fake)
+        await domain.evaluate("({a: 1})", object_group="group1")
+        method, params = fake.last_call
+        assert params is not None
+        assert params["objectGroup"] == "group1"
+
+    async def test_evaluate_with_generate_preview(self) -> None:
+        fake = FakeSender({"result": {"type": "object", "objectId": "OBJ-1"}})
+        domain = RuntimeDomain(fake)
+        await domain.evaluate("({a: 1})", generate_preview=True)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["generatePreview"] is True
+
+    async def test_compile_script_no_persist(self) -> None:
+        fake = FakeSender({"scriptId": "s1"})
+        domain = RuntimeDomain(fake)
+        await domain.compile_script("1+1")
+        method, params = fake.last_call
+        assert params is not None
+        assert "persistScript" not in params
+
+    async def test_await_promise_no_return_by_value(self) -> None:
+        fake = FakeSender({"result": {"type": "object", "objectId": "OBJ-1"}})
+        domain = RuntimeDomain(fake)
+        await domain.await_promise("p1", return_by_value=False)
+        method, params = fake.last_call
+        assert params is not None
+        assert "returnByValue" not in params
+
+
+@pytest.mark.unit
+class TestEmulationEdgeCasesExpanded:
+    async def test_clear_device_metrics_override(self) -> None:
+        fake = FakeSender({})
+        domain = EmulationDomain(fake)
+        await domain.clear_device_metrics_override()
+        assert fake.last_call == ("Emulation.clearDeviceMetricsOverride", None)
+
+    async def test_set_cpu_throttling_rate(self) -> None:
+        fake = FakeSender({})
+        domain = EmulationDomain(fake)
+        await domain.set_cpu_throttling_rate(4.0)
+        assert fake.last_call == (
+            "Emulation.setCPUThrottlingRate",
+            {"rate": 4.0},
         )

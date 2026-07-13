@@ -69,7 +69,7 @@ class TestDebuggerDomain:
     async def test_set_breakpoint_by_url(self) -> None:
         fake = FakeSender({"breakpointId": "bp2", "locations": []})
         domain = DebuggerDomain(fake)
-        await domain.set_breakpoint_by_url("https://example.com/app.js", 20)
+        await domain.set_breakpoint_by_url(20, url="https://example.com/app.js")
         method, params = fake.last_call
         assert method == "Debugger.setBreakpointByUrl"
         assert params is not None
@@ -121,8 +121,11 @@ class TestDebuggerDomain:
     async def test_get_stack_trace(self) -> None:
         fake = FakeSender({"stackTrace": {"callFrames": []}})
         domain = DebuggerDomain(fake)
-        await domain.get_stack_trace()
-        assert fake.last_call == ("Debugger.getStackTrace", {})
+        await domain.get_stack_trace({"id": "st1"})
+        assert fake.last_call == (
+            "Debugger.getStackTrace",
+            {"stackTraceId": {"id": "st1"}},
+        )
 
     async def test_set_skip_all_pauses(self) -> None:
         fake = FakeSender({})
@@ -212,6 +215,12 @@ class TestOverlayDomain:
             {"result": True},
         )
 
+    async def test_set_show_paint_rects_type_error(self) -> None:
+        fake = FakeSender({})
+        domain = OverlayDomain(fake)
+        with pytest.raises(TypeError, match="result must be a bool"):
+            await domain.set_show_paint_rects("not a bool")  # type: ignore[arg-type]
+
     async def test_set_show_debug_borders(self) -> None:
         fake = FakeSender({})
         domain = OverlayDomain(fake)
@@ -238,16 +247,6 @@ class TestOverlayDomain:
             "Overlay.setShowScrollBottleneckRects",
             {"show": False},
         )
-
-    async def test_set_show_web_vitals(self) -> None:
-        fake = FakeSender({})
-        domain = OverlayDomain(fake)
-        await domain.set_show_web_vitals(True, layered=True)
-        method, params = fake.last_call
-        assert method == "Overlay.setShowWebVitals"
-        assert params is not None
-        assert params["show"] is True
-        assert params["layered"] is True
 
     async def test_hide_highlight(self) -> None:
         fake = FakeSender({})
@@ -281,7 +280,7 @@ class TestOverlayDomain:
         fake = FakeSender({})
         domain = OverlayDomain(fake)
         hinge = {"x": 0, "y": 100, "width": 100, "height": 50}
-        await domain.set_show_hinge(hinge)
+        await domain.set_show_hinge(hinge_config=hinge)
         method, params = fake.last_call
         assert method == "Overlay.setShowHinge"
         assert params is not None
@@ -293,17 +292,25 @@ class TestOverlayDomain:
         await domain.set_show_hinge(None)
         method, params = fake.last_call
         assert method == "Overlay.setShowHinge"
-        assert params == {}
+        assert params is None
 
-    async def test_set_show_window_controls(self) -> None:
+    async def test_set_show_window_controls_overlay(self) -> None:
         fake = FakeSender({})
         domain = OverlayDomain(fake)
-        controls = {"show": True, "theme": "dark"}
-        await domain.set_show_window_controls(controls)
-        assert fake.last_call == (
-            "Overlay.setShowWindowControlsOverlay",
-            {"windowControls": controls},
-        )
+        config = {"showCSS": True, "selectedPlatform": "windows", "themeColor": "#000"}
+        await domain.set_show_window_controls_overlay(config)
+        method, params = fake.last_call
+        assert method == "Overlay.setShowWindowControlsOverlay"
+        assert params is not None
+        assert params["windowControlsOverlayConfig"] == config
+
+    async def test_set_show_window_controls_overlay_none(self) -> None:
+        fake = FakeSender({})
+        domain = OverlayDomain(fake)
+        await domain.set_show_window_controls_overlay(None)
+        method, params = fake.last_call
+        assert method == "Overlay.setShowWindowControlsOverlay"
+        assert params is None
 
     async def test_set_show_isolated_elements(self) -> None:
         fake = FakeSender({})
@@ -370,12 +377,64 @@ class TestAuditsDomain:
         assert fake.last_call == ("Audits.checkContrast", None)
 
     async def test_get_encoded_response(self) -> None:
-        fake = FakeSender({"body": "base64data", "byteSize": 100})
+        fake = FakeSender({"body": "base64data", "originalSize": 100, "encodedSize": 80})
         domain = AuditsDomain(fake)
-        await domain.get_encoded_response("req1", "base64", quality=80)
+        await domain.get_encoded_response("req1", "webp", quality=0.8)
         method, params = fake.last_call
         assert method == "Audits.getEncodedResponse"
         assert params is not None
         assert params["requestId"] == "req1"
-        assert params["encoding"] == "base64"
-        assert params["quality"] == 80
+        assert params["encoding"] == "webp"
+        assert params["quality"] == 0.8
+
+    async def test_get_encoded_response_size_only(self) -> None:
+        fake = FakeSender({"originalSize": 100, "encodedSize": 80})
+        domain = AuditsDomain(fake)
+        await domain.get_encoded_response("req1", "jpeg", size_only=True)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["sizeOnly"] is True
+
+    async def test_check_forms_issues(self) -> None:
+        fake = FakeSender({"issues": []})
+        domain = AuditsDomain(fake)
+        await domain.check_forms_issues()
+        assert fake.last_call == ("Audits.checkFormsIssues", None)
+
+    async def test_get_encoded_response_all_params(self) -> None:
+        fake = FakeSender({"body": "data", "originalSize": 200, "encodedSize": 100})
+        domain = AuditsDomain(fake)
+        await domain.get_encoded_response(
+            "req2", "png", quality=0.5, size_only=False
+        )
+        method, params = fake.last_call
+        assert params is not None
+        assert params["requestId"] == "req2"
+        assert params["encoding"] == "png"
+        assert params["quality"] == 0.5
+        assert params["sizeOnly"] is False
+
+    async def test_get_encoded_response_no_optional_params(self) -> None:
+        fake = FakeSender({"body": "data", "originalSize": 50, "encodedSize": 30})
+        domain = AuditsDomain(fake)
+        await domain.get_encoded_response("req3", "webp")
+        method, params = fake.last_call
+        assert params is not None
+        assert "quality" not in params
+        assert "sizeOnly" not in params
+
+    async def test_get_encoded_response_quality_zero(self) -> None:
+        fake = FakeSender({"body": "", "originalSize": 100, "encodedSize": 1})
+        domain = AuditsDomain(fake)
+        await domain.get_encoded_response("req4", "jpeg", quality=0.0)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["quality"] == 0.0
+
+    async def test_get_encoded_response_quality_one(self) -> None:
+        fake = FakeSender({"body": "data", "originalSize": 100, "encodedSize": 100})
+        domain = AuditsDomain(fake)
+        await domain.get_encoded_response("req5", "webp", quality=1.0)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["quality"] == 1.0

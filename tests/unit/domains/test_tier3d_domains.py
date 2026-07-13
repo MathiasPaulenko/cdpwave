@@ -29,7 +29,7 @@ class TestServiceWorkerDomain:
         await domain.start_worker("https://example.com/sw")
         assert fake.last_call == (
             "ServiceWorker.startWorker",
-            {"scope": "https://example.com/sw"},
+            {"scopeURL": "https://example.com/sw"},
         )
 
     async def test_stop_worker(self) -> None:
@@ -47,7 +47,7 @@ class TestServiceWorkerDomain:
         await domain.unregister("https://example.com/sw")
         assert fake.last_call == (
             "ServiceWorker.unregister",
-            {"scope": "https://example.com/sw"},
+            {"scopeURL": "https://example.com/sw"},
         )
 
     async def test_deliver_push_message(self) -> None:
@@ -93,7 +93,7 @@ class TestServiceWorkerDomain:
         await domain.skip_waiting("https://example.com/sw")
         assert fake.last_call == (
             "ServiceWorker.skipWaiting",
-            {"scope": "https://example.com/sw"},
+            {"scopeURL": "https://example.com/sw"},
         )
 
     async def test_inspect_worker(self) -> None:
@@ -110,8 +110,8 @@ class TestServiceWorkerDomain:
         domain = ServiceWorkerDomain(fake)
         await domain.update("https://example.com/sw")
         assert fake.last_call == (
-            "ServiceWorker.update",
-            {"scope": "https://example.com/sw"},
+            "ServiceWorker.updateRegistration",
+            {"scopeURL": "https://example.com/sw"},
         )
 
     async def test_get_messages(self) -> None:
@@ -142,14 +142,71 @@ class TestSystemInfoDomain:
         await domain.get_feature_state("Vulkan")
         assert fake.last_call == (
             "SystemInfo.getFeatureState",
-            {"featureName": "Vulkan"},
+            {"featureState": "Vulkan"},
         )
 
-    async def test_get_gpu_info(self) -> None:
-        fake = FakeSender({"gpu": {}})
+    async def test_get_info_return_value(self) -> None:
+        fake = FakeSender({
+            "gpu": {"devices": []},
+            "modelName": "TestModel",
+            "modelVersion": "1.0",
+            "commandLine": "--test",
+        })
         domain = SystemInfoDomain(fake)
-        await domain.get_gpu_info()
-        assert fake.last_call == ("SystemInfo.getGPUInfo", None)
+        result = await domain.get_info()
+        assert result["modelName"] == "TestModel"
+        assert result["modelVersion"] == "1.0"
+        assert "commandLine" in result
+
+    async def test_get_process_info_return_value(self) -> None:
+        fake = FakeSender({"processInfo": [{"type": "browser", "id": 1}]})
+        domain = SystemInfoDomain(fake)
+        result = await domain.get_process_info()
+        assert isinstance(result["processInfo"], list)
+
+    async def test_get_feature_state_return_value(self) -> None:
+        fake = FakeSender({"featureEnabled": True})
+        domain = SystemInfoDomain(fake)
+        result = await domain.get_feature_state("Vulkan")
+        assert result["featureEnabled"] is True
+
+    async def test_get_feature_state_disabled(self) -> None:
+        fake = FakeSender({"featureEnabled": False})
+        domain = SystemInfoDomain(fake)
+        result = await domain.get_feature_state("SomeFeature")
+        assert result["featureEnabled"] is False
+
+    # --- TypeError edge cases ---
+
+    async def test_type_error_get_feature_state_int(self) -> None:
+        fake = FakeSender({"featureEnabled": True})
+        domain = SystemInfoDomain(fake)
+        with pytest.raises(TypeError, match="feature_state must be a str"):
+            await domain.get_feature_state(42)
+
+    async def test_type_error_get_feature_state_bytes(self) -> None:
+        fake = FakeSender({"featureEnabled": True})
+        domain = SystemInfoDomain(fake)
+        with pytest.raises(TypeError, match="feature_state must be a str"):
+            await domain.get_feature_state(b"Vulkan")
+
+    async def test_type_error_get_feature_state_bool(self) -> None:
+        fake = FakeSender({"featureEnabled": True})
+        domain = SystemInfoDomain(fake)
+        with pytest.raises(TypeError, match="feature_state must be a str"):
+            await domain.get_feature_state(True)
+
+    async def test_type_error_get_feature_state_none(self) -> None:
+        fake = FakeSender({"featureEnabled": True})
+        domain = SystemInfoDomain(fake)
+        with pytest.raises(TypeError, match="feature_state must be a str"):
+            await domain.get_feature_state(None)  # type: ignore[arg-type]
+
+    async def test_type_error_get_feature_state_list(self) -> None:
+        fake = FakeSender({"featureEnabled": True})
+        domain = SystemInfoDomain(fake)
+        with pytest.raises(TypeError, match="feature_state must be a str"):
+            await domain.get_feature_state(["Vulkan"])  # type: ignore[arg-type]
 
 
 @pytest.mark.unit
@@ -169,9 +226,7 @@ class TestWebAuthnDomain:
     async def test_add_virtual_authenticator(self) -> None:
         fake = FakeSender({"authenticatorId": "auth1"})
         domain = WebAuthnDomain(fake)
-        await domain.add_virtual_authenticator(
-            {"protocol": "ctap2", "transport": "usb"}
-        )
+        await domain.add_virtual_authenticator("ctap2", "usb")
         method, params = fake.last_call
         assert method == "WebAuthn.addVirtualAuthenticator"
         assert params is not None

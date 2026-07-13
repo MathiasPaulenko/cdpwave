@@ -87,15 +87,6 @@ class TestCSSDomain:
             {"nodeId": 42},
         )
 
-    async def test_get_layout_tree_and_styles(self) -> None:
-        fake = FakeSender({"layoutTree": {}, "computedStyles": []})
-        domain = CSSDomain(fake)
-        await domain.get_layout_tree_and_styles(node_ids=[1, 2, 3])
-        method, params = fake.last_call
-        assert method == "CSS.getLayoutTreeAndStyles"
-        assert params is not None
-        assert params["nodeIds"] == [1, 2, 3]
-
     async def test_get_stylesheet_text(self) -> None:
         fake = FakeSender({"text": "body { color: red; }"})
         domain = CSSDomain(fake)
@@ -230,37 +221,29 @@ class TestEventBreakpointsDomain:
             {"eventName": "scriptFirstStatement"},
         )
 
-    async def test_clear_instrumentation_breakpoint(self) -> None:
+    async def test_remove_instrumentation_breakpoint(self) -> None:
+        fake = FakeSender({})
+        domain = EventBreakpointsDomain(fake)
+        await domain.remove_instrumentation_breakpoint("scriptFirstStatement")
+        assert fake.last_call == (
+            "EventBreakpoints.removeInstrumentationBreakpoint",
+            {"eventName": "scriptFirstStatement"},
+        )
+
+    async def test_clear_instrumentation_breakpoint_alias(self) -> None:
         fake = FakeSender({})
         domain = EventBreakpointsDomain(fake)
         await domain.clear_instrumentation_breakpoint("scriptFirstStatement")
         assert fake.last_call == (
-            "EventBreakpoints.clearInstrumentationBreakpoint",
+            "EventBreakpoints.removeInstrumentationBreakpoint",
             {"eventName": "scriptFirstStatement"},
         )
 
-    async def test_set_breakpoint_on_native_event(self) -> None:
+    async def test_disable(self) -> None:
         fake = FakeSender({})
         domain = EventBreakpointsDomain(fake)
-        await domain.set_breakpoint_on_native_event("click")
+        await domain.disable()
         assert fake.last_call == (
-            "EventBreakpoints.setBreakpointOnNativeEvent",
-            {"eventName": "click"},
-        )
-
-    async def test_set_breakpoint_on_native_event_with_target(self) -> None:
-        fake = FakeSender({})
-        domain = EventBreakpointsDomain(fake)
-        await domain.set_breakpoint_on_native_event("click", target_name="document")
-        method, params = fake.last_call
-        assert params is not None
-        assert params["targetName"] == "document"
-
-    async def test_clear_breakpoint_on_native_event(self) -> None:
-        fake = FakeSender({})
-        domain = EventBreakpointsDomain(fake)
-        await domain.clear_breakpoint_on_native_event("click")
-        assert fake.last_call == (
-            "EventBreakpoints.clearBreakpointOnNativeEvent",
-            {"eventName": "click"},
+            "EventBreakpoints.disable",
+            None,
         )

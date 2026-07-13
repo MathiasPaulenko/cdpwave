@@ -57,7 +57,7 @@ class TestAutofillCoverage:
         card = {"number": "4111111111111111", "name": "Test"}
         await domain.trigger_fill(42, frame_id="F1", card=card)
         method, params = fake.last_call
-        assert method == "Autofill.triggerFill"
+        assert method == "Autofill.trigger"
         assert params is not None
         assert params["fieldId"] == 42
         assert params["frameId"] == "F1"
@@ -68,15 +68,26 @@ class TestAutofillCoverage:
         domain = AutofillDomain(fake)
         await domain.trigger_fill(10)
         method, params = fake.last_call
-        assert method == "Autofill.triggerFill"
+        assert method == "Autofill.trigger"
         assert params == {"fieldId": 10}
+
+    async def test_trigger_with_address(self) -> None:
+        fake = FakeSender({})
+        domain = AutofillDomain(fake)
+        address = {"fields": [{"name": "GIVEN_NAME", "value": "Jon"}]}
+        await domain.trigger(20, address=address)
+        method, params = fake.last_call
+        assert method == "Autofill.trigger"
+        assert params is not None
+        assert params["fieldId"] == 20
+        assert params["address"] == address
 
     async def test_trigger_fill_after_save_with_frame(self) -> None:
         fake = FakeSender({})
         domain = AutofillDomain(fake)
         await domain.trigger_fill_after_save(5, frame_id="F2")
         method, params = fake.last_call
-        assert method == "Autofill.triggerFillAfterSave"
+        assert method == "Autofill.trigger"
         assert params is not None
         assert params["fieldId"] == 5
         assert params["frameId"] == "F2"
@@ -86,18 +97,68 @@ class TestAutofillCoverage:
         domain = AutofillDomain(fake)
         await domain.trigger_fill_after_save(7)
         method, params = fake.last_call
-        assert method == "Autofill.triggerFillAfterSave"
+        assert method == "Autofill.trigger"
         assert params == {"fieldId": 7}
 
     async def test_set_addresses(self) -> None:
         fake = FakeSender({})
         domain = AutofillDomain(fake)
-        addresses = [{"street": "123 Main", "city": "Testville"}]
+        addresses = [
+            {"fields": [{"name": "NAME_FULL", "value": "Jon Doe"}]},
+            {"fields": [{"name": "NAME_FULL", "value": "Jane Doe"}]},
+        ]
         await domain.set_addresses(addresses)
         method, params = fake.last_call
         assert method == "Autofill.setAddresses"
         assert params is not None
         assert params["addresses"] == addresses
+
+    async def test_trigger_direct_with_all_params(self) -> None:
+        fake = FakeSender({})
+        domain = AutofillDomain(fake)
+        card = {"number": "4111111111111111", "name": "Test"}
+        await domain.trigger(30, frame_id="F3", card=card)
+        method, params = fake.last_call
+        assert method == "Autofill.trigger"
+        assert params is not None
+        assert params["fieldId"] == 30
+        assert params["frameId"] == "F3"
+        assert params["card"] == card
+
+    async def test_trigger_no_optional_params(self) -> None:
+        fake = FakeSender({})
+        domain = AutofillDomain(fake)
+        await domain.trigger(15)
+        method, params = fake.last_call
+        assert method == "Autofill.trigger"
+        assert params == {"fieldId": 15}
+
+    async def test_trigger_fill_after_save_no_frame(self) -> None:
+        fake = FakeSender({})
+        domain = AutofillDomain(fake)
+        await domain.trigger_fill_after_save(3)
+        method, params = fake.last_call
+        assert method == "Autofill.trigger"
+        assert params == {"fieldId": 3}
+
+    async def test_trigger_fill_alias_with_address(self) -> None:
+        fake = FakeSender({})
+        domain = AutofillDomain(fake)
+        address = {"fields": [{"name": "NAME_FULL", "value": "Jon"}]}
+        await domain.trigger_fill(25, address=address)
+        method, params = fake.last_call
+        assert method == "Autofill.trigger"
+        assert params is not None
+        assert params["fieldId"] == 25
+        assert params["address"] == address
+
+    async def test_set_addresses_empty(self) -> None:
+        fake = FakeSender({})
+        domain = AutofillDomain(fake)
+        await domain.set_addresses([])
+        method, params = fake.last_call
+        assert method == "Autofill.setAddresses"
+        assert params == {"addresses": []}
 
 
 @pytest.mark.unit
@@ -272,18 +333,6 @@ class TestIndexedDBCoverage:
 
 @pytest.mark.unit
 class TestCacheStorageCoverage:
-    async def test_enable(self) -> None:
-        fake = FakeSender({})
-        domain = CacheStorageDomain(fake)
-        await domain.enable()
-        assert fake.last_call == ("CacheStorage.enable", None)
-
-    async def test_disable(self) -> None:
-        fake = FakeSender({})
-        domain = CacheStorageDomain(fake)
-        await domain.disable()
-        assert fake.last_call == ("CacheStorage.disable", None)
-
     async def test_request_cache_names_with_storage_key_and_bucket(self) -> None:
         fake = FakeSender({"caches": []})
         domain = CacheStorageDomain(fake)
@@ -338,7 +387,7 @@ class TestCSSCoverage:
     async def test_set_rule_style(self) -> None:
         fake = FakeSender({})
         domain = CSSDomain(fake)
-        await domain.set_rule_style("ss1", ".cls", "color: green")
+        await domain.set_rule_style("ss1", "color: green")
         method, params = fake.last_call
         assert method == "CSS.setStyleTexts"
         assert params is not None
@@ -495,8 +544,8 @@ class TestDebuggerCoverage:
         fake = FakeSender({"breakpointId": "bp1", "locations": []})
         domain = DebuggerDomain(fake)
         await domain.set_breakpoint_by_url(
-            "https://example.com/js.js",
             10,
+            url="https://example.com/js.js",
             column_number=5,
             condition="x > 0",
         )
@@ -506,12 +555,12 @@ class TestDebuggerCoverage:
         assert params["columnNumber"] == 5
         assert params["condition"] == "x > 0"
 
-    async def test_set_breakpoints_by_url_all_params(self) -> None:
+    async def test_set_breakpoint_by_url_all_params(self) -> None:
         fake = FakeSender({"breakpointId": "bp1", "locations": []})
         domain = DebuggerDomain(fake)
-        await domain.set_breakpoints_by_url(
+        await domain.set_breakpoint_by_url(
+            5,
             url_regex="https://.*\\.js",
-            line_number=5,
             column_number=3,
             condition="debugger",
         )
@@ -521,18 +570,6 @@ class TestDebuggerCoverage:
         assert params["urlRegex"] == "https://.*\\.js"
         assert params["columnNumber"] == 3
         assert params["condition"] == "debugger"
-
-    async def test_set_breakpoints_by_url_with_url_prefix(self) -> None:
-        fake = FakeSender({"breakpointId": "bp1", "locations": []})
-        domain = DebuggerDomain(fake)
-        await domain.set_breakpoints_by_url(
-            url_prefix="https://cdn.",
-            line_number=1,
-        )
-        method, params = fake.last_call
-        assert method == "Debugger.setBreakpointByUrl"
-        assert params is not None
-        assert params["urlPrefix"] == "https://cdn."
 
     async def test_evaluate_on_call_frame_all_optional(self) -> None:
         fake = FakeSender({"result": {}})
@@ -629,24 +666,6 @@ class TestDebuggerCoverage:
         assert params is not None
         assert params["newValue"] == {"value": 99}
 
-    async def test_get_properties_all_flags(self) -> None:
-        fake = FakeSender({"result": [], "internalProperties": []})
-        domain = DebuggerDomain(fake)
-        await domain.get_properties(
-            "obj1",
-            own_properties=True,
-            accessor_properties_only=True,
-            generate_preview=True,
-            non_indexed_properties_only=True,
-        )
-        method, params = fake.last_call
-        assert method == "Runtime.getProperties"
-        assert params is not None
-        assert params["ownProperties"] is True
-        assert params["accessorPropertiesOnly"] is True
-        assert params["generatePreview"] is True
-        assert params["nonIndexedPropertiesOnly"] is True
-
 
 @pytest.mark.unit
 class TestOverlayCoverage:
@@ -686,17 +705,19 @@ class TestOverlayCoverage:
         assert params["color"] == color
         assert params["outlineColor"] == outline
 
-    async def test_highlight_frame_with_colors(self) -> None:
+    async def test_highlight_rect_default_no_colors(self) -> None:
         fake = FakeSender({})
         domain = OverlayDomain(fake)
-        cc = {"r": 255, "g": 0, "b": 0, "a": 0.5}
-        coc = {"r": 0, "g": 0, "b": 255, "a": 1.0}
-        await domain.highlight_frame("F1", content_color=cc, content_outline_color=coc)
+        await domain.highlight_rect(0, 0, 100, 50)
         method, params = fake.last_call
-        assert method == "Overlay.highlightFrame"
-        assert params is not None
-        assert params["contentColor"] == cc
-        assert params["contentOutlineColor"] == coc
+        assert method == "Overlay.highlightRect"
+        assert params == {"x": 0, "y": 0, "width": 100, "height": 50}
+
+    async def test_highlight_rect_type_error(self) -> None:
+        fake = FakeSender({})
+        domain = OverlayDomain(fake)
+        with pytest.raises(TypeError, match="x must be an int"):
+            await domain.highlight_rect("bad", 0, 100, 50)  # type: ignore[arg-type]
 
 
 @pytest.mark.unit
@@ -778,14 +799,13 @@ class TestInputCoverage:
         domain = InputDomain(fake)
         data = {"items": [], "dragOperationsMask": 1}
         await domain.dispatch_drag_event(
-            "dragEnter", 10.0, 20.0, data=data, modifiers=0, timestamp=1000.0
+            "dragEnter", 10.0, 20.0, data=data, modifiers=0
         )
         method, params = fake.last_call
         assert method == "Input.dispatchDragEvent"
         assert params is not None
         assert params["data"] == data
         assert params["modifiers"] == 0
-        assert params["timestamp"] == 1000.0
 
     async def test_type_text(self) -> None:
         fake = FakeSender({})
@@ -803,10 +823,9 @@ class TestInputCoverage:
         domain = InputDomain(fake)
         await domain.emulate_touch_from_mouse_event(
             "mousePressed",
-            10.0,
-            20.0,
+            10,
+            20,
             button="left",
-            buttons=1,
             click_count=1,
             delta_x=5.0,
             delta_y=10.0,
@@ -850,17 +869,17 @@ class TestBrowserCoverage:
         assert params["eventsEnabled"] is True
 
     async def test_get_browser_command_line(self) -> None:
-        fake = FakeSender({"commandLine": "chrome --foo"})
+        fake = FakeSender({"arguments": ["--foo"]})
         domain = BrowserDomain(fake)
         result = await domain.get_browser_command_line()
         assert fake.last_call[0] == "Browser.getBrowserCommandLine"
-        assert "commandLine" in result
+        assert "arguments" in result
 
     async def test_get_command_line_alias(self) -> None:
-        fake = FakeSender({"commandLine": "chrome --foo"})
+        fake = FakeSender({"arguments": ["--foo"]})
         domain = BrowserDomain(fake)
         result = await domain.get_command_line()
-        assert "commandLine" in result
+        assert "arguments" in result
 
     async def test_get_histogram_with_delta(self) -> None:
         fake = FakeSender({"histogram": {"name": "test", "sum": 100}})
@@ -875,41 +894,19 @@ class TestBrowserCoverage:
         fake = FakeSender({"histograms": []})
         domain = BrowserDomain(fake)
         await domain.get_histograms()
-        assert fake.last_call == ("Browser.getHistograms", None)
-
-    async def test_reset_histograms(self) -> None:
-        fake = FakeSender({})
-        domain = BrowserDomain(fake)
-        await domain.reset_histograms()
-        assert fake.last_call == ("Browser.resetHistograms", None)
-
-    async def test_get_cpu_profile(self) -> None:
-        fake = FakeSender({"profile": {}})
-        domain = BrowserDomain(fake)
-        await domain.get_cpu_profile()
-        assert fake.last_call == ("Browser.getCPUProfile", None)
-
-    async def test_get_heap_profile(self) -> None:
-        fake = FakeSender({"profile": {}})
-        domain = BrowserDomain(fake)
-        await domain.get_heap_profile()
-        assert fake.last_call == ("Browser.getHeapProfile", None)
-
-    async def test_get_bounds(self) -> None:
-        fake = FakeSender({"bounds": {"width": 800, "height": 600}})
-        domain = BrowserDomain(fake)
-        await domain.get_bounds()
-        assert fake.last_call == ("Browser.getBounds", None)
-
-    async def test_set_bounds(self) -> None:
-        fake = FakeSender({})
-        domain = BrowserDomain(fake)
-        bounds = {"width": 1024, "height": 768}
-        await domain.set_bounds(bounds)
         method, params = fake.last_call
-        assert method == "Browser.setBounds"
+        assert method == "Browser.getHistograms"
         assert params is not None
-        assert params["bounds"] == bounds
+        assert params["delta"] is False
+
+    async def test_get_histograms_with_query(self) -> None:
+        fake = FakeSender({"histograms": []})
+        domain = BrowserDomain(fake)
+        await domain.get_histograms(query="V8", delta=True)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["query"] == "V8"
+        assert params["delta"] is True
 
 
 @pytest.mark.unit
@@ -918,7 +915,10 @@ class TestEmulationCoverage:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
         await domain.clear_auto_dark_mode_override()
-        assert fake.last_call[0] == "Emulation.setAutoDarkModeOverride"
+        assert fake.last_call == (
+            "Emulation.setAutoDarkModeOverride",
+            {"enabled": False},
+        )
 
     async def test_set_navigator_overrides(self) -> None:
         fake = FakeSender({})
@@ -968,21 +968,13 @@ class TestEmulationCoverage:
         assert method == "Emulation.setEmulatedVisionDeficiency"
         assert params == {"type": "none"}
 
-    async def test_set_scroll_position(self) -> None:
-        fake = FakeSender({})
-        domain = EmulationDomain(fake)
-        await domain.set_scroll_position(x=100.0, y=200.0)
-        method, params = fake.last_call
-        assert method == "Emulation.setScrollPositionOverride"
-        assert params == {"x": 100.0, "y": 200.0}
-
     async def test_clear_emulated_media(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
         await domain.clear_emulated_media()
         method, params = fake.last_call
         assert method == "Emulation.setEmulatedMedia"
-        assert params == {"media": ""}
+        assert params is None
 
     async def test_set_emulated_media_feature(self) -> None:
         fake = FakeSender({})
@@ -996,11 +988,11 @@ class TestEmulationCoverage:
     async def test_set_default_background_color_override_from_rgba(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
-        await domain.set_default_background_color_override(r=255, g=0, b=0, a=128)
+        await domain.set_default_background_color_override(r=255, g=0, b=0, a=0.5)
         method, params = fake.last_call
         assert method == "Emulation.setDefaultBackgroundColorOverride"
         assert params is not None
-        assert params["color"] == {"r": 255, "g": 0, "b": 0, "a": 128}
+        assert params["color"] == {"r": 255, "g": 0, "b": 0, "a": 0.5}
 
     async def test_set_default_background_color_override_clear(self) -> None:
         fake = FakeSender({})
@@ -1233,7 +1225,7 @@ class TestFetchCoverage:
             response_code=302,
             response_headers=headers,
             binary_response_headers="aGc=",
-            status_text="Found",
+            response_phrase="Found",
         )
         method, params = fake.last_call
         assert method == "Fetch.continueResponse"
@@ -1241,7 +1233,7 @@ class TestFetchCoverage:
         assert params["responseCode"] == 302
         assert params["responseHeaders"] == headers
         assert params["binaryResponseHeaders"] == "aGc="
-        assert params["statusText"] == "Found"
+        assert params["responsePhrase"] == "Found"
 
 
 @pytest.mark.unit

@@ -15,7 +15,6 @@ from cdpwave.domains.emulation import EmulationDomain
 from cdpwave.domains.fetch import FetchDomain
 from cdpwave.domains.indexed_db import IndexedDBDomain
 from cdpwave.domains.input import InputDomain
-from cdpwave.domains.network import NetworkDomain
 from cdpwave.domains.overlay import OverlayDomain
 from cdpwave.domains.page import PageDomain
 from cdpwave.domains.runtime import RuntimeDomain
@@ -58,24 +57,16 @@ class TestInputParamCasuistics:
         assert params is not None
         assert params["deltaY"] == -10.0
 
-    async def test_ime_set_composition_with_composition_range(self) -> None:
+    async def test_ime_set_composition_with_replacement_range(self) -> None:
         fake = FakeSender({})
         domain = InputDomain(fake)
         await domain.ime_set_composition(
-            "text", 0, 4, composition_start=0, composition_end=4
+            "text", 0, 4, replacement_start=0, replacement_end=4
         )
         method, params = fake.last_call
         assert params is not None
-        assert params["compositionStart"] == 0
-        assert params["compositionEnd"] == 4
-
-    async def test_ime_set_composition_with_replace(self) -> None:
-        fake = FakeSender({})
-        domain = InputDomain(fake)
-        await domain.ime_set_composition("text", 0, 4, replace=True)
-        method, params = fake.last_call
-        assert params is not None
-        assert params["replace"] is True
+        assert params["replacementStart"] == 0
+        assert params["replacementEnd"] == 4
 
     async def test_synthesize_pinch_gesture_with_relative_speed(self) -> None:
         fake = FakeSender({})
@@ -168,6 +159,71 @@ class TestInputParamCasuistics:
         assert params is not None
         assert params["gestureSourceType"] == "touch"
 
+    async def test_dispatch_key_event_with_key_identifier(self) -> None:
+        fake = FakeSender({})
+        domain = InputDomain(fake)
+        await domain.dispatch_key_event("keyDown", key_identifier="U+0041")
+        method, params = fake.last_call
+        assert params is not None
+        assert params["keyIdentifier"] == "U+0041"
+
+    async def test_dispatch_mouse_event_with_force(self) -> None:
+        fake = FakeSender({})
+        domain = InputDomain(fake)
+        await domain.dispatch_mouse_event("mousePressed", 10.0, 20.0, force=0.5)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["force"] == 0.5
+
+    async def test_dispatch_mouse_event_with_tangential_pressure(self) -> None:
+        fake = FakeSender({})
+        domain = InputDomain(fake)
+        await domain.dispatch_mouse_event(
+            "mousePressed", 10.0, 20.0, tangential_pressure=0.3
+        )
+        method, params = fake.last_call
+        assert params is not None
+        assert params["tangentialPressure"] == 0.3
+
+    async def test_dispatch_mouse_event_with_tilt(self) -> None:
+        fake = FakeSender({})
+        domain = InputDomain(fake)
+        await domain.dispatch_mouse_event(
+            "mousePressed", 10.0, 20.0, tilt_x=45.0, tilt_y=-30.0
+        )
+        method, params = fake.last_call
+        assert params is not None
+        assert params["tiltX"] == 45.0
+        assert params["tiltY"] == -30.0
+
+    async def test_dispatch_mouse_event_with_twist(self) -> None:
+        fake = FakeSender({})
+        domain = InputDomain(fake)
+        await domain.dispatch_mouse_event("mousePressed", 10.0, 20.0, twist=90)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["twist"] == 90
+
+    async def test_dispatch_mouse_event_with_pointer_type(self) -> None:
+        fake = FakeSender({})
+        domain = InputDomain(fake)
+        await domain.dispatch_mouse_event(
+            "mousePressed", 10.0, 20.0, pointer_type="pen"
+        )
+        method, params = fake.last_call
+        assert params is not None
+        assert params["pointerType"] == "pen"
+
+    async def test_synthesize_scroll_gesture_with_interaction_marker_name(self) -> None:
+        fake = FakeSender({})
+        domain = InputDomain(fake)
+        await domain.synthesize_scroll_gesture(
+            100, 100, interaction_marker_name="marker1"
+        )
+        method, params = fake.last_call
+        assert params is not None
+        assert params["interactionMarkerName"] == "marker1"
+
 
 @pytest.mark.unit
 class TestDebuggerParamCasuistics:
@@ -228,7 +284,7 @@ class TestDebuggerParamCasuistics:
     async def test_set_breakpoint_by_url_with_column_number(self) -> None:
         fake = FakeSender({"breakpointId": "bp1", "locations": []})
         domain = DebuggerDomain(fake)
-        await domain.set_breakpoint_by_url("https://example.com", 10, column_number=5)
+        await domain.set_breakpoint_by_url(10, url="https://example.com", column_number=5)
         method, params = fake.last_call
         assert params is not None
         assert params["columnNumber"] == 5
@@ -260,39 +316,25 @@ class TestEmulationParamCasuistics:
         assert params["positionX"] == 10
         assert params["positionY"] == 20
 
-    async def test_set_device_metrics_override_with_display_feature(self) -> None:
+    async def test_set_device_metrics_override_no_display_feature(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
-        display_feature = {
-            "orientation": "portrait",
-            "offset": 0,
-            "maskLength": 100,
-            "maskThickness": 50,
-        }
         await domain.set_device_metrics_override(
             width=375, height=667, device_scale_factor=2, mobile=True,
-            display_feature=display_feature,
         )
         method, params = fake.last_call
         assert params is not None
-        assert params["displayFeature"] == {
-            "orientation": "portrait",
-            "offset": 0,
-            "maskLength": 100,
-            "maskThickness": 50,
-        }
+        assert "displayFeature" not in params
 
-    async def test_set_device_metrics_override_with_device_posture(self) -> None:
+    async def test_set_device_metrics_override_no_device_posture(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
-        posture = {"type": "folded", "fold": 0.5}
         await domain.set_device_metrics_override(
             width=375, height=667, device_scale_factor=2, mobile=True,
-            device_posture=posture,
         )
         method, params = fake.last_call
         assert params is not None
-        assert params["devicePosture"] == posture
+        assert "devicePosture" not in params
 
     async def test_set_user_agent_override_with_metadata(self) -> None:
         fake = FakeSender({})
@@ -333,13 +375,13 @@ class TestFetchParamCasuistics:
         assert params is not None
         assert params["binaryResponseHeaders"] == "base64data"
 
-    async def test_continue_response_with_status_text(self) -> None:
+    async def test_continue_response_with_response_phrase(self) -> None:
         fake = FakeSender({})
         domain = FetchDomain(fake)
-        await domain.continue_response("req1", status_text="OK")
+        await domain.continue_response("req1", response_phrase="OK")
         method, params = fake.last_call
         assert params is not None
-        assert params["statusText"] == "OK"
+        assert params["responsePhrase"] == "OK"
 
     async def test_fulfill_request_with_response_headers(self) -> None:
         fake = FakeSender({})
@@ -563,38 +605,14 @@ class TestTracingParamCasuistics:
         assert params is not None
         assert params["streamCompression"] == "gzip"
 
-    async def test_start_with_trace_type(self) -> None:
+    async def test_start_with_trace_config(self) -> None:
         fake = FakeSender({})
         domain = TracingDomain(fake)
-        await domain.start(trace_type="devtools-test")
+        tc = {"recordMode": "recordUntilFull", "enableSampling": True}
+        await domain.start(trace_config=tc)
         method, params = fake.last_call
         assert params is not None
-        assert params["traceType"] == "devtools-test"
-
-
-@pytest.mark.unit
-class TestNetworkParamCasuistics:
-    async def test_emulate_network_conditions_with_upload_throughput(self) -> None:
-        fake = FakeSender({})
-        domain = NetworkDomain(fake)
-        await domain.emulate_network_conditions(
-            offline=False, latency=100, download_throughput=1000,
-            upload_throughput=500,
-        )
-        method, params = fake.last_call
-        assert params is not None
-        assert params["uploadThroughput"] == 500
-
-    async def test_emulate_network_conditions_with_resource_types(self) -> None:
-        fake = FakeSender({})
-        domain = NetworkDomain(fake)
-        await domain.emulate_network_conditions(
-            offline=False, latency=100, download_throughput=1000,
-            upload_throughput=500, resource_types=["XHR", "Fetch"],
-        )
-        method, params = fake.last_call
-        assert params is not None
-        assert params["resourceTypes"] == ["XHR", "Fetch"]
+        assert params["traceConfig"] == tc
 
 
 @pytest.mark.unit
@@ -654,7 +672,7 @@ class TestAuditsParamCasuistics:
     async def test_get_encoded_response_with_size_only(self) -> None:
         fake = FakeSender({"totalSize": 1024})
         domain = AuditsDomain(fake)
-        await domain.get_encoded_response("req1", "base64", size_only=True)
+        await domain.get_encoded_response("req1", "png", size_only=True)
         method, params = fake.last_call
         assert params is not None
         assert params["sizeOnly"] is True

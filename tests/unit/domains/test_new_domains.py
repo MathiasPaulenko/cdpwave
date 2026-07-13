@@ -2,7 +2,6 @@ from typing import Any
 
 import pytest
 
-from cdpwave.domains.console import ConsoleDomain
 from cdpwave.domains.dom import DOMDomain
 from cdpwave.domains.log import LogDomain
 from cdpwave.domains.network import NetworkDomain
@@ -14,7 +13,11 @@ class TestNetworkDomain:
         fake = FakeSender({})
         domain = NetworkDomain(fake)
         await domain.enable()
-        assert fake.last_call == ("Network.enable", None)
+        method, params = fake.last_call
+        assert method == "Network.enable"
+        assert params is not None
+        assert params["reportDirectSocketTraffic"] is False
+        assert params["enableDurableMessages"] is False
 
     async def test_enable_with_all_params(self) -> None:
         fake = FakeSender({})
@@ -88,7 +91,7 @@ class TestNetworkDomain:
         fake = FakeSender({"cookies": []})
         domain = NetworkDomain(fake)
         await domain.get_cookies()
-        assert fake.last_call == ("Network.getCookies", None)
+        assert fake.last_call == ("Network.getCookies", {})
 
     async def test_get_cookies_with_urls(self) -> None:
         fake = FakeSender({"cookies": []})
@@ -169,37 +172,13 @@ class TestNetworkDomain:
             {"cacheDisabled": True},
         )
 
-    async def test_emulate_network_conditions_defaults(self) -> None:
-        fake = FakeSender({})
-        domain = NetworkDomain(fake)
-        await domain.emulate_network_conditions()
-        method, params = fake.last_call
-        assert method == "Network.emulateNetworkConditions"
-        assert params is not None
-        assert params["offline"] is False
-        assert params["latency"] == 0
-        assert params["downloadThroughput"] == -1
-        assert params["uploadThroughput"] == -1
-
-    async def test_emulate_network_conditions_offline(self) -> None:
-        fake = FakeSender({})
-        domain = NetworkDomain(fake)
-        await domain.emulate_network_conditions(
-            offline=True, latency=100, download_throughput=50000
-        )
-        method, params = fake.last_call
-        assert params is not None
-        assert params["offline"] is True
-        assert params["latency"] == 100
-        assert params["downloadThroughput"] == 50000
-
 
 class TestDOMDomain:
     async def test_enable_no_params(self) -> None:
         fake = FakeSender({})
         domain = DOMDomain(fake)
         await domain.enable()
-        assert fake.last_call == ("DOM.enable", None)
+        assert fake.last_call == ("DOM.enable", {})
 
     async def test_disable_no_params(self) -> None:
         fake = FakeSender({})
@@ -215,7 +194,7 @@ class TestDOMDomain:
         assert method == "DOM.getDocument"
         assert params is not None
         assert params["depth"] == -1
-        assert params["pierce"] is False
+        assert "pierce" not in params
 
     async def test_get_document_with_depth_pierce(self) -> None:
         fake = FakeSender({"root": {"nodeId": 1}})
@@ -235,14 +214,8 @@ class TestDOMDomain:
     async def test_get_outer_html(self) -> None:
         fake = FakeSender({"outerHTML": "<div>hello</div>"})
         domain = DOMDomain(fake)
-        await domain.get_outer_html(42)
+        await domain.get_outer_html(node_id=42)
         assert fake.last_call == ("DOM.getOuterHTML", {"nodeId": 42})
-
-    async def test_get_inner_html(self) -> None:
-        fake = FakeSender({"innerHTML": "hello"})
-        domain = DOMDomain(fake)
-        await domain.get_inner_html(42)
-        assert fake.last_call == ("DOM.getInnerHTML", {"nodeId": 42})
 
     async def test_query_selector(self) -> None:
         fake = FakeSender({"nodeId": 10})
@@ -316,7 +289,7 @@ class TestDOMDomain:
         assert params is not None
         assert params["nodeId"] == 42
         assert params["depth"] == -1
-        assert params["pierce"] is False
+        assert "pierce" not in params
 
     async def test_describe_node_with_backend_node_id(self) -> None:
         fake = FakeSender({"node": {}})
@@ -390,8 +363,8 @@ class TestDOMDomain:
     async def test_request_node(self) -> None:
         fake = FakeSender({"node": {}})
         domain = DOMDomain(fake)
-        await domain.request_node(42)
-        assert fake.last_call == ("DOM.requestNode", {"nodeId": 42})
+        await domain.request_node("OBJ-1")
+        assert fake.last_call == ("DOM.requestNode", {"objectId": "OBJ-1"})
 
     async def test_set_attributes_as_text_defaults(self) -> None:
         fake = FakeSender({})
@@ -450,7 +423,7 @@ class TestDOMDomain:
         await domain.request_child_nodes(42)
         assert fake.last_call == (
             "DOM.requestChildNodes",
-            {"nodeId": 42, "depth": -1, "pierce": False},
+            {"nodeId": 42, "depth": -1},
         )
 
     async def test_request_child_nodes_with_depth_pierce(self) -> None:
@@ -505,11 +478,11 @@ class TestDOMDomain:
 
 
 class TestLogDomain:
-    async def test_enable_no_params(self) -> None:
+    async def test_clear_no_params(self) -> None:
         fake = FakeSender({})
         domain = LogDomain(fake)
-        await domain.enable()
-        assert fake.last_call == ("Log.enable", None)
+        await domain.clear()
+        assert fake.last_call == ("Log.clear", None)
 
     async def test_disable_no_params(self) -> None:
         fake = FakeSender({})
@@ -517,13 +490,13 @@ class TestLogDomain:
         await domain.disable()
         assert fake.last_call == ("Log.disable", None)
 
-    async def test_clear_no_params(self) -> None:
+    async def test_enable_no_params(self) -> None:
         fake = FakeSender({})
         domain = LogDomain(fake)
-        await domain.clear()
-        assert fake.last_call == ("Log.clear", None)
+        await domain.enable()
+        assert fake.last_call == ("Log.enable", None)
 
-    async def test_start_violations_report(self) -> None:
+    async def test_start_violations_report_single(self) -> None:
         fake = FakeSender({})
         domain = LogDomain(fake)
         config: list[dict[str, Any]] = [
@@ -535,28 +508,198 @@ class TestLogDomain:
             {"config": config},
         )
 
-    async def test_stop_violations_report(self) -> None:
+    async def test_start_violations_report_multiple(self) -> None:
+        fake = FakeSender({})
+        domain = LogDomain(fake)
+        config: list[dict[str, Any]] = [
+            {"name": "longTask", "threshold": 500},
+            {"name": "longLayout", "threshold": 100},
+            {"name": "blockedEvent", "threshold": 50},
+            {"name": "blockedParser", "threshold": 200},
+            {"name": "discouragedAPIUse", "threshold": 0},
+            {"name": "handler", "threshold": 1000},
+            {"name": "recurringHandler", "threshold": 5000},
+        ]
+        await domain.start_violations_report(config)
+        method, params = fake.last_call
+        assert method == "Log.startViolationsReport"
+        assert params is not None
+        assert params["config"] == config
+        assert len(params["config"]) == 7
+
+    async def test_start_violations_report_empty_list(self) -> None:
+        fake = FakeSender({})
+        domain = LogDomain(fake)
+        await domain.start_violations_report([])
+        assert fake.last_call == (
+            "Log.startViolationsReport",
+            {"config": []},
+        )
+
+    async def test_start_violations_report_float_threshold(self) -> None:
+        fake = FakeSender({})
+        domain = LogDomain(fake)
+        config: list[dict[str, Any]] = [
+            {"name": "longTask", "threshold": 50.5},
+        ]
+        await domain.start_violations_report(config)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["config"][0]["threshold"] == 50.5
+
+    async def test_stop_violations_report_no_params(self) -> None:
         fake = FakeSender({})
         domain = LogDomain(fake)
         await domain.stop_violations_report()
         assert fake.last_call == ("Log.stopViolationsReport", None)
 
-
-class TestConsoleDomain:
-    async def test_enable_no_params(self) -> None:
+    async def test_clear_returns_empty_dict(self) -> None:
         fake = FakeSender({})
-        domain = ConsoleDomain(fake)
-        await domain.enable()
-        assert fake.last_call == ("Console.enable", None)
+        domain = LogDomain(fake)
+        result = await domain.clear()
+        assert result == {}
 
-    async def test_disable_no_params(self) -> None:
+    async def test_disable_returns_empty_dict(self) -> None:
         fake = FakeSender({})
-        domain = ConsoleDomain(fake)
+        domain = LogDomain(fake)
+        result = await domain.disable()
+        assert result == {}
+
+    async def test_enable_returns_empty_dict(self) -> None:
+        fake = FakeSender({})
+        domain = LogDomain(fake)
+        result = await domain.enable()
+        assert result == {}
+
+    async def test_stop_violations_report_returns_empty_dict(self) -> None:
+        fake = FakeSender({})
+        domain = LogDomain(fake)
+        result = await domain.stop_violations_report()
+        assert result == {}
+
+    async def test_start_violations_report_long_task(self) -> None:
+        fake = FakeSender({})
+        domain = LogDomain(fake)
+        await domain.start_violations_report(
+            [{"name": "longTask", "threshold": 200}],
+        )
+        _, params = fake.last_call
+        assert params is not None
+        assert params["config"][0]["name"] == "longTask"
+
+    async def test_start_violations_report_long_layout(self) -> None:
+        fake = FakeSender({})
+        domain = LogDomain(fake)
+        await domain.start_violations_report(
+            [{"name": "longLayout", "threshold": 50}],
+        )
+        _, params = fake.last_call
+        assert params is not None
+        assert params["config"][0]["name"] == "longLayout"
+
+    async def test_start_violations_report_blocked_event(self) -> None:
+        fake = FakeSender({})
+        domain = LogDomain(fake)
+        await domain.start_violations_report(
+            [{"name": "blockedEvent", "threshold": 100}],
+        )
+        _, params = fake.last_call
+        assert params is not None
+        assert params["config"][0]["name"] == "blockedEvent"
+
+    async def test_start_violations_report_blocked_parser(self) -> None:
+        fake = FakeSender({})
+        domain = LogDomain(fake)
+        await domain.start_violations_report(
+            [{"name": "blockedParser", "threshold": 300}],
+        )
+        _, params = fake.last_call
+        assert params is not None
+        assert params["config"][0]["name"] == "blockedParser"
+
+    async def test_start_violations_report_discouraged_api(self) -> None:
+        fake = FakeSender({})
+        domain = LogDomain(fake)
+        await domain.start_violations_report(
+            [{"name": "discouragedAPIUse", "threshold": 0}],
+        )
+        _, params = fake.last_call
+        assert params is not None
+        assert params["config"][0]["name"] == "discouragedAPIUse"
+        assert params["config"][0]["threshold"] == 0
+
+    async def test_start_violations_report_handler(self) -> None:
+        fake = FakeSender({})
+        domain = LogDomain(fake)
+        await domain.start_violations_report(
+            [{"name": "handler", "threshold": 1000}],
+        )
+        _, params = fake.last_call
+        assert params is not None
+        assert params["config"][0]["name"] == "handler"
+
+    async def test_start_violations_report_recurring_handler(self) -> None:
+        fake = FakeSender({})
+        domain = LogDomain(fake)
+        await domain.start_violations_report(
+            [{"name": "recurringHandler", "threshold": 5000}],
+        )
+        _, params = fake.last_call
+        assert params is not None
+        assert params["config"][0]["name"] == "recurringHandler"
+
+    async def test_start_violations_report_threshold_zero(self) -> None:
+        fake = FakeSender({})
+        domain = LogDomain(fake)
+        await domain.start_violations_report(
+            [{"name": "longTask", "threshold": 0}],
+        )
+        _, params = fake.last_call
+        assert params is not None
+        assert params["config"][0]["threshold"] == 0
+
+    async def test_start_violations_report_negative_threshold(self) -> None:
+        fake = FakeSender({})
+        domain = LogDomain(fake)
+        await domain.start_violations_report(
+            [{"name": "longTask", "threshold": -1}],
+        )
+        _, params = fake.last_call
+        assert params is not None
+        assert params["config"][0]["threshold"] == -1
+
+    async def test_start_violations_report_preserves_extra_keys(self) -> None:
+        fake = FakeSender({})
+        domain = LogDomain(fake)
+        config: list[dict[str, Any]] = [
+            {"name": "longTask", "threshold": 100, "extra": "val"},
+        ]
+        await domain.start_violations_report(config)
+        _, params = fake.last_call
+        assert params is not None
+        assert params["config"] == config
+
+    async def test_all_methods_call_sequence(self) -> None:
+        fake = FakeSender({})
+        domain = LogDomain(fake)
+        await domain.clear()
         await domain.disable()
-        assert fake.last_call == ("Console.disable", None)
+        await domain.enable()
+        await domain.start_violations_report(
+            [{"name": "longTask", "threshold": 100}],
+        )
+        await domain.stop_violations_report()
+        assert len(fake.calls) == 5
+        assert fake.calls[0][0] == "Log.clear"
+        assert fake.calls[1][0] == "Log.disable"
+        assert fake.calls[2][0] == "Log.enable"
+        assert fake.calls[3][0] == "Log.startViolationsReport"
+        assert fake.calls[4][0] == "Log.stopViolationsReport"
 
-    async def test_clear_messages_no_params(self) -> None:
-        fake = FakeSender({})
-        domain = ConsoleDomain(fake)
-        await domain.clear_messages()
-        assert fake.last_call == ("Console.clearMessages", None)
+    async def test_start_violations_report_returns_response(self) -> None:
+        fake = FakeSender({"result": "ok"})
+        domain = LogDomain(fake)
+        result = await domain.start_violations_report(
+            [{"name": "longTask", "threshold": 100}],
+        )
+        assert result == {"result": "ok"}

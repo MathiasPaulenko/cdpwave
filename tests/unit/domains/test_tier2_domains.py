@@ -84,13 +84,16 @@ class TestInputDomain:
     async def test_dispatch_drag_event(self) -> None:
         fake = FakeSender({})
         domain = InputDomain(fake)
-        await domain.dispatch_drag_event("dragEnter", 10.0, 20.0)
+        await domain.dispatch_drag_event(
+            "dragEnter", 10.0, 20.0, {"items": [], "dragOperationsMask": 1},
+        )
         method, params = fake.last_call
         assert method == "Input.dispatchDragEvent"
         assert params is not None
         assert params["type"] == "dragEnter"
         assert params["x"] == 10.0
         assert params["y"] == 20.0
+        assert params["data"] == {"items": [], "dragOperationsMask": 1}
 
     async def test_insert_text(self) -> None:
         fake = FakeSender({})
@@ -228,7 +231,7 @@ class TestEmulationDomain:
     async def test_set_geolocation_override(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
-        await domain.set_geolocation_override(37.7749, -122.4194)
+        await domain.set_geolocation_override(37.7749, -122.4194, accuracy=100.0)
         method, params = fake.last_call
         assert method == "Emulation.setGeolocationOverride"
         assert params is not None
@@ -268,7 +271,7 @@ class TestEmulationDomain:
         await domain.set_emulated_media(features=features)
         method, params = fake.last_call
         assert params is not None
-        assert params["media"] == ""
+        assert "media" not in params
         assert params["features"] == features
 
     async def test_set_default_background_color_override(self) -> None:
@@ -296,7 +299,7 @@ class TestEmulationDomain:
         await domain.set_idle_override(True, False)
         assert fake.last_call == (
             "Emulation.setIdleOverride",
-            {"isUserActive": True, "isScreenActive": False},
+            {"isUserActive": True, "isScreenUnlocked": False},
         )
 
     async def test_clear_idle_override(self) -> None:
@@ -332,14 +335,13 @@ class TestEmulationDomain:
             {"locale": "es-ES"},
         )
 
-    async def test_set_disabled_sensors(self) -> None:
+    async def test_set_locale_override_default_empty(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
-        await domain.set_disabled_sensors(True)
-        assert fake.last_call == (
-            "Emulation.setDisabledSensors",
-            {"disabled": True},
-        )
+        await domain.set_locale_override()
+        method, params = fake.last_call
+        assert method == "Emulation.setLocaleOverride"
+        assert params == {}
 
     async def test_set_sensor_override_readings(self) -> None:
         fake = FakeSender({})
@@ -349,15 +351,6 @@ class TestEmulationDomain:
         assert fake.last_call == (
             "Emulation.setSensorOverrideReadings",
             {"type": "accelerometer", "reading": reading},
-        )
-
-    async def test_clear_sensor_override_readings(self) -> None:
-        fake = FakeSender({})
-        domain = EmulationDomain(fake)
-        await domain.clear_sensor_override_readings("gyroscope")
-        assert fake.last_call == (
-            "Emulation.clearSensorOverrideReadings",
-            {"type": "gyroscope"},
         )
 
     async def test_set_page_scale_factor(self) -> None:
@@ -387,15 +380,6 @@ class TestEmulationDomain:
             {"hidden": True},
         )
 
-    async def test_set_javascript_disabled(self) -> None:
-        fake = FakeSender({})
-        domain = EmulationDomain(fake)
-        await domain.set_javascript_disabled(True)
-        assert fake.last_call == (
-            "Emulation.setJavaScriptDisabled",
-            {"disabled": True},
-        )
-
     async def test_set_document_cookie_disabled(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
@@ -411,7 +395,7 @@ class TestEmulationDomain:
         await domain.set_emit_touch_events_for_mouse(True)
         assert fake.last_call == (
             "Emulation.setEmitTouchEventsForMouse",
-            {"enabled": True, "configuration": "mobile"},
+            {"enabled": True},
         )
 
     async def test_set_emit_touch_events_for_mouse_desktop(self) -> None:
@@ -429,6 +413,15 @@ class TestEmulationDomain:
         assert fake.last_call == (
             "Emulation.setAutoDarkModeOverride",
             {"enabled": True},
+        )
+
+    async def test_set_auto_dark_mode_override_default(self) -> None:
+        fake = FakeSender({})
+        domain = EmulationDomain(fake)
+        await domain.set_auto_dark_mode_override()
+        assert fake.last_call == (
+            "Emulation.setAutoDarkModeOverride",
+            {"enabled": False},
         )
 
 
@@ -467,7 +460,7 @@ class TestFetchDomain:
         await domain.continue_request("REQ-1")
         assert fake.last_call == (
             "Fetch.continueRequest",
-            {"requestId": "REQ-1"},
+            {"requestId": "REQ-1", "interceptResponse": False},
         )
 
     async def test_continue_request_all_params(self) -> None:

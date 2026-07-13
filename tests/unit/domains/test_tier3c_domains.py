@@ -27,7 +27,7 @@ class TestAccessibilityDomain:
         fake = FakeSender({"nodes": []})
         domain = AccessibilityDomain(fake)
         await domain.get_full_ax_tree()
-        assert fake.last_call == ("Accessibility.getFullAXTree", None)
+        assert fake.last_call == ("Accessibility.getFullAXTree", {})
 
     async def test_get_partial_ax_tree(self) -> None:
         fake = FakeSender({"nodes": []})
@@ -62,6 +62,37 @@ class TestAccessibilityDomain:
         assert method == "Accessibility.queryAXTree"
         assert params is not None
         assert params["role"] == "button"
+
+    async def test_get_full_ax_tree_with_depth(self) -> None:
+        fake = FakeSender({"nodes": []})
+        domain = AccessibilityDomain(fake)
+        await domain.get_full_ax_tree(depth=2)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["depth"] == 2
+
+    async def test_get_full_ax_tree_with_frame_id(self) -> None:
+        fake = FakeSender({"nodes": []})
+        domain = AccessibilityDomain(fake)
+        await domain.get_full_ax_tree(frame_id="F-1")
+        method, params = fake.last_call
+        assert params is not None
+        assert params["frameId"] == "F-1"
+
+    async def test_get_ax_node_and_ancestors(self) -> None:
+        fake = FakeSender({"nodes": []})
+        domain = AccessibilityDomain(fake)
+        await domain.get_ax_node_and_ancestors(node_id=42)
+        method, params = fake.last_call
+        assert method == "Accessibility.getAXNodeAndAncestors"
+        assert params is not None
+        assert params["nodeId"] == 42
+
+    async def test_get_ax_node_and_ancestors_no_params(self) -> None:
+        fake = FakeSender({"nodes": []})
+        domain = AccessibilityDomain(fake)
+        await domain.get_ax_node_and_ancestors()
+        assert fake.last_call == ("Accessibility.getAXNodeAndAncestors", {})
 
 
 @pytest.mark.unit
@@ -111,26 +142,14 @@ class TestStorageDomain:
         await domain.get_trust_tokens()
         assert fake.last_call == ("Storage.getTrustTokens", None)
 
-    async def test_clear_trust_tokens_all(self) -> None:
-        fake = FakeSender({})
+    async def test_clear_trust_tokens(self) -> None:
+        fake = FakeSender({"didDeleteTokens": True})
         domain = StorageDomain(fake)
-        await domain.clear_trust_tokens()
-        assert fake.last_call == ("Storage.clearTrustTokens", {})
-
-    async def test_clear_trust_tokens_with_issuer(self) -> None:
-        fake = FakeSender({})
-        domain = StorageDomain(fake)
-        await domain.clear_trust_tokens(issuer_origin="https://issuer.example.com")
-        method, params = fake.last_call
-        assert params is not None
-        assert params["issuerOrigin"] == "https://issuer.example.com"
-
-    async def test_set_storage_bucket_info(self) -> None:
-        fake = FakeSender({})
-        domain = StorageDomain(fake)
-        bucket: dict[str, str] = {"name": "default", "origin": "https://example.com"}
-        await domain.set_storage_bucket_info(bucket)
-        assert fake.last_call == ("Storage.setStorageBucketInfo", {"bucket": bucket})
+        await domain.clear_trust_tokens("https://issuer.example.com")
+        assert fake.last_call == (
+            "Storage.clearTrustTokens",
+            {"issuerOrigin": "https://issuer.example.com"},
+        )
 
     async def test_get_storage_key_for_frame(self) -> None:
         fake = FakeSender({"storageKey": "https://example.com"})
@@ -147,11 +166,15 @@ class TestTracingDomain:
     async def test_start(self) -> None:
         fake = FakeSender({})
         domain = TracingDomain(fake)
-        await domain.start(categories="-*,devtools.timeline")
+        await domain.start(
+            trace_config={"recordMode": "recordUntilFull"},
+            transfer_mode="ReportEvents",
+        )
         method, params = fake.last_call
         assert method == "Tracing.start"
         assert params is not None
-        assert params["categories"] == "-*,devtools.timeline"
+        assert params["traceConfig"] == {"recordMode": "recordUntilFull"}
+        assert params["transferMode"] == "ReportEvents"
 
     async def test_end(self) -> None:
         fake = FakeSender({})
@@ -174,11 +197,20 @@ class TestTracingDomain:
             {"syncId": "sync1"},
         )
 
-    async def test_request_clock_sync_marker(self) -> None:
-        fake = FakeSender({})
+    async def test_get_track_event_descriptor(self) -> None:
+        fake = FakeSender({"descriptor": "dGVzdA=="})
         domain = TracingDomain(fake)
-        await domain.request_clock_sync_marker()
-        assert fake.last_call == ("Tracing.requestClockSyncMarker", None)
+        await domain.get_track_event_descriptor()
+        assert fake.last_call == ("Tracing.getTrackEventDescriptor", None)
+
+    async def test_request_memory_dump(self) -> None:
+        fake = FakeSender({"dumpGuid": "guid", "success": True})
+        domain = TracingDomain(fake)
+        await domain.request_memory_dump()
+        method, params = fake.last_call
+        assert method == "Tracing.requestMemoryDump"
+        assert params is not None
+        assert params["deterministic"] is False
 
 
 @pytest.mark.unit
@@ -246,10 +278,35 @@ class TestAnimationDomain:
         domain = AnimationDomain(fake)
         await domain.seek_to(["anim1"], 500)
         method, params = fake.last_call
-        assert method == "Animation.seekTo"
+        assert method == "Animation.seekAnimations"
         assert params is not None
         assert params["animations"] == ["anim1"]
         assert params["currentTime"] == 500
+
+    async def test_seek_animations(self) -> None:
+        fake = FakeSender({})
+        domain = AnimationDomain(fake)
+        await domain.seek_animations(["anim1", "anim2"], 1000)
+        method, params = fake.last_call
+        assert method == "Animation.seekAnimations"
+        assert params is not None
+        assert params["animations"] == ["anim1", "anim2"]
+        assert params["currentTime"] == 1000
+
+    async def test_get_playback_rate(self) -> None:
+        fake = FakeSender({"playbackRate": 1.0})
+        domain = AnimationDomain(fake)
+        await domain.get_playback_rate()
+        assert fake.last_call == ("Animation.getPlaybackRate", None)
+
+    async def test_resolve_animation(self) -> None:
+        fake = FakeSender({"remoteObject": {}})
+        domain = AnimationDomain(fake)
+        await domain.resolve_animation("anim1")
+        assert fake.last_call == (
+            "Animation.resolveAnimation",
+            {"animationId": "anim1"},
+        )
 
     async def test_replay(self) -> None:
         fake = FakeSender({"currentTime": 0})

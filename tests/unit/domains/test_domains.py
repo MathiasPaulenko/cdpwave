@@ -14,7 +14,18 @@ class TestTargetDomain:
         domain = TargetDomain(fake)
         result = await domain.create_target("https://example.com")
         assert result == {"targetId": "T-1"}
-        assert fake.last_call == ("Target.createTarget", {"url": "https://example.com"})
+        assert fake.last_call == (
+            "Target.createTarget",
+            {
+                "url": "https://example.com",
+                "enableBeginFrameControl": False,
+                "newWindow": False,
+                "background": False,
+                "forTab": False,
+                "hidden": False,
+                "focus": False,
+            },
+        )
 
     async def test_attach_to_target_default_flatten(self) -> None:
         fake = FakeSender({"sessionId": "S-1"})
@@ -53,7 +64,7 @@ class TestTargetDomain:
         fake = FakeSender({"targetInfos": []})
         domain = TargetDomain(fake)
         await domain.get_targets()
-        assert fake.last_call == ("Target.getTargets", None)
+        assert fake.last_call == ("Target.getTargets", {})
 
     async def test_set_auto_attach(self) -> None:
         fake = FakeSender({})
@@ -61,7 +72,7 @@ class TestTargetDomain:
         await domain.set_auto_attach(True, flatten=True)
         assert fake.last_call == (
             "Target.setAutoAttach",
-            {"autoAttach": True, "flatten": True},
+            {"autoAttach": True, "waitForDebuggerOnStart": False, "flatten": True},
         )
 
 
@@ -117,7 +128,7 @@ class TestPageDomain:
         fake = FakeSender({})
         domain = PageDomain(fake)
         await domain.stop()
-        assert fake.last_call == ("Page.stop", None)
+        assert fake.last_call == ("Page.stopLoading", None)
 
     async def test_capture_screenshot_defaults(self) -> None:
         fake = FakeSender({"data": "base64data"})
@@ -207,8 +218,7 @@ class TestRuntimeDomain:
         assert method == "Runtime.evaluate"
         assert params is not None
         assert params["expression"] == "document.title"
-        # After fix: only expression is sent when using defaults
-        assert "returnByValue" not in params
+        assert params["returnByValue"] is True
         assert "awaitPromise" not in params
         assert "userGesture" not in params
 
@@ -270,4 +280,204 @@ class TestRuntimeDomain:
         assert method == "Runtime.getProperties"
         assert params is not None
         assert params["objectId"] == "OBJ-1"
-        assert params["ownProperties"] is True
+        assert "ownProperties" not in params
+
+
+class TestRuntimeEdgeCases:
+    async def test_evaluate_return_by_value_false(self) -> None:
+        fake = FakeSender({"result": {"type": "object", "objectId": "OBJ-1"}})
+        domain = RuntimeDomain(fake)
+        await domain.evaluate("({a: 1})", return_by_value=False)
+        method, params = fake.last_call
+        assert params is not None
+        assert "returnByValue" not in params
+
+    async def test_evaluate_with_execution_context_id(self) -> None:
+        fake = FakeSender({"result": {"type": "number", "value": 1}})
+        domain = RuntimeDomain(fake)
+        await domain.evaluate("1+1", execution_context_id=3)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["contextId"] == 3
+
+    async def test_evaluate_with_silent(self) -> None:
+        fake = FakeSender({"result": {"type": "undefined"}})
+        domain = RuntimeDomain(fake)
+        await domain.evaluate("throw new Error()", silent=True)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["silent"] is True
+
+    async def test_call_function_on_no_object_or_context_raises(self) -> None:
+        fake = FakeSender({"result": {}})
+        domain = RuntimeDomain(fake)
+        with pytest.raises(ValueError, match="Either object_id, execution_context_id"):
+            await domain.call_function_on("function() {}")
+
+    async def test_call_function_on_with_execution_context_id(self) -> None:
+        fake = FakeSender({"result": {"type": "number", "value": 42}})
+        domain = RuntimeDomain(fake)
+        await domain.call_function_on(
+            "function() { return 42; }", execution_context_id=5
+        )
+        method, params = fake.last_call
+        assert params is not None
+        assert params["executionContextId"] == 5
+        assert "objectId" not in params
+
+    async def test_call_function_on_return_by_value_false(self) -> None:
+        fake = FakeSender({"result": {"type": "object", "objectId": "OBJ-2"}})
+        domain = RuntimeDomain(fake)
+        await domain.call_function_on(
+            "function() { return {}; }", object_id="OBJ-1", return_by_value=False
+        )
+        method, params = fake.last_call
+        assert params is not None
+        assert "returnByValue" not in params
+
+
+class TestPageEdgeCases:
+    async def test_navigate_with_all_params(self) -> None:
+        fake = FakeSender({"frameId": "F-1"})
+        domain = PageDomain(fake)
+        await domain.navigate(
+            "https://example.com",
+            referrer="https://ref.com",
+            transition_type="link",
+            frame_id="F-0",
+            referrer_policy="noReferrer",
+        )
+        method, params = fake.last_call
+        assert params is not None
+        assert params["url"] == "https://example.com"
+        assert params["referrer"] == "https://ref.com"
+        assert params["transitionType"] == "link"
+        assert params["frameId"] == "F-0"
+        assert params["referrerPolicy"] == "noReferrer"
+
+    async def test_capture_screenshot_webp_format(self) -> None:
+        fake = FakeSender({"data": "base64data"})
+        domain = PageDomain(fake)
+        await domain.capture_screenshot(format="webp")
+        method, params = fake.last_call
+        assert params is not None
+        assert params["format"] == "webp"
+
+    async def test_capture_screenshot_quality_zero(self) -> None:
+        fake = FakeSender({"data": "base64data"})
+        domain = PageDomain(fake)
+        await domain.capture_screenshot(format="jpeg", quality=0)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["quality"] == 0
+
+    async def test_capture_screenshot_quality_100(self) -> None:
+        fake = FakeSender({"data": "base64data"})
+        domain = PageDomain(fake)
+        await domain.capture_screenshot(format="jpeg", quality=100)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["quality"] == 100
+
+    async def test_print_to_pdf_scale_lower_bound(self) -> None:
+        fake = FakeSender({"data": "base64pdf"})
+        domain = PageDomain(fake)
+        await domain.print_to_pdf(scale=0.1)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["scale"] == 0.1
+
+    async def test_print_to_pdf_scale_upper_bound(self) -> None:
+        fake = FakeSender({"data": "base64pdf"})
+        domain = PageDomain(fake)
+        await domain.print_to_pdf(scale=2.0)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["scale"] == 2.0
+
+    async def test_print_to_pdf_return_as_stream(self) -> None:
+        fake = FakeSender({"stream": "stream-handle"})
+        domain = PageDomain(fake)
+        await domain.print_to_pdf(return_as_stream=True)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["transferMode"] == "ReturnAsStream"
+
+    async def test_print_to_pdf_return_as_base64(self) -> None:
+        fake = FakeSender({"data": "base64pdf"})
+        domain = PageDomain(fake)
+        await domain.print_to_pdf(return_as_stream=False)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["transferMode"] == "ReturnAsBase64"
+
+    async def test_reload_default_no_params(self) -> None:
+        fake = FakeSender({})
+        domain = PageDomain(fake)
+        await domain.reload()
+        assert fake.last_call == ("Page.reload", None)
+
+
+class TestTargetEdgeCases:
+    async def test_create_target_with_width_height(self) -> None:
+        fake = FakeSender({"targetId": "T-1"})
+        domain = TargetDomain(fake)
+        await domain.create_target("https://example.com", width=800, height=600)
+        method, params = fake.last_call
+        assert params is not None
+        assert params["url"] == "https://example.com"
+        assert params["width"] == 800
+        assert params["height"] == 600
+
+    async def test_set_auto_attach_no_flatten(self) -> None:
+        fake = FakeSender({})
+        domain = TargetDomain(fake)
+        await domain.set_auto_attach(True, flatten=False)
+        assert fake.last_call == (
+            "Target.setAutoAttach",
+            {"autoAttach": True, "waitForDebuggerOnStart": False, "flatten": False},
+        )
+
+    async def test_set_auto_attach_false(self) -> None:
+        fake = FakeSender({})
+        domain = TargetDomain(fake)
+        await domain.set_auto_attach(False)
+        assert fake.last_call == (
+            "Target.setAutoAttach",
+            {"autoAttach": False, "waitForDebuggerOnStart": False, "flatten": True},
+        )
+
+
+class TestDOMEdgeCases:
+    async def test_get_attribute_with_name_found(self) -> None:
+        from cdpwave.domains.dom import DOMDomain
+
+        fake = FakeSender({"attributes": ["class", "highlight", "id", "main"]})
+        domain = DOMDomain(fake)
+        result = await domain.get_attribute(42, name="class")
+        assert result == {"value": "highlight"}
+        assert fake.last_call == ("DOM.getAttributes", {"nodeId": 42})
+
+    async def test_get_attribute_with_name_not_found(self) -> None:
+        from cdpwave.domains.dom import DOMDomain
+
+        fake = FakeSender({"attributes": ["class", "highlight"]})
+        domain = DOMDomain(fake)
+        result = await domain.get_attribute(42, name="id")
+        assert result == {"value": None}
+
+    async def test_get_attribute_without_name_returns_all(self) -> None:
+        from cdpwave.domains.dom import DOMDomain
+
+        fake = FakeSender({"attributes": ["class", "highlight", "id", "main"]})
+        domain = DOMDomain(fake)
+        result = await domain.get_attribute(42)
+        assert result == {"attributes": ["class", "highlight", "id", "main"]}
+
+    async def test_get_attribute_empty_attributes(self) -> None:
+        from cdpwave.domains.dom import DOMDomain
+
+        fake = FakeSender({"attributes": []})
+        domain = DOMDomain(fake)
+        result = await domain.get_attribute(42, name="class")
+        assert result == {"value": None}

@@ -211,3 +211,24 @@ class TestCDPClient:
             assert client.is_closed is False
         conn.close.assert_awaited_once()
         launcher.close.assert_awaited_once()
+
+    async def test_session_dispatcher_inherits_strict_events(self) -> None:
+        conn = AsyncMock()
+        conn.send_command.return_value = {"sessionId": "S-1"}
+        client = CDPClient(conn, strict_events=True)
+        session = await client.connect_to_page("T-1")
+        assert session._dispatcher._strict is True
+
+    async def test_session_dispatcher_inherits_on_event_error(self) -> None:
+        conn = AsyncMock()
+        conn.send_command.return_value = {"sessionId": "S-1"}
+        on_error = MagicMock()
+        client = CDPClient(conn, on_event_error=on_error)
+        session = await client.connect_to_page("T-1")
+        assert session._dispatcher._on_event_error is on_error
+
+    async def test_session_without_client_has_default_dispatcher(self) -> None:
+        conn = AsyncMock()
+        session = CDPSession(conn, "S-1", "T-1")
+        assert session._dispatcher._strict is False
+        assert session._dispatcher._on_event_error is None
