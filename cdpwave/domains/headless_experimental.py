@@ -4,6 +4,8 @@ from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
+_VALID_SCREENSHOT_FORMATS = frozenset({"jpeg", "png", "webp"})
+
 
 class HeadlessExperimentalDomain(BaseDomain):
     """Wrapper for the CDP HeadlessExperimental domain.
@@ -64,6 +66,16 @@ class HeadlessExperimentalDomain(BaseDomain):
         if screenshot is not None:
             if not isinstance(screenshot, dict):
                 raise TypeError("screenshot must be a dict or None")
+            if "format" in screenshot:
+                fmt = screenshot["format"]
+                if not isinstance(fmt, str):
+                    raise TypeError("screenshot['format'] must be a str")
+                if fmt not in _VALID_SCREENSHOT_FORMATS:
+                    raise ValueError(
+                        f"screenshot['format'] must be one of "
+                        f"{sorted(_VALID_SCREENSHOT_FORMATS)}, "
+                        f"got {fmt!r}"
+                    )
             params["screenshot"] = screenshot
         return await self._call("HeadlessExperimental.beginFrame", params)
 

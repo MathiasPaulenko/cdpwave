@@ -2795,7 +2795,7 @@ class TestBluetoothEmulationCoverage:
     async def test_set_simulated_central_state(self) -> None:
         fake = FakeSender({})
         domain = BluetoothEmulationDomain(fake)
-        await domain.set_simulated_central_state("poweredOn")
+        await domain.set_simulated_central_state("powered-on")
         method, params = fake.last_call
         assert method == "BluetoothEmulation.setSimulatedCentralState"
         assert params is not None

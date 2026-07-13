@@ -4,6 +4,16 @@ from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
+_VALID_CENTRAL_STATES = frozenset({"absent", "powered-off", "powered-on"})
+_VALID_GATT_OP_TYPES = frozenset({"connection", "discovery"})
+_VALID_CHARACTERISTIC_OP_TYPES = frozenset({
+    "read",
+    "write",
+    "subscribe-to-notifications",
+    "unsubscribe-from-notifications",
+})
+_VALID_DESCRIPTOR_OP_TYPES = frozenset({"read", "write"})
+
 
 class BluetoothEmulationDomain(BaseDomain):
     """Wrapper for the CDP BluetoothEmulation domain.
@@ -24,6 +34,15 @@ class BluetoothEmulationDomain(BaseDomain):
                 ``"powered-on"``).
             le_supported: Whether the simulated central supports low-energy.
         """
+        if not isinstance(state, str):
+            raise TypeError("state must be a str")
+        if state not in _VALID_CENTRAL_STATES:
+            raise ValueError(
+                f"state must be one of "
+                f"{sorted(_VALID_CENTRAL_STATES)}, got {state!r}"
+            )
+        if not isinstance(le_supported, bool):
+            raise TypeError("le_supported must be a bool")
         return await self._call(
             "BluetoothEmulation.enable",
             {"state": state, "leSupported": le_supported},
@@ -48,6 +67,20 @@ class BluetoothEmulationDomain(BaseDomain):
             manufacturer_data: List of manufacturer data entries.
             known_service_uuids: List of known service UUIDs.
         """
+        if not isinstance(address, str):
+            raise TypeError("address must be a str")
+        if not isinstance(name, str):
+            raise TypeError("name must be a str")
+        if not isinstance(manufacturer_data, list):
+            raise TypeError("manufacturer_data must be a list")
+        if not isinstance(known_service_uuids, list):
+            raise TypeError("known_service_uuids must be a list")
+        for i, u in enumerate(known_service_uuids):
+            if not isinstance(u, str):
+                raise TypeError(
+                    f"known_service_uuids[{i}] must be a str, "
+                    f"got {type(u).__name__}"
+                )
         return await self._call(
             "BluetoothEmulation.simulatePreconnectedPeripheral",
             {
@@ -67,6 +100,8 @@ class BluetoothEmulationDomain(BaseDomain):
         Args:
             entry: ``ScanEntry`` dict describing the advertisement packet.
         """
+        if not isinstance(entry, dict):
+            raise TypeError("entry must be a dict")
         return await self._call(
             "BluetoothEmulation.simulateAdvertisement",
             {"entry": entry},
@@ -82,6 +117,13 @@ class BluetoothEmulationDomain(BaseDomain):
             state: Central state (``"absent"``, ``"powered-off"``,
                 ``"powered-on"``).
         """
+        if not isinstance(state, str):
+            raise TypeError("state must be a str")
+        if state not in _VALID_CENTRAL_STATES:
+            raise ValueError(
+                f"state must be one of "
+                f"{sorted(_VALID_CENTRAL_STATES)}, got {state!r}"
+            )
         return await self._call(
             "BluetoothEmulation.setSimulatedCentralState",
             {"state": state},
@@ -98,6 +140,10 @@ class BluetoothEmulationDomain(BaseDomain):
             address: Peripheral address.
             service_uuid: Service UUID to add.
         """
+        if not isinstance(address, str):
+            raise TypeError("address must be a str")
+        if not isinstance(service_uuid, str):
+            raise TypeError("service_uuid must be a str")
         return await self._call(
             "BluetoothEmulation.addService",
             {"address": address, "serviceUuid": service_uuid},
@@ -112,6 +158,8 @@ class BluetoothEmulationDomain(BaseDomain):
         Args:
             service_id: Service identifier to remove.
         """
+        if not isinstance(service_id, str):
+            raise TypeError("service_id must be a str")
         return await self._call(
             "BluetoothEmulation.removeService",
             {"serviceId": service_id},
@@ -130,6 +178,12 @@ class BluetoothEmulationDomain(BaseDomain):
             characteristic_uuid: Characteristic UUID to add.
             properties: ``CharacteristicProperties`` dict.
         """
+        if not isinstance(service_id, str):
+            raise TypeError("service_id must be a str")
+        if not isinstance(characteristic_uuid, str):
+            raise TypeError("characteristic_uuid must be a str")
+        if not isinstance(properties, dict):
+            raise TypeError("properties must be a dict")
         return await self._call(
             "BluetoothEmulation.addCharacteristic",
             {
@@ -148,6 +202,8 @@ class BluetoothEmulationDomain(BaseDomain):
         Args:
             characteristic_id: Characteristic identifier to remove.
         """
+        if not isinstance(characteristic_id, str):
+            raise TypeError("characteristic_id must be a str")
         return await self._call(
             "BluetoothEmulation.removeCharacteristic",
             {"characteristicId": characteristic_id},
@@ -164,6 +220,10 @@ class BluetoothEmulationDomain(BaseDomain):
             characteristic_id: Characteristic identifier.
             descriptor_uuid: Descriptor UUID to add.
         """
+        if not isinstance(characteristic_id, str):
+            raise TypeError("characteristic_id must be a str")
+        if not isinstance(descriptor_uuid, str):
+            raise TypeError("descriptor_uuid must be a str")
         return await self._call(
             "BluetoothEmulation.addDescriptor",
             {
@@ -181,6 +241,8 @@ class BluetoothEmulationDomain(BaseDomain):
         Args:
             descriptor_id: Descriptor identifier to remove.
         """
+        if not isinstance(descriptor_id, str):
+            raise TypeError("descriptor_id must be a str")
         return await self._call(
             "BluetoothEmulation.removeDescriptor",
             {"descriptorId": descriptor_id},
@@ -195,6 +257,8 @@ class BluetoothEmulationDomain(BaseDomain):
         Args:
             address: Peripheral address.
         """
+        if not isinstance(address, str):
+            raise TypeError("address must be a str")
         return await self._call(
             "BluetoothEmulation.simulateGATTDisconnection",
             {"address": address},
@@ -214,6 +278,17 @@ class BluetoothEmulationDomain(BaseDomain):
             code: HCI error code from Bluetooth Core Specification Vol 2
                 Part D 1.3.
         """
+        if not isinstance(address, str):
+            raise TypeError("address must be a str")
+        if not isinstance(op_type, str):
+            raise TypeError("op_type must be a str")
+        if op_type not in _VALID_GATT_OP_TYPES:
+            raise ValueError(
+                f"op_type must be one of "
+                f"{sorted(_VALID_GATT_OP_TYPES)}, got {op_type!r}"
+            )
+        if isinstance(code, bool) or not isinstance(code, int):
+            raise TypeError("code must be an int")
         return await self._call(
             "BluetoothEmulation.simulateGATTOperationResponse",
             {"address": address, "type": op_type, "code": code},
@@ -237,12 +312,26 @@ class BluetoothEmulationDomain(BaseDomain):
                 Part F 3.4.1.1.
             data: Response data (base64). Expected for successful read.
         """
+        if not isinstance(characteristic_id, str):
+            raise TypeError("characteristic_id must be a str")
+        if not isinstance(op_type, str):
+            raise TypeError("op_type must be a str")
+        if op_type not in _VALID_CHARACTERISTIC_OP_TYPES:
+            raise ValueError(
+                f"op_type must be one of "
+                f"{sorted(_VALID_CHARACTERISTIC_OP_TYPES)}, "
+                f"got {op_type!r}"
+            )
+        if isinstance(code, bool) or not isinstance(code, int):
+            raise TypeError("code must be an int")
         params: dict[str, Any] = {
             "characteristicId": characteristic_id,
             "type": op_type,
             "code": code,
         }
         if data is not None:
+            if not isinstance(data, str):
+                raise TypeError("data must be a str or None")
             params["data"] = data
         return await self._call(
             "BluetoothEmulation.simulateCharacteristicOperationResponse",
@@ -265,12 +354,25 @@ class BluetoothEmulationDomain(BaseDomain):
                 Part F 3.4.1.1.
             data: Response data (base64). Expected for successful read.
         """
+        if not isinstance(descriptor_id, str):
+            raise TypeError("descriptor_id must be a str")
+        if not isinstance(op_type, str):
+            raise TypeError("op_type must be a str")
+        if op_type not in _VALID_DESCRIPTOR_OP_TYPES:
+            raise ValueError(
+                f"op_type must be one of "
+                f"{sorted(_VALID_DESCRIPTOR_OP_TYPES)}, got {op_type!r}"
+            )
+        if isinstance(code, bool) or not isinstance(code, int):
+            raise TypeError("code must be an int")
         params: dict[str, Any] = {
             "descriptorId": descriptor_id,
             "type": op_type,
             "code": code,
         }
         if data is not None:
+            if not isinstance(data, str):
+                raise TypeError("data must be a str or None")
             params["data"] = data
         return await self._call(
             "BluetoothEmulation.simulateDescriptorOperationResponse",

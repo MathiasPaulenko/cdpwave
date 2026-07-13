@@ -46,6 +46,8 @@ class AnimationDomain(BaseDomain):
         Returns:
             Dict with ``currentTime`` in milliseconds.
         """
+        if not isinstance(animation_id, str):
+            raise TypeError("animation_id must be a str")
         return await self._call(
             "Animation.getCurrentTime",
             {"id": animation_id},
@@ -71,6 +73,8 @@ class AnimationDomain(BaseDomain):
         Returns:
             Dict with ``remoteObject`` of the corresponding Animation.
         """
+        if not isinstance(animation_id, str):
+            raise TypeError("animation_id must be a str")
         return await self._call(
             "Animation.resolveAnimation",
             {"animationId": animation_id},
@@ -87,6 +91,16 @@ class AnimationDomain(BaseDomain):
             animations: List of animation IDs to seek.
             current_time: Target time in milliseconds.
         """
+        if not isinstance(animations, list):
+            raise TypeError("animations must be a list")
+        for i, a in enumerate(animations):
+            if not isinstance(a, str):
+                raise TypeError(
+                    f"animations[{i}] must be a str, "
+                    f"got {type(a).__name__}"
+                )
+        if isinstance(current_time, bool) or not isinstance(current_time, int):
+            raise TypeError("current_time must be an int")
         return await self._call(
             "Animation.seekAnimations",
             {"animations": animations, "currentTime": current_time},
@@ -103,6 +117,16 @@ class AnimationDomain(BaseDomain):
             animations: List of animation IDs to pause/resume.
             paused: Whether to pause (True) or resume (False).
         """
+        if not isinstance(animations, list):
+            raise TypeError("animations must be a list")
+        for i, a in enumerate(animations):
+            if not isinstance(a, str):
+                raise TypeError(
+                    f"animations[{i}] must be a str, "
+                    f"got {type(a).__name__}"
+                )
+        if not isinstance(paused, bool):
+            raise TypeError("paused must be a bool")
         return await self._call(
             "Animation.setPaused",
             {"animations": animations, "paused": paused},
@@ -117,6 +141,10 @@ class AnimationDomain(BaseDomain):
         Args:
             playback_rate: Playback rate (1.0 = normal speed).
         """
+        if isinstance(playback_rate, bool) or not isinstance(
+            playback_rate, (int, float)
+        ):
+            raise TypeError("playback_rate must be a number")
         return await self._call(
             "Animation.setPlaybackRate",
             {"playbackRate": playback_rate},
@@ -135,6 +163,12 @@ class AnimationDomain(BaseDomain):
             duration: Duration in milliseconds.
             delay: Delay in milliseconds.
         """
+        if not isinstance(animation_id, str):
+            raise TypeError("animation_id must be a str")
+        if isinstance(duration, bool) or not isinstance(duration, int):
+            raise TypeError("duration must be an int")
+        if isinstance(delay, bool) or not isinstance(delay, int):
+            raise TypeError("delay must be an int")
         return await self._call(
             "Animation.setTiming",
             {"animationId": animation_id, "duration": duration, "delay": delay},
@@ -149,6 +183,14 @@ class AnimationDomain(BaseDomain):
         Args:
             animations: List of animation IDs to release.
         """
+        if not isinstance(animations, list):
+            raise TypeError("animations must be a list")
+        for i, a in enumerate(animations):
+            if not isinstance(a, str):
+                raise TypeError(
+                    f"animations[{i}] must be a str, "
+                    f"got {type(a).__name__}"
+                )
         return await self._call(
             "Animation.releaseAnimations",
             {"animations": animations},
@@ -181,6 +223,14 @@ class AnimationDomain(BaseDomain):
         Returns:
             Dict with ``currentTime`` in milliseconds.
         """
+        if not isinstance(animations, list):
+            raise TypeError("animations must be a list")
+        for i, a in enumerate(animations):
+            if not isinstance(a, str):
+                raise TypeError(
+                    f"animations[{i}] must be a str, "
+                    f"got {type(a).__name__}"
+                )
         return await self._call(
             "Animation.replay",
             {"animations": animations},

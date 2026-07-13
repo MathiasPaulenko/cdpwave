@@ -4,6 +4,21 @@ from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
+_VALID_SAME_SITE = frozenset({"Strict", "Lax", "None"})
+_VALID_COOKIE_PRIORITY = frozenset({"Low", "Medium", "High"})
+_VALID_SOURCE_SCHEME = frozenset({"Secure", "NonSecure"})
+_VALID_CONNECTION_TYPES = frozenset({
+    "none",
+    "cellular2g",
+    "cellular3g",
+    "cellular4g",
+    "bluetooth",
+    "ethernet",
+    "wifi",
+    "wimax",
+    "other",
+})
+
 
 class NetworkDomain(BaseDomain):
     """Wrapper for the CDP Network domain."""
@@ -31,11 +46,29 @@ class NetworkDomain(BaseDomain):
             "reportDirectSocketTraffic": report_direct_socket_traffic,
             "enableDurableMessages": enable_durable_messages,
         }
+        if not isinstance(report_direct_socket_traffic, bool):
+            raise TypeError("report_direct_socket_traffic must be a bool")
+        if not isinstance(enable_durable_messages, bool):
+            raise TypeError("enable_durable_messages must be a bool")
         if max_total_buffer_size is not None:
+            if isinstance(max_total_buffer_size, bool) or not isinstance(
+                max_total_buffer_size, int
+            ):
+                raise TypeError("max_total_buffer_size must be an int or None")
             params["maxTotalBufferSize"] = max_total_buffer_size
         if max_resource_buffer_size is not None:
+            if isinstance(max_resource_buffer_size, bool) or not isinstance(
+                max_resource_buffer_size, int
+            ):
+                raise TypeError(
+                    "max_resource_buffer_size must be an int or None"
+                )
             params["maxResourceBufferSize"] = max_resource_buffer_size
         if max_post_data_size is not None:
+            if isinstance(max_post_data_size, bool) or not isinstance(
+                max_post_data_size, int
+            ):
+                raise TypeError("max_post_data_size must be an int or None")
             params["maxPostDataSize"] = max_post_data_size
         return await self._call("Network.enable", params)
 
@@ -66,11 +99,19 @@ class NetworkDomain(BaseDomain):
             user_agent_metadata: Optional metadata for Sec-CH-UA-* headers.
         """
         params: dict[str, Any] = {"userAgent": user_agent}
+        if not isinstance(user_agent, str):
+            raise TypeError("user_agent must be a str")
         if accept_language is not None:
+            if not isinstance(accept_language, str):
+                raise TypeError("accept_language must be a str or None")
             params["acceptLanguage"] = accept_language
         if platform is not None:
+            if not isinstance(platform, str):
+                raise TypeError("platform must be a str or None")
             params["platform"] = platform
         if user_agent_metadata is not None:
+            if not isinstance(user_agent_metadata, dict):
+                raise TypeError("user_agent_metadata must be a dict or None")
             params["userAgentMetadata"] = user_agent_metadata
         return await self._call("Network.setUserAgentOverride", params)
 
@@ -83,6 +124,8 @@ class NetworkDomain(BaseDomain):
         Args:
             headers: Dict of header name to value.
         """
+        if not isinstance(headers, dict):
+            raise TypeError("headers must be a dict")
         return await self._call(
             "Network.setExtraHTTPHeaders",
             {"headers": headers},
@@ -125,6 +168,14 @@ class NetworkDomain(BaseDomain):
         """
         params: dict[str, Any] = {}
         if urls is not None:
+            if not isinstance(urls, list):
+                raise TypeError("urls must be a list or None")
+            for i, u in enumerate(urls):
+                if not isinstance(u, str):
+                    raise TypeError(
+                        f"urls[{i}] must be a str, "
+                        f"got {type(u).__name__}"
+                    )
             params["urls"] = urls
         return await self._call("Network.getCookies", params)
 
@@ -170,23 +221,65 @@ class NetworkDomain(BaseDomain):
             "secure": secure,
             "httpOnly": http_only,
         }
+        if not isinstance(name, str):
+            raise TypeError("name must be a str")
+        if not isinstance(value, str):
+            raise TypeError("value must be a str")
+        if not isinstance(secure, bool):
+            raise TypeError("secure must be a bool")
+        if not isinstance(http_only, bool):
+            raise TypeError("http_only must be a bool")
         if url is not None:
+            if not isinstance(url, str):
+                raise TypeError("url must be a str or None")
             params["url"] = url
         if domain is not None:
+            if not isinstance(domain, str):
+                raise TypeError("domain must be a str or None")
             params["domain"] = domain
         if path is not None:
+            if not isinstance(path, str):
+                raise TypeError("path must be a str or None")
             params["path"] = path
         if same_site is not None:
+            if not isinstance(same_site, str):
+                raise TypeError("same_site must be a str or None")
+            if same_site not in _VALID_SAME_SITE:
+                raise ValueError(
+                    f"same_site must be one of "
+                    f"{sorted(_VALID_SAME_SITE)}, got {same_site!r}"
+                )
             params["sameSite"] = same_site
         if expires is not None:
+            if isinstance(expires, bool) or not isinstance(expires, (int, float)):
+                raise TypeError("expires must be a number or None")
             params["expires"] = expires
         if priority is not None:
+            if not isinstance(priority, str):
+                raise TypeError("priority must be a str or None")
+            if priority not in _VALID_COOKIE_PRIORITY:
+                raise ValueError(
+                    f"priority must be one of "
+                    f"{sorted(_VALID_COOKIE_PRIORITY)}, got {priority!r}"
+                )
             params["priority"] = priority
         if source_scheme is not None:
+            if not isinstance(source_scheme, str):
+                raise TypeError("source_scheme must be a str or None")
+            if source_scheme not in _VALID_SOURCE_SCHEME:
+                raise ValueError(
+                    f"source_scheme must be one of "
+                    f"{sorted(_VALID_SOURCE_SCHEME)}, "
+                    f"got {source_scheme!r}"
+                )
             params["sourceScheme"] = source_scheme
         if source_port is not None:
+            if isinstance(source_port, bool) or not isinstance(source_port, int):
+                raise TypeError("source_port must be an int or None")
             params["sourcePort"] = source_port
         if partition_key is not None:
+            if not isinstance(partition_key, dict):
+                raise TypeError("partition_key must be a dict or None")
             params["partitionKey"] = partition_key
         return await self._call("Network.setCookie", params)
 
@@ -208,13 +301,23 @@ class NetworkDomain(BaseDomain):
             partition_key: Optional cookie partition key.
         """
         params: dict[str, Any] = {"name": name}
+        if not isinstance(name, str):
+            raise TypeError("name must be a str")
         if url is not None:
+            if not isinstance(url, str):
+                raise TypeError("url must be a str or None")
             params["url"] = url
         if domain is not None:
+            if not isinstance(domain, str):
+                raise TypeError("domain must be a str or None")
             params["domain"] = domain
         if path is not None:
+            if not isinstance(path, str):
+                raise TypeError("path must be a str or None")
             params["path"] = path
         if partition_key is not None:
+            if not isinstance(partition_key, dict):
+                raise TypeError("partition_key must be a dict or None")
             params["partitionKey"] = partition_key
         return await self._call("Network.deleteCookies", params)
 
@@ -230,6 +333,8 @@ class NetworkDomain(BaseDomain):
         Returns:
             Response dict containing ``body`` and ``base64Encoded``.
         """
+        if not isinstance(request_id, str):
+            raise TypeError("request_id must be a str")
         return await self._call(
             "Network.getResponseBody",
             {"requestId": request_id},
@@ -244,6 +349,8 @@ class NetworkDomain(BaseDomain):
         Args:
             cache_disabled: If True, disable the cache.
         """
+        if not isinstance(cache_disabled, bool):
+            raise TypeError("cache_disabled must be a bool")
         return await self._call(
             "Network.setCacheDisabled",
             {"cacheDisabled": cache_disabled},
@@ -264,8 +371,18 @@ class NetworkDomain(BaseDomain):
         """
         params: dict[str, Any] = {}
         if url_patterns is not None:
+            if not isinstance(url_patterns, list):
+                raise TypeError("url_patterns must be a list or None")
             params["urlPatterns"] = url_patterns
         if urls is not None:
+            if not isinstance(urls, list):
+                raise TypeError("urls must be a list or None")
+            for i, u in enumerate(urls):
+                if not isinstance(u, str):
+                    raise TypeError(
+                        f"urls[{i}] must be a str, "
+                        f"got {type(u).__name__}"
+                    )
             params["urls"] = urls
         return await self._call("Network.setBlockedURLs", params)
 
@@ -275,6 +392,8 @@ class NetworkDomain(BaseDomain):
         Args:
             bypass: Whether to bypass service workers.
         """
+        if not isinstance(bypass, bool):
+            raise TypeError("bypass must be a bool")
         return await self._call(
             "Network.setBypassServiceWorker",
             {"bypass": bypass},
@@ -298,7 +417,13 @@ class NetworkDomain(BaseDomain):
             Dict with ``resource`` containing ``headers`` and ``statusCode``.
         """
         params: dict[str, Any] = {"url": url, "options": options}
+        if not isinstance(url, str):
+            raise TypeError("url must be a str")
+        if not isinstance(options, dict):
+            raise TypeError("options must be a dict")
         if frame_id is not None:
+            if not isinstance(frame_id, str):
+                raise TypeError("frame_id must be a str or None")
             params["frameId"] = frame_id
         return await self._call("Network.loadNetworkResource", params)
 
@@ -311,6 +436,8 @@ class NetworkDomain(BaseDomain):
         Returns:
             Dict with ``postData`` string.
         """
+        if not isinstance(request_id, str):
+            raise TypeError("request_id must be a str")
         return await self._call(
             "Network.getRequestPostData",
             {"requestId": request_id},
@@ -326,6 +453,8 @@ class NetworkDomain(BaseDomain):
             cookies: List of cookie dicts with ``name``, ``value``,
                 ``domain``, ``path``, etc.
         """
+        if not isinstance(cookies, list):
+            raise TypeError("cookies must be a list")
         return await self._call("Network.setCookies", {"cookies": cookies})
 
     async def emulate_network_conditions_by_rule(
@@ -344,6 +473,10 @@ class NetworkDomain(BaseDomain):
                 ``uploadThroughput``.
             emulate_offline_service_worker: True to emulate offline service worker.
         """
+        if not isinstance(matched_network_conditions, list):
+            raise TypeError("matched_network_conditions must be a list")
+        if not isinstance(emulate_offline_service_worker, bool):
+            raise TypeError("emulate_offline_service_worker must be a bool")
         return await self._call(
             "Network.emulateNetworkConditionsByRule",
             {
@@ -375,7 +508,27 @@ class NetworkDomain(BaseDomain):
             "downloadThroughput": download_throughput,
             "uploadThroughput": upload_throughput,
         }
+        if not isinstance(offline, bool):
+            raise TypeError("offline must be a bool")
+        if isinstance(latency, bool) or not isinstance(latency, (int, float)):
+            raise TypeError("latency must be a number")
+        if isinstance(download_throughput, bool) or not isinstance(
+            download_throughput, (int, float)
+        ):
+            raise TypeError("download_throughput must be a number")
+        if isinstance(upload_throughput, bool) or not isinstance(
+            upload_throughput, (int, float)
+        ):
+            raise TypeError("upload_throughput must be a number")
         if connection_type is not None:
+            if not isinstance(connection_type, str):
+                raise TypeError("connection_type must be a str or None")
+            if connection_type not in _VALID_CONNECTION_TYPES:
+                raise ValueError(
+                    f"connection_type must be one of "
+                    f"{sorted(_VALID_CONNECTION_TYPES)}, "
+                    f"got {connection_type!r}"
+                )
             params["connectionType"] = connection_type
         return await self._call("Network.overrideNetworkState", params)
 
@@ -389,6 +542,14 @@ class NetworkDomain(BaseDomain):
             encodings: List of accepted encodings (e.g.
                 ``["gzip", "deflate", "br"]``).
         """
+        if not isinstance(encodings, list):
+            raise TypeError("encodings must be a list")
+        for i, e in enumerate(encodings):
+            if not isinstance(e, str):
+                raise TypeError(
+                    f"encodings[{i}] must be a str, "
+                    f"got {type(e).__name__}"
+                )
         return await self._call(
             "Network.setAcceptedEncodings",
             {"encodings": encodings},
@@ -407,6 +568,8 @@ class NetworkDomain(BaseDomain):
         Returns:
             Dict with ``tableNames`` list.
         """
+        if not isinstance(origin, str):
+            raise TypeError("origin must be a str")
         return await self._call("Network.getCertificate", {"origin": origin})
 
     async def get_security_isolation_status(
@@ -423,6 +586,8 @@ class NetworkDomain(BaseDomain):
         """
         params: dict[str, Any] = {}
         if frame_id is not None:
+            if not isinstance(frame_id, str):
+                raise TypeError("frame_id must be a str or None")
             params["frameId"] = frame_id
         return await self._call(
             "Network.getSecurityIsolationStatus",
@@ -435,6 +600,8 @@ class NetworkDomain(BaseDomain):
         Args:
             enable: Whether to enable the Reporting API.
         """
+        if not isinstance(enable, bool):
+            raise TypeError("enable must be a bool")
         return await self._call(
             "Network.enableReportingApi",
             {"enable": enable},
@@ -446,6 +613,8 @@ class NetworkDomain(BaseDomain):
         Args:
             request_id: The request ID to replay.
         """
+        if not isinstance(request_id, str):
+            raise TypeError("request_id must be a str")
         return await self._call("Network.replayXHR", {"requestId": request_id})
 
     async def search_in_response_body(
@@ -472,6 +641,14 @@ class NetworkDomain(BaseDomain):
             "caseSensitive": case_sensitive,
             "isRegex": is_regex,
         }
+        if not isinstance(request_id, str):
+            raise TypeError("request_id must be a str")
+        if not isinstance(query, str):
+            raise TypeError("query must be a str")
+        if not isinstance(case_sensitive, bool):
+            raise TypeError("case_sensitive must be a bool")
+        if not isinstance(is_regex, bool):
+            raise TypeError("is_regex must be a bool")
         return await self._call("Network.searchInResponseBody", params)
 
     async def set_attach_debug_stack(self, enabled: bool) -> dict[str, Any]:
@@ -480,6 +657,8 @@ class NetworkDomain(BaseDomain):
         Args:
             enabled: Whether to attach debug stacks.
         """
+        if not isinstance(enabled, bool):
+            raise TypeError("enabled must be a bool")
         return await self._call(
             "Network.setAttachDebugStack",
             {"enabled": enabled},
@@ -497,6 +676,8 @@ class NetworkDomain(BaseDomain):
         Returns:
             Dict with ``body`` and ``base64Encoded``.
         """
+        if not isinstance(interception_id, str):
+            raise TypeError("interception_id must be a str")
         return await self._call(
             "Network.getResponseBodyForInterception",
             {"interceptionId": interception_id},
@@ -514,6 +695,8 @@ class NetworkDomain(BaseDomain):
         Returns:
             Dict with ``stream`` handle.
         """
+        if not isinstance(interception_id, str):
+            raise TypeError("interception_id must be a str")
         return await self._call(
             "Network.takeResponseBodyForInterceptionAsStream",
             {"interceptionId": interception_id},
@@ -531,6 +714,8 @@ class NetworkDomain(BaseDomain):
         Returns:
             Dict with ``bufferedData``.
         """
+        if not isinstance(request_id, str):
+            raise TypeError("request_id must be a str")
         return await self._call(
             "Network.streamResourceContent",
             {"requestId": request_id},
@@ -548,6 +733,8 @@ class NetworkDomain(BaseDomain):
         Returns:
             Dict with ``schemefulSite`` string.
         """
+        if not isinstance(origin, str):
+            raise TypeError("origin must be a str")
         return await self._call(
             "Network.fetchSchemefulSite",
             {"origin": origin},
@@ -564,6 +751,10 @@ class NetworkDomain(BaseDomain):
         Args:
             enable_third_party_cookie_restriction: Whether 3pc restriction is enabled.
         """
+        if not isinstance(enable_third_party_cookie_restriction, bool):
+            raise TypeError(
+                "enable_third_party_cookie_restriction must be a bool"
+            )
         return await self._call(
             "Network.setCookieControls",
             {"enableThirdPartyCookieRestriction": enable_third_party_cookie_restriction},
@@ -575,6 +766,8 @@ class NetworkDomain(BaseDomain):
         Args:
             enable: Whether to enable device bound sessions.
         """
+        if not isinstance(enable, bool):
+            raise TypeError("enable must be a bool")
         return await self._call(
             "Network.enableDeviceBoundSessions",
             {"enable": enable},
@@ -589,6 +782,8 @@ class NetworkDomain(BaseDomain):
         Args:
             key: DeviceBoundSessionKey dict identifying the session.
         """
+        if not isinstance(key, dict):
+            raise TypeError("key must be a dict")
         return await self._call(
             "Network.deleteDeviceBoundSession",
             {"key": key},
@@ -609,8 +804,20 @@ class NetworkDomain(BaseDomain):
         """
         params: dict[str, Any] = {}
         if max_total_buffer_size is not None:
+            if isinstance(max_total_buffer_size, bool) or not isinstance(
+                max_total_buffer_size, int
+            ):
+                raise TypeError(
+                    "max_total_buffer_size must be an int or None"
+                )
             params["maxTotalBufferSize"] = max_total_buffer_size
         if max_resource_buffer_size is not None:
+            if isinstance(max_resource_buffer_size, bool) or not isinstance(
+                max_resource_buffer_size, int
+            ):
+                raise TypeError(
+                    "max_resource_buffer_size must be an int or None"
+                )
             params["maxResourceBufferSize"] = max_resource_buffer_size
         return await self._call(
             "Network.configureDurableMessages",
