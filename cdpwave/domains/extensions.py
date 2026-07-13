@@ -18,6 +18,8 @@ from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
+_VALID_STORAGE_AREAS = frozenset({"session", "local", "sync", "managed"})
+
 
 class ExtensionsDomain(BaseDomain):
     """Wrapper for the CDP Extensions domain.
@@ -153,6 +155,11 @@ class ExtensionsDomain(BaseDomain):
                 f"storage_area must be a str, "
                 f"got {type(storage_area).__name__}"
             )
+        if storage_area not in _VALID_STORAGE_AREAS:
+            raise ValueError(
+                f"storage_area must be one of "
+                f"{sorted(_VALID_STORAGE_AREAS)}, got {storage_area!r}"
+            )
         if keys is not None:
             if not isinstance(keys, list):
                 raise TypeError(
@@ -201,6 +208,11 @@ class ExtensionsDomain(BaseDomain):
                 f"storage_area must be a str, "
                 f"got {type(storage_area).__name__}"
             )
+        if storage_area not in _VALID_STORAGE_AREAS:
+            raise ValueError(
+                f"storage_area must be one of "
+                f"{sorted(_VALID_STORAGE_AREAS)}, got {storage_area!r}"
+            )
         if keys is not None:
             if not isinstance(keys, list):
                 raise TypeError(
@@ -247,6 +259,11 @@ class ExtensionsDomain(BaseDomain):
                 f"storage_area must be a str, "
                 f"got {type(storage_area).__name__}"
             )
+        if storage_area not in _VALID_STORAGE_AREAS:
+            raise ValueError(
+                f"storage_area must be one of "
+                f"{sorted(_VALID_STORAGE_AREAS)}, got {storage_area!r}"
+            )
         return await self._call(
             "Extensions.clearStorageItems",
             {"id": id, "storageArea": storage_area},
@@ -284,6 +301,11 @@ class ExtensionsDomain(BaseDomain):
             raise TypeError(
                 f"storage_area must be a str, "
                 f"got {type(storage_area).__name__}"
+            )
+        if storage_area not in _VALID_STORAGE_AREAS:
+            raise ValueError(
+                f"storage_area must be one of "
+                f"{sorted(_VALID_STORAGE_AREAS)}, got {storage_area!r}"
             )
         if not isinstance(values, dict):
             raise TypeError(
