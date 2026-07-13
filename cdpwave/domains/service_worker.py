@@ -88,7 +88,7 @@ class ServiceWorkerDomain(BaseDomain):
         Args:
             scope: URL scope of the service worker to start.
         """
-        return await self._call("ServiceWorker.startWorker", {"scope": scope})
+        return await self._call("ServiceWorker.startWorker", {"scopeURL": scope})
 
     async def skip_waiting(self, scope: str) -> dict[str, Any]:
         """Mark a service worker as waiting to activate.
@@ -96,7 +96,7 @@ class ServiceWorkerDomain(BaseDomain):
         Args:
             scope: URL scope of the service worker.
         """
-        return await self._call("ServiceWorker.skipWaiting", {"scope": scope})
+        return await self._call("ServiceWorker.skipWaiting", {"scopeURL": scope})
 
     async def stop_worker(self, version_id: str) -> dict[str, Any]:
         """Stop a running service worker.
@@ -126,7 +126,7 @@ class ServiceWorkerDomain(BaseDomain):
         Args:
             scope: URL scope of the service worker to update.
         """
-        return await self._call("ServiceWorker.update", {"scope": scope})
+        return await self._call("ServiceWorker.updateRegistration", {"scopeURL": scope})
 
     async def unregister(self, scope: str) -> dict[str, Any]:
         """Unregister a service worker.
@@ -134,7 +134,7 @@ class ServiceWorkerDomain(BaseDomain):
         Args:
             scope: URL scope of the service worker to unregister.
         """
-        return await self._call("ServiceWorker.unregister", {"scope": scope})
+        return await self._call("ServiceWorker.unregister", {"scopeURL": scope})
 
     async def get_messages(self) -> dict[str, Any]:
         """Get service worker messages.

@@ -1,4 +1,23 @@
-"""DeviceAccess domain: Bluetooth and USB device access prompts."""
+"""DeviceAccess domain: Bluetooth and USB device access prompts.
+
+Types:
+
+    ``RequestID`` — str. Device request id.
+
+    ``DeviceID`` — str. A device id.
+
+    ``PromptDevice`` — dict. Device information displayed in a user
+    prompt to select a device. Fields: ``id`` (DeviceID), ``name``
+    (str — display name as it appears in a device request user
+    prompt).
+
+Events:
+
+    ``DeviceAccess.deviceRequestPrompted`` — A device request opened
+    a user prompt to select a device. Respond with the selectPrompt
+    or cancelPrompt command. Params: ``id`` (RequestID), ``devices``
+    (list[PromptDevice]).
+"""
 
 from typing import Any
 
@@ -10,52 +29,83 @@ class DeviceAccessDomain(BaseDomain):
 
     Provides control over device access prompts (e.g. Bluetooth
     device selection) for testing Web Bluetooth and similar APIs.
+
+    **Experimental domain.**
+
+    Events:
+
+    - ``deviceRequestPrompted`` — A device request opened a user
+      prompt to select a device. Respond with the selectPrompt or
+      cancelPrompt command. Params: ``id`` (RequestID), ``devices``
+      (list[PromptDevice]).
     """
 
-    async def enable(self) -> dict[str, Any]:
-        """Enable the DeviceAccess domain.
+    async def cancel_prompt(self, id: str) -> dict[str, Any]:
+        """Cancel a prompt in response to a
+        DeviceAccess.deviceRequestPrompted event.
 
-        Activates DeviceAccess domain events and reporting.
-        Must be called before using other methods in this domain.
+        Args:
+            id: Device request id.
 
         Returns:
-            Response dict from the CDP.
+            Empty dict (no return value from CDP).
+
+        Raises:
+            TypeError: If ``id`` is not a str.
         """
-        return await self._call("DeviceAccess.enable")
+        if not isinstance(id, str):
+            raise TypeError(
+                f"id must be a str, got {type(id).__name__}"
+            )
+        return await self._call(
+            "DeviceAccess.cancelPrompt",
+            {"id": id},
+        )
 
     async def disable(self) -> dict[str, Any]:
-        """Disable the DeviceAccess domain.
-
-        Deactivates DeviceAccess domain events and reporting.
+        """Disable events in this domain.
 
         Returns:
-            Response dict from the CDP.
+            Empty dict (no return value from CDP).
         """
         return await self._call("DeviceAccess.disable")
 
-    async def select_bluetooth_device(
+    async def enable(self) -> dict[str, Any]:
+        """Enable events in this domain.
+
+        Returns:
+            Empty dict (no return value from CDP).
+        """
+        return await self._call("DeviceAccess.enable")
+
+    async def select_prompt(
         self,
-        request_id: str,
-        device: dict[str, Any],
+        id: str,
+        device_id: str,
     ) -> dict[str, Any]:
-        """Select a Bluetooth device in response to a prompt.
+        """Select a device in response to a
+        DeviceAccess.deviceRequestPrompted event.
 
         Args:
-            request_id: Request ID from ``DeviceAccess.deviceRequestPrompted``.
-            device: Device dict with ``id`` and ``name``.
-        """
-        return await self._call(
-            "DeviceAccess.selectBluetoothDevice",
-            {"requestId": request_id, "device": device},
-        )
+            id: Device request id.
+            device_id: A device id.
 
-    async def cancel_prompt(self, request_id: str) -> dict[str, Any]:
-        """Cancel a device access prompt.
+        Returns:
+            Empty dict (no return value from CDP).
 
-        Args:
-            request_id: Request ID to cancel.
+        Raises:
+            TypeError: If ``id`` or ``device_id`` is not a str.
         """
+        if not isinstance(id, str):
+            raise TypeError(
+                f"id must be a str, got {type(id).__name__}"
+            )
+        if not isinstance(device_id, str):
+            raise TypeError(
+                f"device_id must be a str, "
+                f"got {type(device_id).__name__}"
+            )
         return await self._call(
-            "DeviceAccess.cancelPrompt",
-            {"requestId": request_id},
+            "DeviceAccess.selectPrompt",
+            {"id": id, "deviceId": device_id},
         )

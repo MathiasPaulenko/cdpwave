@@ -52,7 +52,7 @@ class FetchDomain(BaseDomain):
         method: str | None = None,
         post_data: str | None = None,
         headers: list[dict[str, str]] | None = None,
-        intercept_response: bool | None = None,
+        intercept_response: bool = False,
     ) -> dict[str, Any]:
         """Continue an intercepted request with optional modifications.
 
@@ -67,7 +67,10 @@ class FetchDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
-        params: dict[str, Any] = {"requestId": request_id}
+        params: dict[str, Any] = {
+            "requestId": request_id,
+            "interceptResponse": intercept_response,
+        }
         if url is not None:
             params["url"] = url
         if method is not None:
@@ -76,8 +79,6 @@ class FetchDomain(BaseDomain):
             params["postData"] = post_data
         if headers is not None:
             params["headers"] = headers
-        if intercept_response is not None:
-            params["interceptResponse"] = intercept_response
         return await self._call("Fetch.continueRequest", params)
 
     async def continue_request_with_auth(
@@ -145,7 +146,7 @@ class FetchDomain(BaseDomain):
         response_code: int | None = None,
         response_headers: list[dict[str, str]] | None = None,
         binary_response_headers: str | None = None,
-        status_text: str | None = None,
+        response_phrase: str | None = None,
     ) -> dict[str, Any]:
         """Continue an intercepted response with optional modifications.
 
@@ -155,7 +156,7 @@ class FetchDomain(BaseDomain):
             response_headers: Response headers as list of
                 ``{"name": ..., "value": ...}``.
             binary_response_headers: Base64-encoded response headers.
-            status_text: HTTP status text.
+            response_phrase: Textual representation of responseCode.
 
         Returns:
             Response dict from the CDP command.
@@ -167,8 +168,8 @@ class FetchDomain(BaseDomain):
             params["responseHeaders"] = response_headers
         if binary_response_headers is not None:
             params["binaryResponseHeaders"] = binary_response_headers
-        if status_text is not None:
-            params["statusText"] = status_text
+        if response_phrase is not None:
+            params["responsePhrase"] = response_phrase
         return await self._call("Fetch.continueResponse", params)
 
     async def fulfill_request(
@@ -178,6 +179,7 @@ class FetchDomain(BaseDomain):
         response_headers: list[dict[str, str]] | None = None,
         body: str | None = None,
         binary_response_headers: str | None = None,
+        response_phrase: str | None = None,
         status_code: int | None = None,
     ) -> dict[str, Any]:
         """Provide a complete response to an intercepted request.
@@ -189,6 +191,7 @@ class FetchDomain(BaseDomain):
                 ``{"name": ..., "value": ...}``.
             body: Response body as base64-encoded string.
             binary_response_headers: Base64-encoded response headers.
+            response_phrase: Textual representation of responseCode.
             status_code: Alias for ``response_code``.
 
         Returns:
@@ -207,6 +210,8 @@ class FetchDomain(BaseDomain):
             params["body"] = body
         if binary_response_headers is not None:
             params["binaryResponseHeaders"] = binary_response_headers
+        if response_phrase is not None:
+            params["responsePhrase"] = response_phrase
         return await self._call("Fetch.fulfillRequest", params)
 
     async def fail_request(

@@ -126,14 +126,16 @@ async def wait_for_selector(
     Raises:
         TimeoutError: If the selector doesn't match within ``timeout``.
     """
-    elapsed = 0.0
-    while elapsed < timeout:
+    deadline = asyncio.get_running_loop().time() + timeout
+    while asyncio.get_running_loop().time() < deadline:
         result = await session.dom.query_selector(root_node_id, selector)
         node_id: int = result.get("nodeId", 0)
         if node_id and node_id != 0:
             return node_id
-        await asyncio.sleep(poll_interval)
-        elapsed += poll_interval
+        remaining = deadline - asyncio.get_running_loop().time()
+        if remaining <= 0:
+            break
+        await asyncio.sleep(min(poll_interval, remaining))
     raise TimeoutError(
         f"Selector '{selector}' not found within {timeout}s",
     )
@@ -158,17 +160,18 @@ async def wait_for_network_idle(
     Raises:
         TimeoutError: If network doesn't settle within ``timeout``.
     """
-    last_request_time = asyncio.get_event_loop().time()
+    loop = asyncio.get_running_loop()
+    last_request_time = loop.time()
 
     async def _on_request(params: dict[str, Any]) -> None:
         nonlocal last_request_time
-        last_request_time = asyncio.get_event_loop().time()
+        last_request_time = loop.time()
 
     sub = session.on("Network.requestWillBeSent", _on_request)
     try:
-        deadline = asyncio.get_event_loop().time() + timeout
+        deadline = loop.time() + timeout
         while True:
-            now = asyncio.get_event_loop().time()
+            now = loop.time()
             if now >= deadline:
                 raise TimeoutError(
                     f"Network did not become idle within {timeout}s",

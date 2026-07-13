@@ -11,6 +11,23 @@ class StorageDomain(BaseDomain):
     Provides access to browser storage: cookies per origin, IndexedDB,
     cache storage, and storage quota tracking.
 
+    Events:
+        - ``Storage.indexedDBListUpdated`` — origin's IndexedDB list modified.
+        - ``Storage.indexedDBContentUpdated`` — origin's IndexedDB object
+          store modified.
+        - ``Storage.cacheStorageListUpdated`` — cache added/deleted.
+        - ``Storage.cacheStorageContentUpdated`` — cache contents modified.
+        - ``Storage.interestGroupAccessed`` — interest group accessed.
+        - ``Storage.interestGroupAuctionEventOccurred`` — auction event.
+        - ``Storage.interestGroupAuctionNetworkRequestCreated`` — auction
+          network fetch.
+        - ``Storage.sharedStorageAccessed`` — shared storage accessed.
+        - ``Storage.sharedStorageWorkletOperationExecutionFinished`` —
+          shared storage worklet operation finished.
+        - ``Storage.storageBucketCreatedOrUpdated`` — storage bucket
+          created or updated.
+        - ``Storage.storageBucketDeleted`` — storage bucket deleted.
+
     For DOMStorage (localStorage/sessionStorage), use
     ``DOMStorageDomain`` via ``session.dom_storage``.
     """
@@ -28,7 +45,7 @@ class StorageDomain(BaseDomain):
             Dict with ``cookies`` list of cookie objects.
         """
         params: dict[str, Any] = {}
-        if browser_context_id is not None:
+        if browser_context_id:
             params["browserContextId"] = browser_context_id
         return await self._call("Storage.getCookies", params)
 
@@ -45,7 +62,7 @@ class StorageDomain(BaseDomain):
             browser_context_id: Optional browser context ID.
         """
         params: dict[str, Any] = {"cookies": cookies}
-        if browser_context_id is not None:
+        if browser_context_id:
             params["browserContextId"] = browser_context_id
         return await self._call("Storage.setCookies", params)
 
@@ -59,7 +76,7 @@ class StorageDomain(BaseDomain):
             browser_context_id: Optional browser context ID.
         """
         params: dict[str, Any] = {}
-        if browser_context_id is not None:
+        if browser_context_id:
             params["browserContextId"] = browser_context_id
         return await self._call("Storage.clearCookies", params)
 
@@ -73,7 +90,8 @@ class StorageDomain(BaseDomain):
             origin: Security origin (e.g. ``"https://example.com"``).
 
         Returns:
-            Dict with ``usage``, ``quota``, and ``overrideActive``.
+            Dict with ``usage``, ``quota``, ``overrideActive``, and
+            ``usageBreakdown`` (list of ``{storageType, usage}`` dicts).
         """
         return await self._call(
             "Storage.getUsageAndQuota",
@@ -90,7 +108,7 @@ class StorageDomain(BaseDomain):
         Args:
             origin: Security origin.
             storage_types: Comma-separated storage types (e.g.
-                ``"cookies,local_storage,session_storage,indexeddb"``,
+                ``"cookies,local_storage,indexeddb"``,
                 or ``"all"``).
         """
         return await self._call(
@@ -108,38 +126,31 @@ class StorageDomain(BaseDomain):
 
     async def clear_trust_tokens(
         self,
-        issuer_origin: str | None = None,
+        issuer_origin: str,
     ) -> dict[str, Any]:
         """Clear trust tokens for an issuer.
 
-        Args:
-            issuer_origin: Optional issuer origin. If omitted, clears all.
-        """
-        params: dict[str, Any] = {}
-        if issuer_origin is not None:
-            params["issuerOrigin"] = issuer_origin
-        return await self._call("Storage.clearTrustTokens", params)
-
-    async def set_storage_bucket_info(
-        self,
-        bucket: dict[str, Any],
-    ) -> dict[str, Any]:
-        """Set storage bucket info (quota, expiration, etc.).
+        Removes all Trust Tokens issued by the provided issuerOrigin.
+        Leaves other stored data, including the issuer's Redemption
+        Records, intact.
 
         Args:
-            bucket: Bucket info dict with ``storageKey``, ``name``,
-                and ``quota``.
+            issuer_origin: Issuer origin to clear tokens for.
+
+        Returns:
+            Dict with ``didDeleteTokens`` (bool).
         """
         return await self._call(
-            "Storage.setStorageBucketInfo",
-            {"bucket": bucket},
+            "Storage.clearTrustTokens",
+            {"issuerOrigin": issuer_origin},
         )
 
     async def track_indexed_db_for_origin(self, origin: str) -> dict[str, Any]:
         """Start tracking IndexedDB storage for an origin.
 
-        Emits ``Storage.indexedDBListUpdated`` events when the database
-        list changes.
+        Emits ``Storage.indexedDBListUpdated`` and
+        ``Storage.indexedDBContentUpdated`` events when the database
+        list or object store changes.
 
         Args:
             origin: Origin to track.
@@ -188,6 +199,9 @@ class StorageDomain(BaseDomain):
     async def get_storage_key_for_frame(self, frame_id: str) -> dict[str, Any]:
         """Get the storage key for a frame.
 
+        .. deprecated::
+            Use ``get_storage_key`` instead.
+
         Args:
             frame_id: Frame ID to get the storage key for.
 
@@ -199,19 +213,22 @@ class StorageDomain(BaseDomain):
             {"frameId": frame_id},
         )
 
-    async def get_storage_key(self, frame_id: str) -> dict[str, Any]:
+    async def get_storage_key(self, frame_id: str | None = None) -> dict[str, Any]:
         """Get the storage key for a frame.
 
+        If no frame ID is provided, the storage key of the target
+        executing this command is returned.
+
         Args:
-            frame_id: Frame ID to get the storage key for.
+            frame_id: Optional frame ID to get the storage key for.
 
         Returns:
             Dict with ``storageKey``.
         """
-        return await self._call(
-            "Storage.getStorageKey",
-            {"frameId": frame_id},
-        )
+        params: dict[str, Any] = {}
+        if frame_id:
+            params["frameId"] = frame_id
+        return await self._call("Storage.getStorageKey", params)
 
     async def clear_data_for_storage_key(
         self,
@@ -223,7 +240,7 @@ class StorageDomain(BaseDomain):
         Args:
             storage_key: Storage key to clear data for.
             storage_types: Comma-separated storage types (e.g.
-                ``"cookies,local_storage,session_storage,indexeddb"``,
+                ``"cookies,local_storage,indexeddb"``,
                 or ``"all"``).
         """
         return await self._call(
@@ -234,16 +251,17 @@ class StorageDomain(BaseDomain):
     async def override_quota_for_origin(
         self,
         origin: str,
-        quota_size: int | None = None,
+        quota_size: float | None = None,
     ) -> dict[str, Any]:
         """Override storage quota for an origin.
 
         Args:
             origin: Security origin to override quota for.
-            quota_size: Quota size in bytes. If None, removes the override.
+            quota_size: Quota size in bytes. If omitted, the quota
+                is reset to the default value for the specified origin.
         """
         params: dict[str, Any] = {"origin": origin}
-        if quota_size is not None:
+        if quota_size:
             params["quotaSize"] = quota_size
         return await self._call("Storage.overrideQuotaForOrigin", params)
 
@@ -313,6 +331,9 @@ class StorageDomain(BaseDomain):
     async def set_interest_group_tracking(self, enable: bool) -> dict[str, Any]:
         """Enable or disable interest group tracking.
 
+        Emits ``Storage.interestGroupAccessed`` events when interest
+        groups are accessed.
+
         Args:
             enable: Whether to track interest groups.
         """
@@ -323,6 +344,10 @@ class StorageDomain(BaseDomain):
 
     async def set_interest_group_auction_tracking(self, enable: bool) -> dict[str, Any]:
         """Enable or disable interest group auction tracking.
+
+        Emits ``Storage.interestGroupAuctionEventOccurred`` and
+        ``Storage.interestGroupAuctionNetworkRequestCreated`` events
+        during auctions.
 
         Args:
             enable: Whether to track interest group auctions.
@@ -336,13 +361,14 @@ class StorageDomain(BaseDomain):
         self,
         owner_origin: str,
     ) -> dict[str, Any]:
-        """Get metadata for a shared storage.
+        """Get metadata for an origin's shared storage.
 
         Args:
             owner_origin: Owner origin of the shared storage.
 
         Returns:
-            Dict with ``metadata`` containing ``creationTime`` and ``length``.
+            Dict with ``metadata`` containing ``creationTime``,
+            ``length``, ``remainingBudget``, and ``bytesUsed``.
         """
         return await self._call(
             "Storage.getSharedStorageMetadata",
@@ -353,7 +379,7 @@ class StorageDomain(BaseDomain):
         self,
         owner_origin: str,
     ) -> dict[str, Any]:
-        """Get entries from a shared storage.
+        """Get entries from an origin's shared storage.
 
         Args:
             owner_origin: Owner origin of the shared storage.
@@ -373,7 +399,7 @@ class StorageDomain(BaseDomain):
         value: str,
         ignore_if_present: bool = False,
     ) -> dict[str, Any]:
-        """Set an entry in a shared storage.
+        """Set an entry in an origin's shared storage.
 
         Args:
             owner_origin: Owner origin of the shared storage.
@@ -396,7 +422,9 @@ class StorageDomain(BaseDomain):
         owner_origin: str,
         key: str,
     ) -> dict[str, Any]:
-        """Delete an entry from a shared storage.
+        """Delete an entry from an origin's shared storage.
+
+        Deletes the entry for key if it exists.
 
         Args:
             owner_origin: Owner origin of the shared storage.
@@ -408,7 +436,7 @@ class StorageDomain(BaseDomain):
         )
 
     async def clear_shared_storage_entries(self, owner_origin: str) -> dict[str, Any]:
-        """Clear all entries in a shared storage.
+        """Clear all entries in an origin's shared storage.
 
         Args:
             owner_origin: Owner origin of the shared storage.
@@ -421,21 +449,25 @@ class StorageDomain(BaseDomain):
     async def reset_shared_storage_budget(
         self,
         owner_origin: str,
-        budget: float | None = None,
     ) -> dict[str, Any]:
         """Reset the shared storage budget for an origin.
 
+        Resets the budget for ownerOrigin by clearing all budget
+        withdrawals.
+
         Args:
             owner_origin: Owner origin of the shared storage.
-            budget: Optional budget to set. If None, resets to default.
         """
-        params: dict[str, Any] = {"ownerOrigin": owner_origin}
-        if budget is not None:
-            params["budget"] = budget
-        return await self._call("Storage.resetSharedStorageBudget", params)
+        return await self._call(
+            "Storage.resetSharedStorageBudget",
+            {"ownerOrigin": owner_origin},
+        )
 
     async def set_shared_storage_tracking(self, enable: bool) -> dict[str, Any]:
         """Enable or disable shared storage tracking.
+
+        Emits ``Storage.sharedStorageAccessed`` events when shared
+        storage is accessed.
 
         Args:
             enable: Whether to track shared storage operations.
@@ -464,23 +496,30 @@ class StorageDomain(BaseDomain):
     async def delete_storage_bucket(
         self,
         storage_key: str,
-        bucket_name: str,
+        bucket_name: str | None = None,
     ) -> dict[str, Any]:
         """Delete a storage bucket.
 
         Args:
             storage_key: Storage key of the bucket.
-            bucket_name: Name of the bucket to delete.
+            bucket_name: Name of the bucket to delete. If omitted,
+                deletes the default bucket.
         """
+        bucket: dict[str, Any] = {"storageKey": storage_key}
+        if bucket_name:
+            bucket["name"] = bucket_name
         return await self._call(
             "Storage.deleteStorageBucket",
-            {"storageKey": storage_key, "bucketName": bucket_name},
+            {"bucket": bucket},
         )
 
     async def run_bounce_tracking_mitigations(self) -> dict[str, Any]:
         """Run bounce tracking mitigations.
 
         Removes trackers that have been identified as bounce trackers.
+
+        Returns:
+            Dict with ``deletedSites`` list of deleted site origins.
         """
         return await self._call("Storage.runBounceTrackingMitigations")
 
@@ -494,22 +533,22 @@ class StorageDomain(BaseDomain):
 
     async def set_protected_audience_k_anonymity(
         self,
-        owner_origin: str,
+        owner: str,
         name: str,
-        k_anonymity: bool,
+        hashes: list[str],
     ) -> dict[str, Any]:
         """Set k-anonymity for a protected audience interest group.
 
         Args:
-            owner_origin: Owner origin of the interest group.
+            owner: Owner origin of the interest group.
             name: Name of the interest group.
-            k_anonymity: Whether k-anonymity is satisfied.
+            hashes: List of k-anonymity hashes.
         """
         return await self._call(
             "Storage.setProtectedAudienceKAnonymity",
             {
-                "ownerOrigin": owner_origin,
+                "owner": owner,
                 "name": name,
-                "kAnonymity": k_anonymity,
+                "hashes": hashes,
             },
         )

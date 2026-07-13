@@ -37,30 +37,47 @@ class AutofillDomain(BaseDomain):
         """
         return await self._call("Autofill.disable")
 
-    async def trigger_fill(
+    async def trigger(
         self,
         field_id: int,
         frame_id: str | None = None,
         card: dict[str, Any] | None = None,
+        address: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Trigger autofill on a form field.
+        """Trigger autofill on a form identified by the fieldId.
 
-        Fills the form field identified by ``field_id`` with the
-        provided credit card or address data.
+        If the field and related form cannot be autofilled, returns an error.
+        ``card`` and ``address`` are mutually exclusive.
 
         Args:
-            field_id: The DOM node ID of the field to autofill.
-            frame_id: Optional frame ID containing the field.
-            card: Optional credit card data dict with fields like
-                ``number``, ``name``, ``expiryMonth``, ``expiryYear``,
-                ``cvc``.
+            field_id: The backend node ID that serves as an anchor for autofill.
+            frame_id: Identifies the frame that the field belongs to.
+            card: Credit card information to fill out the form.
+                Not saved. Mutually exclusive with ``address``.
+            address: Address to fill out the form.
+                Not saved. Mutually exclusive with ``card``.
         """
         params: dict[str, Any] = {"fieldId": field_id}
         if frame_id is not None:
             params["frameId"] = frame_id
         if card is not None:
             params["card"] = card
-        return await self._call("Autofill.triggerFill", params)
+        if address is not None:
+            params["address"] = address
+        return await self._call("Autofill.trigger", params)
+
+    async def trigger_fill(
+        self,
+        field_id: int,
+        frame_id: str | None = None,
+        card: dict[str, Any] | None = None,
+        address: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Trigger autofill on a form field.
+
+        Alias for :meth:`trigger`.
+        """
+        return await self.trigger(field_id, frame_id, card, address)
 
     async def trigger_fill_after_save(
         self,
@@ -69,14 +86,10 @@ class AutofillDomain(BaseDomain):
     ) -> dict[str, Any]:
         """Trigger autofill using saved data after a user save action.
 
-        Args:
-            field_id: The DOM node ID of the field to autofill.
-            frame_id: Optional frame ID containing the field.
+        Convenience method that calls :meth:`trigger` without card/address
+        to use previously saved autofill data.
         """
-        params: dict[str, Any] = {"fieldId": field_id}
-        if frame_id is not None:
-            params["frameId"] = frame_id
-        return await self._call("Autofill.triggerFillAfterSave", params)
+        return await self.trigger(field_id, frame_id)
 
     async def set_addresses(
         self,
@@ -88,9 +101,9 @@ class AutofillDomain(BaseDomain):
         replacing any existing addresses.
 
         Args:
-            addresses: List of address dicts with fields like
-                ``street``, ``city``, ``state``, ``postalCode``,
-                ``country``, ``name``, ``organization``, etc.
+            addresses: List of ``Address`` dicts, each containing a
+                ``fields`` key with a list of ``{"name": ..., "value": ...}``
+                entries (e.g. ``{"name": "NAME_FULL", "value": "Jon"}``).
         """
         return await self._call(
             "Autofill.setAddresses",

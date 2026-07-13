@@ -8,17 +8,28 @@ from cdpwave.domains.base import BaseDomain
 class DOMDomain(BaseDomain):
     """Wrapper for the CDP DOM domain."""
 
-    async def enable(self) -> dict[str, Any]:
+    async def enable(
+        self,
+        include_whitespace: str | None = None,
+    ) -> dict[str, Any]:
         """Enable DOM domain events.
 
         Activates reporting of DOM document updates, attribute changes,
         and node modifications. Must be called before using most
         other DOM methods.
 
+        Args:
+            include_whitespace: Whether to include whitespaces in
+                the children array of returned Nodes. One of
+                ``"none"`` or ``"all"``.
+
         Returns:
             Response dict from the CDP.
         """
-        return await self._call("DOM.enable")
+        params: dict[str, Any] = {}
+        if include_whitespace is not None:
+            params["includeWhitespace"] = include_whitespace
+        return await self._call("DOM.enable", params)
 
     async def disable(self) -> dict[str, Any]:
         """Disable DOM domain events.
@@ -47,24 +58,42 @@ class DOMDomain(BaseDomain):
         """
         if depth < -1:
             raise ValueError("depth must be >= -1")
+        params: dict[str, Any] = {"depth": depth}
+        if pierce:
+            params["pierce"] = pierce
         return await self._call(
             "DOM.getDocument",
-            {"depth": depth, "pierce": pierce},
+            params,
         )
 
-    async def get_outer_html(self, node_id: int) -> dict[str, Any]:
+    async def get_outer_html(
+        self,
+        node_id: int | None = None,
+        backend_node_id: int | None = None,
+        object_id: str | None = None,
+        include_shadow_dom: bool = False,
+    ) -> dict[str, Any]:
         """Get the outer HTML of a node.
 
         Args:
-            node_id: The node ID to inspect.
+            node_id: Identifier of the node.
+            backend_node_id: Identifier of the backend node.
+            object_id: JavaScript object id of the node wrapper.
+            include_shadow_dom: Include all shadow roots.
 
         Returns:
             Response dict containing ``outerHTML``.
         """
-        return await self._call(
-            "DOM.getOuterHTML",
-            {"nodeId": node_id},
-        )
+        params: dict[str, Any] = {}
+        if node_id is not None:
+            params["nodeId"] = node_id
+        if backend_node_id is not None:
+            params["backendNodeId"] = backend_node_id
+        if object_id is not None:
+            params["objectId"] = object_id
+        if include_shadow_dom:
+            params["includeShadowDOM"] = True
+        return await self._call("DOM.getOuterHTML", params)
 
     async def query_selector(
         self,
@@ -148,34 +177,71 @@ class DOMDomain(BaseDomain):
             name: Optional attribute name to retrieve.
 
         Returns:
-            Response dict containing ``attributes``.
+            Response dict containing ``attributes`` (flat list of
+            name/value pairs) or ``value`` (single attribute value
+            when ``name`` is provided).
         """
-        return await self._call(
+        result = await self._call(
             "DOM.getAttributes",
             {"nodeId": node_id},
         )
+        if name is not None:
+            attrs = result.get("attributes", [])
+            for i in range(0, len(attrs) - 1, 2):
+                if attrs[i] == name:
+                    return {"value": attrs[i + 1]}
+            return {"value": None}
+        return result
 
-    async def focus(self, node_id: int) -> dict[str, Any]:
+    async def focus(
+        self,
+        node_id: int | None = None,
+        backend_node_id: int | None = None,
+        object_id: str | None = None,
+    ) -> dict[str, Any]:
         """Focus a node.
 
         Args:
-            node_id: The node ID to focus.
+            node_id: Identifier of the node.
+            backend_node_id: Identifier of the backend node.
+            object_id: JavaScript object id of the node wrapper.
         """
-        return await self._call(
-            "DOM.focus",
-            {"nodeId": node_id},
-        )
+        params: dict[str, Any] = {}
+        if node_id is not None:
+            params["nodeId"] = node_id
+        if backend_node_id is not None:
+            params["backendNodeId"] = backend_node_id
+        if object_id is not None:
+            params["objectId"] = object_id
+        return await self._call("DOM.focus", params)
 
-    async def scroll_into_view_if_needed(self, node_id: int) -> dict[str, Any]:
+    async def scroll_into_view_if_needed(
+        self,
+        node_id: int | None = None,
+        backend_node_id: int | None = None,
+        object_id: str | None = None,
+        rect: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Scroll a node into view if needed.
 
         Args:
-            node_id: The node ID to scroll into view.
+            node_id: Identifier of the node.
+            backend_node_id: Identifier of the backend node.
+            object_id: JavaScript object id of the node wrapper.
+            rect: The rect to be scrolled into view, relative to
+                the node's border box, in CSS pixels. When omitted,
+                center of the node will be used.
         """
-        return await self._call(
-            "DOM.scrollIntoViewIfNeeded",
-            {"nodeId": node_id},
-        )
+        params: dict[str, Any] = {}
+        if node_id is not None:
+            params["nodeId"] = node_id
+        if backend_node_id is not None:
+            params["backendNodeId"] = backend_node_id
+        if object_id is not None:
+            params["objectId"] = object_id
+        if rect is not None:
+            params["rect"] = rect
+        return await self._call("DOM.scrollIntoViewIfNeeded", params)
 
     async def remove_attribute(
         self,
@@ -213,7 +279,11 @@ class DOMDomain(BaseDomain):
         Returns:
             Dict with ``node`` descriptor.
         """
-        params: dict[str, Any] = {"depth": depth, "pierce": pierce}
+        if depth < -1:
+            raise ValueError("depth must be >= -1")
+        params: dict[str, Any] = {"depth": depth}
+        if pierce:
+            params["pierce"] = pierce
         if node_id is not None:
             params["nodeId"] = node_id
         if backend_node_id is not None:
@@ -255,6 +325,7 @@ class DOMDomain(BaseDomain):
         x: int,
         y: int,
         include_user_agent_shadow_dom: bool = False,
+        ignore_pointer_events_none: bool = False,
     ) -> dict[str, Any]:
         """Get the node at a given screen location.
 
@@ -262,64 +333,75 @@ class DOMDomain(BaseDomain):
             x: X coordinate relative to the document.
             y: Y coordinate relative to the document.
             include_user_agent_shadow_dom: Include UA shadow DOM.
+            ignore_pointer_events_none: Whether to ignore
+                pointer-events: none on elements and hit test them.
 
         Returns:
-            Dict with ``nodeId``, ``backendNodeId``, ``frameId``.
+            Dict with ``backendNodeId``, ``frameId``, and optional
+            ``nodeId`` (only when DOM domain is enabled).
         """
         params: dict[str, Any] = {"x": x, "y": y}
         if include_user_agent_shadow_dom:
             params["includeUserAgentShadowDOM"] = True
+        if ignore_pointer_events_none:
+            params["ignorePointerEventsNone"] = True
         return await self._call("DOM.getNodeForLocation", params)
 
     async def resolve_node(
         self,
         node_id: int | None = None,
         backend_node_id: int | None = None,
-        object_id: str | None = None,
         object_group: str | None = None,
+        execution_context_id: int | None = None,
     ) -> dict[str, Any]:
         """Resolve a DOM node to a remote object.
 
         Args:
             node_id: Node ID to resolve.
-            backend_node_id: Backend node ID.
-            object_id: Remote object ID to resolve.
-            object_group: Optional object group.
+            backend_node_id: Backend node ID to resolve.
+            object_group: Optional symbolic group name for releasing
+                multiple objects.
+            execution_context_id: Execution context in which to
+                resolve the node.
 
         Returns:
             Dict with ``object`` remote object descriptor.
+
+        Raises:
+            ValueError: If neither ``node_id`` nor ``backend_node_id``
+                is provided.
         """
+        if node_id is None and backend_node_id is None:
+            raise ValueError(
+                "Either node_id or backend_node_id must be provided"
+            )
         params: dict[str, Any] = {}
         if node_id is not None:
             params["nodeId"] = node_id
         if backend_node_id is not None:
             params["backendNodeId"] = backend_node_id
-        if object_id is not None:
-            params["objectId"] = object_id
         if object_group is not None:
             params["objectGroup"] = object_group
+        if execution_context_id is not None:
+            params["executionContextId"] = execution_context_id
         return await self._call("DOM.resolveNode", params)
 
     async def request_node(
         self,
-        node_id: int | None = None,
-        object_id: str | None = None,
+        object_id: str,
     ) -> dict[str, Any]:
-        """Request a node by node ID or JavaScript object reference.
+        """Request a node by JavaScript object reference.
 
         Args:
-            node_id: Node ID to request node for.
-            object_id: Remote object ID to request node for.
+            object_id: JavaScript object id to convert into node.
 
         Returns:
             Dict with ``nodeId`` of the requested node.
         """
-        params: dict[str, Any] = {}
-        if node_id is not None:
-            params["nodeId"] = node_id
-        if object_id is not None:
-            params["objectId"] = object_id
-        return await self._call("DOM.requestNode", params)
+        return await self._call(
+            "DOM.requestNode",
+            {"objectId": object_id},
+        )
 
     async def set_attributes_as_text(
         self,
@@ -399,9 +481,14 @@ class DOMDomain(BaseDomain):
             depth: Maximum depth to traverse (-1 for full).
             pierce: Whether to pierce iframes and shadow DOM.
         """
+        if depth < -1:
+            raise ValueError("depth must be >= -1")
+        params: dict[str, Any] = {"nodeId": node_id, "depth": depth}
+        if pierce:
+            params["pierce"] = pierce
         return await self._call(
             "DOM.requestChildNodes",
-            {"nodeId": node_id, "depth": depth, "pierce": pierce},
+            params,
         )
 
     async def perform_search(
@@ -493,9 +580,14 @@ class DOMDomain(BaseDomain):
         Returns:
             Response dict containing ``root`` node.
         """
+        if depth < -1:
+            raise ValueError("depth must be >= -1")
+        params: dict[str, Any] = {"depth": depth}
+        if pierce:
+            params["pierce"] = pierce
         return await self._call(
             "DOM.getFlattenedDocument",
-            {"depth": depth, "pierce": pierce},
+            params,
         )
 
     async def collect_class_names_from_subtree(
@@ -517,36 +609,52 @@ class DOMDomain(BaseDomain):
 
     async def get_content_quads(
         self,
-        node_id: int,
+        node_id: int | None = None,
+        backend_node_id: int | None = None,
+        object_id: str | None = None,
     ) -> dict[str, Any]:
         """Get content quads for a node.
 
         Args:
-            node_id: Node ID to get quads for.
+            node_id: Identifier of the node.
+            backend_node_id: Identifier of the backend node.
+            object_id: JavaScript object id of the node wrapper.
 
         Returns:
             Dict with ``quads`` list.
         """
-        return await self._call(
-            "DOM.getContentQuads",
-            {"nodeId": node_id},
-        )
+        params: dict[str, Any] = {}
+        if node_id is not None:
+            params["nodeId"] = node_id
+        if backend_node_id is not None:
+            params["backendNodeId"] = backend_node_id
+        if object_id is not None:
+            params["objectId"] = object_id
+        return await self._call("DOM.getContentQuads", params)
 
     async def set_file_input_files(
         self,
-        node_id: int,
         files: list[str],
+        node_id: int | None = None,
+        backend_node_id: int | None = None,
+        object_id: str | None = None,
     ) -> dict[str, Any]:
         """Set files for a file input element.
 
         Args:
-            node_id: Node ID of the file input element.
-            files: List of file paths.
+            files: List of file paths to set.
+            node_id: Identifier of the node.
+            backend_node_id: Identifier of the backend node.
+            object_id: JavaScript object id of the node wrapper.
         """
-        return await self._call(
-            "DOM.setFileInputFiles",
-            {"nodeId": node_id, "files": files},
-        )
+        params: dict[str, Any] = {"files": files}
+        if node_id is not None:
+            params["nodeId"] = node_id
+        if backend_node_id is not None:
+            params["backendNodeId"] = backend_node_id
+        if object_id is not None:
+            params["objectId"] = object_id
+        return await self._call("DOM.setFileInputFiles", params)
 
     async def set_outer_html(
         self,
@@ -583,40 +691,6 @@ class DOMDomain(BaseDomain):
             {"nodeId": node_id, "value": text},
         )
 
-    async def get_highlight_object_for_test(
-        self,
-        node_id: int,
-    ) -> dict[str, Any]:
-        """Get the highlight object for a node (for testing).
-
-        Args:
-            node_id: Node ID to get the highlight object for.
-
-        Returns:
-            Dict with ``highlight`` object.
-        """
-        return await self._call(
-            "DOM.getHighlightObjectForTest",
-            {"nodeId": node_id},
-        )
-
-    async def get_inner_html(
-        self,
-        node_id: int,
-    ) -> dict[str, Any]:
-        """Get the inner HTML of a node.
-
-        Args:
-            node_id: Node ID to get inner HTML for.
-
-        Returns:
-            Dict with ``innerHTML`` string.
-        """
-        return await self._call(
-            "DOM.getInnerHTML",
-            {"nodeId": node_id},
-        )
-
     async def undo(self) -> dict[str, Any]:
         """Undo the last DOM modification."""
         return await self._call("DOM.undo")
@@ -631,38 +705,71 @@ class DOMDomain(BaseDomain):
 
     async def hide_highlight(self) -> dict[str, Any]:
         """Hide any highlighted node."""
-        return await self._call("DOM.hideHighlight")
+        return await self._call("Overlay.hideHighlight")
 
-    async def highlight_node(self, node_id: int) -> dict[str, Any]:
+    async def highlight_node(
+        self,
+        highlight_config: dict[str, Any],
+        node_id: int | None = None,
+        backend_node_id: int | None = None,
+        object_id: str | None = None,
+        selector: str | None = None,
+    ) -> dict[str, Any]:
         """Highlight a node in the browser.
 
+        Redirects to ``Overlay.highlightNode``.
+
         Args:
-            node_id: Node ID to highlight.
+            highlight_config: Dict with show options (``showInfo``,
+                ``contentColor``, ``borderColor``, etc.).
+            node_id: Optional DOM node ID.
+            backend_node_id: Optional backend DOM node ID.
+            object_id: Optional remote object ID.
+            selector: Optional CSS selector.
         """
-        return await self._call(
-            "DOM.highlightNode",
-            {"nodeId": node_id},
-        )
+        params: dict[str, Any] = {"highlightConfig": highlight_config}
+        if node_id is not None:
+            params["nodeId"] = node_id
+        if backend_node_id is not None:
+            params["backendNodeId"] = backend_node_id
+        if object_id is not None:
+            params["objectId"] = object_id
+        if selector is not None:
+            params["selector"] = selector
+        return await self._call("Overlay.highlightNode", params)
 
     async def highlight_rect(
         self,
-        x: int,
-        y: int,
-        width: int,
-        height: int,
+        x: float,
+        y: float,
+        width: float,
+        height: float,
+        color: dict[str, Any] | None = None,
+        outline_color: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Highlight a rectangular area in the browser.
+
+        Redirects to ``Overlay.highlightRect``.
 
         Args:
             x: X coordinate.
             y: Y coordinate.
             width: Width of the rectangle.
             height: Height of the rectangle.
+            color: Optional fill color as RGBA dict.
+            outline_color: Optional outline color as RGBA dict.
         """
-        return await self._call(
-            "DOM.highlightRect",
-            {"x": x, "y": y, "width": width, "height": height},
-        )
+        params: dict[str, Any] = {
+            "x": x,
+            "y": y,
+            "width": width,
+            "height": height,
+        }
+        if color is not None:
+            params["color"] = color
+        if outline_color is not None:
+            params["outlineColor"] = outline_color
+        return await self._call("Overlay.highlightRect", params)
 
     async def push_node_by_path_to_frontend(
         self,
@@ -701,26 +808,31 @@ class DOMDomain(BaseDomain):
     async def get_nodes_for_subtree_by_style(
         self,
         node_id: int,
-        computed_styles: list[str],
+        computed_styles: list[dict[str, str]],
         pierce: bool = False,
     ) -> dict[str, Any]:
         """Find nodes in a subtree that match computed styles.
 
         Args:
             node_id: Root node ID to search from.
-            computed_styles: List of CSS property names to match.
+            computed_styles: List of CSS computed style properties
+                to filter nodes by (includes nodes if any of
+                properties matches). Each entry is a dict with
+                ``name`` and ``value`` keys.
             pierce: Whether to pierce shadow DOM.
 
         Returns:
             Dict with ``nodeIds`` list.
         """
+        params: dict[str, Any] = {
+            "nodeId": node_id,
+            "computedStyles": computed_styles,
+        }
+        if pierce:
+            params["pierce"] = pierce
         return await self._call(
             "DOM.getNodesForSubtreeByStyle",
-            {
-                "nodeId": node_id,
-                "computedStyles": computed_styles,
-                "pierce": pierce,
-            },
+            params,
         )
 
     async def get_relayout_boundary(self, node_id: int) -> dict[str, Any]:
@@ -730,7 +842,7 @@ class DOMDomain(BaseDomain):
             node_id: Node ID to query.
 
         Returns:
-            Dict with ``relayoutBoundary`` node ID.
+            Dict with ``nodeId`` of the relayout boundary node.
         """
         return await self._call(
             "DOM.getRelayoutBoundary",
@@ -747,35 +859,37 @@ class DOMDomain(BaseDomain):
 
     async def get_element_by_relation(
         self,
-        document_id: int,
+        node_id: int,
         relation: str,
     ) -> dict[str, Any]:
-        """Get an element by ARIA relation.
+        """Get an element by relation.
 
         Args:
-            document_id: Document node ID.
-            relation: ARIA relation type (e.g. ``"controlledby"``).
+            node_id: Id of the node from which to query the relation.
+            relation: Type of relation to get. One of
+                ``"PopoverTarget"``, ``"InterestTarget"``,
+                ``"CommandFor"``.
 
         Returns:
-            Dict with ``nodeId``.
+            Dict with ``nodeId`` of the matching element.
         """
         return await self._call(
             "DOM.getElementByRelation",
-            {"documentId": document_id, "relation": relation},
+            {"nodeId": node_id, "relation": relation},
         )
 
     async def set_node_stack_traces_enabled(
         self,
-        enabled: bool,
+        enable: bool,
     ) -> dict[str, Any]:
         """Enable or disable node stack traces.
 
         Args:
-            enabled: Whether to capture stack traces for DOM nodes.
+            enable: Whether to capture stack traces for DOM nodes.
         """
         return await self._call(
             "DOM.setNodeStackTracesEnabled",
-            {"enabled": enabled},
+            {"enable": enable},
         )
 
     async def get_node_stack_traces(
@@ -788,23 +902,23 @@ class DOMDomain(BaseDomain):
             node_id: Node ID to query.
 
         Returns:
-            Dict with ``creation`` stack trace.
+            Dict with optional ``creation`` stack trace.
         """
         return await self._call(
             "DOM.getNodeStackTraces",
             {"nodeId": node_id},
         )
 
-    async def get_file_info(self, file_id: str) -> dict[str, Any]:
-        """Get file info for a file input element.
+    async def get_file_info(self, object_id: str) -> dict[str, Any]:
+        """Get file info for a File wrapper.
 
         Args:
-            file_id: File ID from a file input element.
+            object_id: JavaScript object id of the File wrapper.
 
         Returns:
-            Dict with ``name``, ``size``, ``type``, and ``lastModified``.
+            Dict with ``path``.
         """
-        return await self._call("DOM.getFileInfo", {"fileId": file_id})
+        return await self._call("DOM.getFileInfo", {"objectId": object_id})
 
     async def get_detached_dom_nodes(self) -> dict[str, Any]:
         """Get detached DOM nodes.
@@ -851,7 +965,7 @@ class DOMDomain(BaseDomain):
             frame_id: Frame ID to find the owner for.
 
         Returns:
-            Dict with ``nodeId``, ``backendNodeId``, and ``nodeId``.
+            Dict with ``backendNodeId`` and optional ``nodeId``.
         """
         return await self._call(
             "DOM.getFrameOwner",
@@ -862,12 +976,22 @@ class DOMDomain(BaseDomain):
         self,
         node_id: int,
         container_name: str | None = None,
+        physical_axes: str | None = None,
+        logical_axes: str | None = None,
+        queries_scroll_state: bool = False,
+        queries_anchored: bool = False,
     ) -> dict[str, Any]:
-        """Get the container node for a given node.
+        """Get the query container of a given node.
 
         Args:
             node_id: Node ID to find the container for.
             container_name: Optional container name to match.
+            physical_axes: Physical axes to match. One of
+                ``"Horizontal"``, ``"Vertical"``, ``"Both"``.
+            logical_axes: Logical axes to match. One of
+                ``"Inline"``, ``"Block"``, ``"Both"``.
+            queries_scroll_state: Whether to query scroll-state.
+            queries_anchored: Whether to query anchored elements.
 
         Returns:
             Dict with ``nodeId`` of the container.
@@ -875,6 +999,14 @@ class DOMDomain(BaseDomain):
         params: dict[str, Any] = {"nodeId": node_id}
         if container_name is not None:
             params["containerName"] = container_name
+        if physical_axes is not None:
+            params["physicalAxes"] = physical_axes
+        if logical_axes is not None:
+            params["logicalAxes"] = logical_axes
+        if queries_scroll_state:
+            params["queriesScrollState"] = True
+        if queries_anchored:
+            params["queriesAnchored"] = True
         return await self._call("DOM.getContainerForNode", params)
 
     async def get_querying_descendants_for_container(
@@ -897,29 +1029,48 @@ class DOMDomain(BaseDomain):
     async def get_anchor_element(
         self,
         node_id: int,
-        anchor_name: str | None = None,
+        anchor_specifier: str | None = None,
     ) -> dict[str, Any]:
-        """Get the anchor element for a node.
+        """Get the anchor element for a positioned element.
 
         Args:
-            node_id: Node ID to find the anchor for.
-            anchor_name: Optional anchor name to match.
+            node_id: Id of the positioned element from which to find
+                the anchor.
+            anchor_specifier: Optional anchor specifier, as defined in
+                the CSS Anchor Positioning spec. If not provided, the
+                implicit anchor element is returned.
 
         Returns:
-            Dict with ``anchorElement`` node ID.
+            Dict with ``nodeId`` of the anchor element.
         """
         params: dict[str, Any] = {"nodeId": node_id}
-        if anchor_name is not None:
-            params["anchorName"] = anchor_name
+        if anchor_specifier is not None:
+            params["anchorSpecifier"] = anchor_specifier
         return await self._call("DOM.getAnchorElement", params)
 
-    async def force_show_popover(self, node_id: int) -> dict[str, Any]:
-        """Force show a popover element.
+    async def force_show_popover(
+        self,
+        node_id: int,
+        enable: bool,
+        invoker_node_id: int | None = None,
+    ) -> dict[str, Any]:
+        """Force show or hide a popover element.
+
+        When enabled, force-opens the popover and keeps it open until
+        disabled.
 
         Args:
-            node_id: Node ID of the popover element.
+            node_id: Node ID of the popover HTMLElement.
+            enable: If true, opens the popover and keeps it open.
+                If false, closes the popover if previously force-opened.
+            invoker_node_id: Optional backend node ID of the invoking
+                element, used to establish the implicit anchor.
+
+        Returns:
+            Dict with ``nodeIds`` of popovers closed to respect
+            stacking order.
         """
-        return await self._call(
-            "DOM.forceShowPopover",
-            {"nodeId": node_id},
-        )
+        params: dict[str, Any] = {"nodeId": node_id, "enable": enable}
+        if invoker_node_id is not None:
+            params["invokerNodeId"] = invoker_node_id
+        return await self._call("DOM.forceShowPopover", params)

@@ -12,9 +12,22 @@ class BluetoothEmulationDomain(BaseDomain):
     Web Bluetooth API interactions.
     """
 
-    async def enable(self) -> dict[str, Any]:
-        """Enable the Bluetooth emulation domain."""
-        return await self._call("BluetoothEmulation.enable")
+    async def enable(
+        self,
+        state: str,
+        le_supported: bool,
+    ) -> dict[str, Any]:
+        """Enable the Bluetooth emulation domain.
+
+        Args:
+            state: Central state (``"absent"``, ``"powered-off"``,
+                ``"powered-on"``).
+            le_supported: Whether the simulated central supports low-energy.
+        """
+        return await self._call(
+            "BluetoothEmulation.enable",
+            {"state": state, "leSupported": le_supported},
+        )
 
     async def disable(self) -> dict[str, Any]:
         """Disable the Bluetooth emulation domain."""
@@ -24,35 +37,39 @@ class BluetoothEmulationDomain(BaseDomain):
         self,
         address: str,
         name: str,
-        known_service_uuids: list[str] | None = None,
+        manufacturer_data: list[dict[str, Any]],
+        known_service_uuids: list[str],
     ) -> dict[str, Any]:
         """Simulate a preconnected peripheral.
 
         Args:
             address: Peripheral address.
             name: Peripheral name.
-            known_service_uuids: Optional list of known service UUIDs.
+            manufacturer_data: List of manufacturer data entries.
+            known_service_uuids: List of known service UUIDs.
         """
-        params: dict[str, Any] = {"address": address, "name": name}
-        if known_service_uuids is not None:
-            params["knownServiceUuids"] = known_service_uuids
         return await self._call(
             "BluetoothEmulation.simulatePreconnectedPeripheral",
-            params,
+            {
+                "address": address,
+                "name": name,
+                "manufacturerData": manufacturer_data,
+                "knownServiceUuids": known_service_uuids,
+            },
         )
 
     async def simulate_advertisement(
         self,
-        advertisement: dict[str, Any],
+        entry: dict[str, Any],
     ) -> dict[str, Any]:
         """Simulate a Bluetooth advertisement.
 
         Args:
-            advertisement: Advertisement dict with ``gpAdvertisement``.
+            entry: ``ScanEntry`` dict describing the advertisement packet.
         """
         return await self._call(
             "BluetoothEmulation.simulateAdvertisement",
-            {"advertisement": advertisement},
+            {"entry": entry},
         )
 
     async def set_simulated_central_state(
@@ -62,8 +79,8 @@ class BluetoothEmulationDomain(BaseDomain):
         """Set the simulated central state.
 
         Args:
-            state: Central state (``"unknown"``, ``"resetting"``,
-                ``"powered"``, ``"unauthorized"``, ``"poweredOff"``).
+            state: Central state (``"absent"``, ``"powered-off"``,
+                ``"powered-on"``).
         """
         return await self._call(
             "BluetoothEmulation.setSimulatedCentralState",
@@ -72,212 +89,190 @@ class BluetoothEmulationDomain(BaseDomain):
 
     async def add_service(
         self,
-        peripheral_address: str,
-        service: dict[str, Any],
+        address: str,
+        service_uuid: str,
     ) -> dict[str, Any]:
         """Add a service to a peripheral.
 
         Args:
-            peripheral_address: Peripheral address.
-            service: Service dict with ``uuid`` and ``isPrimary``.
+            address: Peripheral address.
+            service_uuid: Service UUID to add.
         """
         return await self._call(
             "BluetoothEmulation.addService",
-            {
-                "peripheralAddress": peripheral_address,
-                "service": service,
-            },
+            {"address": address, "serviceUuid": service_uuid},
         )
 
     async def remove_service(
         self,
-        peripheral_address: str,
-        service_uuid: str,
+        service_id: str,
     ) -> dict[str, Any]:
-        """Remove a service from a peripheral.
+        """Remove a service from the simulated central.
 
         Args:
-            peripheral_address: Peripheral address.
-            service_uuid: Service UUID to remove.
+            service_id: Service identifier to remove.
         """
         return await self._call(
             "BluetoothEmulation.removeService",
-            {
-                "peripheralAddress": peripheral_address,
-                "serviceUuid": service_uuid,
-            },
+            {"serviceId": service_id},
         )
 
     async def add_characteristic(
         self,
-        peripheral_address: str,
-        service_uuid: str,
-        characteristic: dict[str, Any],
+        service_id: str,
+        characteristic_uuid: str,
+        properties: dict[str, Any],
     ) -> dict[str, Any]:
         """Add a characteristic to a service.
 
         Args:
-            peripheral_address: Peripheral address.
-            service_uuid: Service UUID.
-            characteristic: Characteristic dict.
+            service_id: Service identifier.
+            characteristic_uuid: Characteristic UUID to add.
+            properties: ``CharacteristicProperties`` dict.
         """
         return await self._call(
             "BluetoothEmulation.addCharacteristic",
             {
-                "peripheralAddress": peripheral_address,
-                "serviceUuid": service_uuid,
-                "characteristic": characteristic,
+                "serviceId": service_id,
+                "characteristicUuid": characteristic_uuid,
+                "properties": properties,
             },
         )
 
     async def remove_characteristic(
         self,
-        peripheral_address: str,
-        service_uuid: str,
-        characteristic_uuid: str,
+        characteristic_id: str,
     ) -> dict[str, Any]:
-        """Remove a characteristic from a service.
+        """Remove a characteristic from the simulated central.
 
         Args:
-            peripheral_address: Peripheral address.
-            service_uuid: Service UUID.
-            characteristic_uuid: Characteristic UUID to remove.
+            characteristic_id: Characteristic identifier to remove.
         """
         return await self._call(
             "BluetoothEmulation.removeCharacteristic",
-            {
-                "peripheralAddress": peripheral_address,
-                "serviceUuid": service_uuid,
-                "characteristicUuid": characteristic_uuid,
-            },
+            {"characteristicId": characteristic_id},
         )
 
     async def add_descriptor(
         self,
-        peripheral_address: str,
-        service_uuid: str,
-        characteristic_uuid: str,
-        descriptor: dict[str, Any],
+        characteristic_id: str,
+        descriptor_uuid: str,
     ) -> dict[str, Any]:
         """Add a descriptor to a characteristic.
 
         Args:
-            peripheral_address: Peripheral address.
-            service_uuid: Service UUID.
-            characteristic_uuid: Characteristic UUID.
-            descriptor: Descriptor dict.
+            characteristic_id: Characteristic identifier.
+            descriptor_uuid: Descriptor UUID to add.
         """
         return await self._call(
             "BluetoothEmulation.addDescriptor",
             {
-                "peripheralAddress": peripheral_address,
-                "serviceUuid": service_uuid,
-                "characteristicUuid": characteristic_uuid,
-                "descriptor": descriptor,
+                "characteristicId": characteristic_id,
+                "descriptorUuid": descriptor_uuid,
             },
         )
 
     async def remove_descriptor(
         self,
-        peripheral_address: str,
-        service_uuid: str,
-        characteristic_uuid: str,
-        descriptor_uuid: str,
+        descriptor_id: str,
     ) -> dict[str, Any]:
-        """Remove a descriptor from a characteristic.
+        """Remove a descriptor from the simulated central.
 
         Args:
-            peripheral_address: Peripheral address.
-            service_uuid: Service UUID.
-            characteristic_uuid: Characteristic UUID.
-            descriptor_uuid: Descriptor UUID to remove.
+            descriptor_id: Descriptor identifier to remove.
         """
         return await self._call(
             "BluetoothEmulation.removeDescriptor",
-            {
-                "peripheralAddress": peripheral_address,
-                "serviceUuid": service_uuid,
-                "characteristicUuid": characteristic_uuid,
-                "descriptorUuid": descriptor_uuid,
-            },
+            {"descriptorId": descriptor_id},
         )
 
     async def simulate_gatt_disconnection(
         self,
-        peripheral_address: str,
+        address: str,
     ) -> dict[str, Any]:
         """Simulate a GATT disconnection.
 
         Args:
-            peripheral_address: Peripheral address.
+            address: Peripheral address.
         """
         return await self._call(
             "BluetoothEmulation.simulateGATTDisconnection",
-            {"peripheralAddress": peripheral_address},
+            {"address": address},
         )
 
     async def simulate_gatt_operation_response(
         self,
-        peripheral_address: str,
-        characteristic_uuid: str,
-        status: int,
+        address: str,
+        op_type: str,
+        code: int,
     ) -> dict[str, Any]:
         """Simulate a GATT operation response.
 
         Args:
-            peripheral_address: Peripheral address.
-            characteristic_uuid: Characteristic UUID.
-            status: Response status code.
+            address: Peripheral address.
+            op_type: GATT operation type (``"connection"``, ``"discovery"``).
+            code: HCI error code from Bluetooth Core Specification Vol 2
+                Part D 1.3.
         """
         return await self._call(
             "BluetoothEmulation.simulateGATTOperationResponse",
-            {
-                "peripheralAddress": peripheral_address,
-                "characteristicUuid": characteristic_uuid,
-                "status": status,
-            },
+            {"address": address, "type": op_type, "code": code},
         )
 
     async def simulate_characteristic_operation_response(
         self,
-        peripheral_address: str,
-        characteristic_uuid: str,
-        status: int,
+        characteristic_id: str,
+        op_type: str,
+        code: int,
+        data: str | None = None,
     ) -> dict[str, Any]:
         """Simulate a characteristic operation response.
 
         Args:
-            peripheral_address: Peripheral address.
-            characteristic_uuid: Characteristic UUID.
-            status: Response status code.
+            characteristic_id: Characteristic identifier.
+            op_type: Characteristic operation type (``"read"``, ``"write"``,
+                ``"subscribe-to-notifications"``,
+                ``"unsubscribe-from-notifications"``).
+            code: Error code from Bluetooth Core Specification Vol 3
+                Part F 3.4.1.1.
+            data: Response data (base64). Expected for successful read.
         """
+        params: dict[str, Any] = {
+            "characteristicId": characteristic_id,
+            "type": op_type,
+            "code": code,
+        }
+        if data is not None:
+            params["data"] = data
         return await self._call(
             "BluetoothEmulation.simulateCharacteristicOperationResponse",
-            {
-                "peripheralAddress": peripheral_address,
-                "characteristicUuid": characteristic_uuid,
-                "status": status,
-            },
+            params,
         )
 
     async def simulate_descriptor_operation_response(
         self,
-        peripheral_address: str,
-        descriptor_uuid: str,
-        status: int,
+        descriptor_id: str,
+        op_type: str,
+        code: int,
+        data: str | None = None,
     ) -> dict[str, Any]:
         """Simulate a descriptor operation response.
 
         Args:
-            peripheral_address: Peripheral address.
-            descriptor_uuid: Descriptor UUID.
-            status: Response status code.
+            descriptor_id: Descriptor identifier.
+            op_type: Descriptor operation type (``"read"``, ``"write"``).
+            code: Error code from Bluetooth Core Specification Vol 3
+                Part F 3.4.1.1.
+            data: Response data (base64). Expected for successful read.
         """
+        params: dict[str, Any] = {
+            "descriptorId": descriptor_id,
+            "type": op_type,
+            "code": code,
+        }
+        if data is not None:
+            params["data"] = data
         return await self._call(
             "BluetoothEmulation.simulateDescriptorOperationResponse",
-            {
-                "peripheralAddress": peripheral_address,
-                "descriptorUuid": descriptor_uuid,
-                "status": status,
-            },
+            params,
         )

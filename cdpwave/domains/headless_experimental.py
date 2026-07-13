@@ -8,15 +8,70 @@ from cdpwave.domains.base import BaseDomain
 class HeadlessExperimentalDomain(BaseDomain):
     """Wrapper for the CDP HeadlessExperimental domain.
 
-    Provides control over headless window bounds for testing
+    Provides control over headless frame scheduling for testing
     viewport-dependent behavior in headless mode.
+
+    Note: This entire domain is **experimental**.
     """
+
+    async def begin_frame(
+        self,
+        frame_time_ticks: float | None = None,
+        interval: float | None = None,
+        no_display_updates: bool | None = None,
+        screenshot: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Send a BeginFrame to the target and return when the frame was completed.
+
+        Optionally captures a screenshot from the resulting frame. Requires
+        that the target was created with enabled BeginFrameControl.
+
+        Args:
+            frame_time_ticks: Timestamp of this BeginFrame in Renderer
+                TimeTicks (milliseconds of uptime). If not set, the current
+                time will be used.
+            interval: The interval between BeginFrames reported to the
+                compositor, in milliseconds. Defaults to ~16.666 ms (60 fps).
+            no_display_updates: Whether updates should not be committed and
+                drawn onto the display. False by default.
+            screenshot: Screenshot capture options. Dict with optional
+                ``format`` (``"jpeg"``, ``"png"``, ``"webp"``),
+                ``quality`` (int 0-100), and ``optimizeForSpeed`` (bool).
+
+        Returns:
+            Dict with ``hasDamage`` (bool) and optional ``screenshotData``
+            (base64-encoded image data).
+        """
+        params: dict[str, Any] = {}
+        if frame_time_ticks is not None:
+            if isinstance(frame_time_ticks, bool) or not isinstance(
+                frame_time_ticks, (int, float)
+            ):
+                raise TypeError("frame_time_ticks must be a number or None")
+            params["frameTimeTicks"] = frame_time_ticks
+        if interval is not None:
+            if isinstance(interval, bool) or not isinstance(
+                interval, (int, float)
+            ):
+                raise TypeError("interval must be a number or None")
+            params["interval"] = interval
+        if no_display_updates is not None:
+            if not isinstance(no_display_updates, bool):
+                raise TypeError(
+                    "no_display_updates must be a bool or None"
+                )
+            params["noDisplayUpdates"] = no_display_updates
+        if screenshot is not None:
+            if not isinstance(screenshot, dict):
+                raise TypeError("screenshot must be a dict or None")
+            params["screenshot"] = screenshot
+        return await self._call("HeadlessExperimental.beginFrame", params)
 
     async def enable(self) -> dict[str, Any]:
         """Enable the HeadlessExperimental domain.
 
-        Activates HeadlessExperimental domain events and reporting.
-        Must be called before using other methods in this domain.
+        .. deprecated::
+            Marked as deprecated in the CDP specification.
 
         Returns:
             Response dict from the CDP.
@@ -26,30 +81,10 @@ class HeadlessExperimentalDomain(BaseDomain):
     async def disable(self) -> dict[str, Any]:
         """Disable the HeadlessExperimental domain.
 
-        Deactivates HeadlessExperimental domain events and reporting.
+        .. deprecated::
+            Marked as deprecated in the CDP specification.
 
         Returns:
             Response dict from the CDP.
         """
         return await self._call("HeadlessExperimental.disable")
-
-    async def set_window_bounds(
-        self,
-        window_id: int | None = None,
-        bounds: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        """Set headless window bounds.
-
-        Args:
-            window_id: Optional window ID. Defaults to the current window.
-            bounds: Bounds dict with optional ``left``, ``top``,
-                ``width``, ``height``, and ``windowState`` fields.
-        """
-        params: dict[str, Any] = {}
-        if window_id is not None:
-            params["windowId"] = window_id
-        if bounds is not None:
-            params["bounds"] = bounds
-        return await self._call(
-            "HeadlessExperimental.setWindowBounds", params
-        )

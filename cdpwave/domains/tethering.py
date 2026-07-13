@@ -1,4 +1,11 @@
-"""Tethering domain: port binding for incoming connections."""
+"""Tethering domain: browser port binding.
+
+Events:
+    Tethering.accepted: Informs that port was successfully bound and
+        got a specified connection id.
+        Params: ``port`` (integer — port number that was bound),
+        ``connectionId`` (string — connection id to be used).
+"""
 
 from typing import Any
 
@@ -8,30 +15,43 @@ from cdpwave.domains.base import BaseDomain
 class TetheringDomain(BaseDomain):
     """Wrapper for the CDP Tethering domain.
 
-    Provides port binding capabilities, allowing the browser to accept
-    incoming connections on specified ports. Useful for testing
-    network interception and service worker scenarios.
+    The Tethering domain defines methods and events for browser
+    port binding.
+
+    Note: This entire domain is **experimental**.
+
+    Events:
+        ``Tethering.accepted`` — informs that port was successfully
+            bound and got a specified connection id.
+            Params: ``port`` (integer — port number that was bound),
+            ``connectionId`` (string — connection id to be used).
+
+    Use ``session.on("Tethering.accepted", handler)``
+    to subscribe to these events.
     """
 
-    async def enable(self, port: int | None = None) -> dict[str, Any]:
-        """Enable tethering on a port.
+    async def bind(self, port: int) -> dict[str, Any]:
+        """Request browser port binding.
 
         Args:
-            port: Port to bind. If omitted, the browser will request
-                a port via ``Tethering.requested`` events.
+            port: Port number to bind.
         """
-        params: dict[str, Any] = {}
-        if port is not None:
-            params["port"] = port
-        return await self._call("Tethering.enable", params)
+        if not isinstance(port, int) or isinstance(port, bool):
+            raise TypeError("port must be an integer")
+        return await self._call(
+            "Tethering.bind",
+            {"port": port},
+        )
 
-    async def disable(self, port: int | None = None) -> dict[str, Any]:
-        """Disable tethering on a port.
+    async def unbind(self, port: int) -> dict[str, Any]:
+        """Request browser port unbinding.
 
         Args:
-            port: Port to unbind. If omitted, unbinds all.
+            port: Port number to unbind.
         """
-        params: dict[str, Any] = {}
-        if port is not None:
-            params["port"] = port
-        return await self._call("Tethering.disable", params)
+        if not isinstance(port, int) or isinstance(port, bool):
+            raise TypeError("port must be an integer")
+        return await self._call(
+            "Tethering.unbind",
+            {"port": port},
+        )

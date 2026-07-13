@@ -1,4 +1,10 @@
-"""CacheStorage domain: inspect and manipulate Cache API caches."""
+"""CacheStorage domain: inspect and manipulate Cache API caches.
+
+Provides inspection and manipulation of Cache API caches
+(Service Worker Cache Storage), including listing caches,
+retrieving entries, deleting caches or individual entries,
+and retrieving cached responses.
+"""
 
 from typing import Any
 
@@ -13,22 +19,17 @@ class CacheStorageDomain(BaseDomain):
     retrieving entries, and deleting caches or individual entries.
     """
 
-    async def enable(self) -> dict[str, Any]:
-        """Enable CacheStorage domain."""
-        return await self._call("CacheStorage.enable")
-
-    async def disable(self) -> dict[str, Any]:
-        """Disable CacheStorage domain."""
-        return await self._call("CacheStorage.disable")
-
     async def delete_cache(
         self,
         cache_id: str,
     ) -> dict[str, Any]:
-        """Delete a cache.
+        """Deletes a cache.
 
         Args:
             cache_id: ID of the cache to delete.
+
+        Returns:
+            Response dict from the CDP.
         """
         return await self._call(
             "CacheStorage.deleteCache",
@@ -40,11 +41,14 @@ class CacheStorageDomain(BaseDomain):
         cache_id: str,
         request: str,
     ) -> dict[str, Any]:
-        """Delete a specific entry from a cache.
+        """Deletes a cache entry.
 
         Args:
-            cache_id: ID of the cache containing the entry.
-            request: URL of the request to delete.
+            cache_id: ID of the cache where the entry will be deleted.
+            request: URL spec of the request.
+
+        Returns:
+            Response dict from the CDP.
         """
         return await self._call(
             "CacheStorage.deleteEntry",
@@ -57,48 +61,78 @@ class CacheStorageDomain(BaseDomain):
         storage_key: str | None = None,
         storage_bucket: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """List all caches for a security origin or storage key.
+        """Requests cache names.
+
+        At least and at most one of security_origin, storage_key, or
+        storage_bucket must be specified.
 
         Args:
-            security_origin: Security origin to query.
-            storage_key: Storage key to query.
-            storage_bucket: Optional storage bucket info.
+            security_origin: Security origin.
+            storage_key: Storage key.
+            storage_bucket: Storage bucket. If not specified, uses the
+                default bucket.
 
         Returns:
             Dict with ``caches`` list.
         """
         params: dict[str, Any] = {}
-        if security_origin is not None:
+        if security_origin:
             params["securityOrigin"] = security_origin
-        if storage_key is not None:
+        if storage_key:
             params["storageKey"] = storage_key
         if storage_bucket is not None:
             params["storageBucket"] = storage_bucket
         return await self._call("CacheStorage.requestCacheNames", params)
 
+    async def request_cached_response(
+        self,
+        cache_id: str,
+        request_url: str,
+        request_headers: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Fetches cache entry.
+
+        Args:
+            cache_id: ID of the cache that contains the entry.
+            request_url: URL spec of the request.
+            request_headers: Headers of the request.
+
+        Returns:
+            Dict with ``response`` containing ``body`` (base64-encoded str).
+        """
+        return await self._call(
+            "CacheStorage.requestCachedResponse",
+            {
+                "cacheId": cache_id,
+                "requestURL": request_url,
+                "requestHeaders": request_headers,
+            },
+        )
+
     async def request_entries(
         self,
         cache_id: str,
-        skip_count: int = 0,
-        page_size: int = 100,
+        skip_count: int | None = None,
+        page_size: int | None = None,
         path_filter: str | None = None,
     ) -> dict[str, Any]:
-        """Request entries from a cache.
+        """Requests data from cache.
 
         Args:
-            cache_id: ID of the cache to query.
-            skip_count: Number of entries to skip.
-            page_size: Maximum entries to return.
-            path_filter: Optional path filter string.
+            cache_id: ID of cache to get entries from.
+            skip_count: Number of records to skip.
+            page_size: Number of records to fetch.
+            path_filter: If present, only return the entries containing
+                this substring in the path.
 
         Returns:
             Dict with ``cacheDataEntries`` and ``returnCount``.
         """
-        params: dict[str, Any] = {
-            "cacheId": cache_id,
-            "skipCount": skip_count,
-            "pageSize": page_size,
-        }
-        if path_filter is not None:
+        params: dict[str, Any] = {"cacheId": cache_id}
+        if skip_count is not None:
+            params["skipCount"] = skip_count
+        if page_size is not None:
+            params["pageSize"] = page_size
+        if path_filter:
             params["pathFilter"] = path_filter
         return await self._call("CacheStorage.requestEntries", params)

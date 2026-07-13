@@ -1,4 +1,4 @@
-"""DOMStorage domain: localStorage and sessionStorage inspection."""
+"""DOMStorage domain: localStorage and sessionStorage access."""
 
 from typing import Any
 
@@ -9,9 +9,29 @@ class DOMStorageDomain(BaseDomain):
     """Wrapper for the CDP DOMStorage domain.
 
     Provides access to Web Storage (localStorage and sessionStorage)
-    per security origin. The DOMStorage domain does not require
-    ``enable``/``disable`` calls — commands work directly.
+    per security origin.
+
+    Events:
+        - ``DOMStorage.domStorageItemAdded`` — fired when item added.
+          Params: ``storageId`` (StorageId), ``key`` (str), ``newValue`` (str).
+        - ``DOMStorage.domStorageItemRemoved`` — fired when item removed.
+          Params: ``storageId`` (StorageId), ``key`` (str).
+        - ``DOMStorage.domStorageItemsCleared`` — fired when all items cleared.
+          Params: ``storageId`` (StorageId).
+        - ``DOMStorage.domStorageItemUpdated`` — fired when item value updated.
+          Params: ``storageId`` (StorageId), ``key`` (str),
+          ``oldValue`` (str), ``newValue`` (str).
+
+    Call ``enable`` to receive storage events; ``disable`` to stop them.
     """
+
+    async def enable(self) -> dict[str, Any]:
+        """Enable storage tracking, storage events will now be delivered to the client."""
+        return await self._call("DOMStorage.enable")
+
+    async def disable(self) -> dict[str, Any]:
+        """Disable storage tracking, prevents storage events from being sent to the client."""
+        return await self._call("DOMStorage.disable")
 
     async def get_dom_storage_items(
         self,
@@ -20,10 +40,13 @@ class DOMStorageDomain(BaseDomain):
         """Get DOM storage items.
 
         Args:
-            storage_id: Dict with ``securityOrigin`` and ``isLocalStorage``.
+            storage_id: Dict with ``securityOrigin`` (str, optional),
+                ``storageKey`` (str, optional), and ``isLocalStorage``
+                (bool, always sent).
 
         Returns:
-            Dict with ``entries`` list of ``[key, value]`` pairs.
+            Dict with ``entries`` key: list of ``[key, value]`` pairs
+            (each pair is a ``list[str]`` of length 2).
         """
         return await self._call(
             "DOMStorage.getDOMStorageItems",
@@ -39,7 +62,9 @@ class DOMStorageDomain(BaseDomain):
         """Set a DOM storage item.
 
         Args:
-            storage_id: Dict with ``securityOrigin`` and ``isLocalStorage``.
+            storage_id: Dict with ``securityOrigin`` (str, optional),
+                ``storageKey`` (str, optional), and ``isLocalStorage``
+                (bool, always sent).
             key: Item key.
             value: Item value.
         """
@@ -56,7 +81,9 @@ class DOMStorageDomain(BaseDomain):
         """Remove a DOM storage item.
 
         Args:
-            storage_id: Dict with ``securityOrigin`` and ``isLocalStorage``.
+            storage_id: Dict with ``securityOrigin`` (str, optional),
+                ``storageKey`` (str, optional), and ``isLocalStorage``
+                (bool, always sent).
             key: Item key to remove.
         """
         return await self._call(
@@ -64,16 +91,25 @@ class DOMStorageDomain(BaseDomain):
             {"storageId": storage_id, "key": key},
         )
 
-    async def clear_dom_storage_items(
+    async def clear(
         self,
         storage_id: dict[str, Any],
     ) -> dict[str, Any]:
-        """Clear all DOM storage items.
+        """Clear all DOM storage items for the given storage.
 
         Args:
-            storage_id: Dict with ``securityOrigin`` and ``isLocalStorage``.
+            storage_id: Dict with ``securityOrigin`` (str, optional),
+                ``storageKey`` (str, optional), and ``isLocalStorage``
+                (bool, always sent).
         """
         return await self._call(
             "DOMStorage.clear",
             {"storageId": storage_id},
         )
+
+    async def clear_dom_storage_items(
+        self,
+        storage_id: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Alias for :meth:`clear`."""
+        return await self.clear(storage_id)

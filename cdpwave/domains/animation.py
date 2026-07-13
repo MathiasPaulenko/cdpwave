@@ -51,6 +51,47 @@ class AnimationDomain(BaseDomain):
             {"id": animation_id},
         )
 
+    async def get_playback_rate(self) -> dict[str, Any]:
+        """Get the playback rate of the document timeline.
+
+        Returns:
+            Dict with ``playbackRate`` for animations on page.
+        """
+        return await self._call("Animation.getPlaybackRate")
+
+    async def resolve_animation(
+        self,
+        animation_id: str,
+    ) -> dict[str, Any]:
+        """Get the remote object of an Animation.
+
+        Args:
+            animation_id: Animation ID to resolve.
+
+        Returns:
+            Dict with ``remoteObject`` of the corresponding Animation.
+        """
+        return await self._call(
+            "Animation.resolveAnimation",
+            {"animationId": animation_id},
+        )
+
+    async def seek_animations(
+        self,
+        animations: list[str],
+        current_time: int,
+    ) -> dict[str, Any]:
+        """Seek a set of animations to a particular time.
+
+        Args:
+            animations: List of animation IDs to seek.
+            current_time: Target time in milliseconds.
+        """
+        return await self._call(
+            "Animation.seekAnimations",
+            {"animations": animations, "currentTime": current_time},
+        )
+
     async def set_paused(
         self,
         animations: list[str],
@@ -120,14 +161,13 @@ class AnimationDomain(BaseDomain):
     ) -> dict[str, Any]:
         """Seek animations to a specific time.
 
+        Alias for :meth:`seek_animations`.
+
         Args:
             animations: List of animation IDs.
             current_time: Target time in milliseconds.
         """
-        return await self._call(
-            "Animation.seekTo",
-            {"animations": animations, "currentTime": current_time},
-        )
+        return await self.seek_animations(animations, current_time)
 
     async def replay(
         self,

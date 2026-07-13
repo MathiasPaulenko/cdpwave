@@ -98,15 +98,15 @@ class CDPSession:
         self._session_id = session_id
         self._target_id = target_id
         self._closed = False
-        self._dispatcher = EventDispatcher()
 
         if client is not None:
-            client._session_dispatchers[session_id] = self._dispatcher
             self._dispatcher = EventDispatcher(
                 strict_events=client._strict_events,
                 on_event_error=client._on_event_error,
             )
             client._session_dispatchers[session_id] = self._dispatcher
+        else:
+            self._dispatcher = EventDispatcher()
         self._client = client
 
         self._sub_sessions: dict[str, CDPSession] = {}
@@ -255,7 +255,7 @@ class CDPSession:
 
     @property
     def security(self) -> SecurityDomain:
-        """Security domain wrapper for certificate error handling."""
+        """Security domain wrapper for tracking security state changes."""
         return self._security
 
     @property
@@ -280,7 +280,14 @@ class CDPSession:
 
     @property
     def tracing(self) -> TracingDomain:
-        """Tracing domain wrapper for performance tracing and timeline recording."""
+        """Tracing domain wrapper for performance tracing and timeline recording.
+
+        Provides 6 methods: ``end``, ``get_categories``,
+        ``get_track_event_descriptor``, ``record_clock_sync_marker``,
+        ``request_memory_dump``, ``start``.
+
+        **Experimental** — marked as Experimental in the CDP spec.
+        """
         return self._tracing
 
     @property
@@ -310,7 +317,7 @@ class CDPSession:
 
     @property
     def memory(self) -> MemoryDomain:
-        """Memory domain wrapper for DOM counters, sampling, and GC control."""
+        """Memory domain wrapper for DOM counters, sampling, and pressure control."""
         return self._memory
 
     @property
@@ -335,7 +342,7 @@ class CDPSession:
 
     @property
     def tethering(self) -> TetheringDomain:
-        """Tethering domain wrapper for port binding."""
+        """Tethering domain wrapper for browser port binding."""
         return self._tethering
 
     @property
@@ -345,7 +352,7 @@ class CDPSession:
 
     @property
     def cast(self) -> CastDomain:
-        """Cast domain wrapper for sink discovery and tab mirroring."""
+        """Cast domain wrapper for sink discovery, tab and desktop mirroring."""
         return self._cast
 
     @property
@@ -385,7 +392,7 @@ class CDPSession:
 
     @property
     def inspector(self) -> InspectorDomain:
-        """Inspector domain wrapper for inspector lifecycle events."""
+        """Inspector domain wrapper for inspector domain notifications."""
         return self._inspector
 
     @property
@@ -475,7 +482,7 @@ class CDPSession:
 
     @property
     def web_mcp(self) -> WebMCPDomain:
-        """WebMCP domain wrapper for Web MCP tool invocation."""
+        """WebMCP domain wrapper for Web MCP monitoring."""
         return self._web_mcp
 
     @property

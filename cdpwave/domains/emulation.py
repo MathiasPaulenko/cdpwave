@@ -10,6 +10,16 @@ class EmulationDomain(BaseDomain):
 
     Provides methods for emulating devices, viewports, CPU throttling,
     sensors, and other environmental conditions.
+
+    Events:
+        - ``Emulation.screenOrientationLockChanged`` — fired when
+          ``screen.orientation.lock()`` is called while device emulation
+          is enabled.
+        - ``Emulation.virtualTimeBudgetExpired`` — fired when the virtual
+          time budget for the current VirtualTimePolicy has run out.
+
+    Use ``session.on("Emulation.virtualTimeBudgetExpired", handler)``
+    to subscribe to these events.
     """
 
     async def set_device_metrics_override(
@@ -18,15 +28,16 @@ class EmulationDomain(BaseDomain):
         height: int,
         device_scale_factor: float = 1.0,
         mobile: bool = False,
+        scale: float | None = None,
         screen_width: int | None = None,
         screen_height: int | None = None,
         position_x: int | None = None,
         position_y: int | None = None,
-        user_agent: str | None = None,
+        dont_set_visible_size: bool = False,
         screen_orientation: dict[str, Any] | None = None,
         viewport: dict[str, Any] | None = None,
-        display_feature: dict[str, Any] | None = None,
-        device_posture: dict[str, Any] | None = None,
+        scrollbar_type: str | None = None,
+        screen_orientation_lock_emulation: bool = False,
     ) -> dict[str, Any]:
         """Override device metrics for the page.
 
@@ -35,16 +46,18 @@ class EmulationDomain(BaseDomain):
             height: Viewport height in CSS pixels.
             device_scale_factor: Device pixel scale factor.
             mobile: Whether the device is mobile.
+            scale: Scale to apply to resulting view image.
             screen_width: Screen width in CSS pixels.
             screen_height: Screen height in CSS pixels.
             position_x: Screen X position offset.
             position_y: Screen Y position offset.
-            user_agent: User agent string override.
+            dont_set_visible_size: Do not set visible view size.
             screen_orientation: Screen orientation dict with ``type`` and
                 ``angle``.
             viewport: Page viewport dict.
-            display_feature: Display feature dict (e.g. hinge).
-            device_posture: Device posture dict.
+            scrollbar_type: Scrollbar type (``"default"``, ``"overlay"``).
+            screen_orientation_lock_emulation: Enable screen orientation lock
+                emulation.
 
         Returns:
             Response dict from the CDP command.
@@ -54,31 +67,25 @@ class EmulationDomain(BaseDomain):
             "height": height,
             "deviceScaleFactor": device_scale_factor,
             "mobile": mobile,
+            "dontSetVisibleSize": dont_set_visible_size,
+            "screenOrientationLockEmulation": screen_orientation_lock_emulation,
         }
-        if screen_width is not None:
+        if scale:
+            params["scale"] = scale
+        if screen_width:
             params["screenWidth"] = screen_width
-        if screen_height is not None:
+        if screen_height:
             params["screenHeight"] = screen_height
-        if position_x is not None:
+        if position_x:
             params["positionX"] = position_x
-        if position_y is not None:
+        if position_y:
             params["positionY"] = position_y
-        if user_agent is not None:
-            params["userAgent"] = user_agent
         if screen_orientation is not None:
             params["screenOrientation"] = screen_orientation
         if viewport is not None:
             params["viewport"] = viewport
-        if display_feature is not None:
-            df = display_feature
-            params["displayFeature"] = {
-                "orientation": df.get("orientation", df.get("Orientation", "")),
-                "offset": df.get("offset", df.get("Offset", 0)),
-                "maskLength": df.get("maskLength", df.get("mask_length", 0)),
-                "maskThickness": df.get("maskThickness", df.get("mask_thickness", 0)),
-            }
-        if device_posture is not None:
-            params["devicePosture"] = device_posture
+        if scrollbar_type:
+            params["scrollbarType"] = scrollbar_type
         return await self._call("Emulation.setDeviceMetricsOverride", params)
 
     async def clear_device_metrics_override(self) -> dict[str, Any]:
@@ -112,9 +119,9 @@ class EmulationDomain(BaseDomain):
             Response dict from the CDP command.
         """
         params: dict[str, Any] = {"userAgent": user_agent}
-        if accept_language is not None:
+        if accept_language:
             params["acceptLanguage"] = accept_language
-        if platform is not None:
+        if platform:
             params["platform"] = platform
         if user_agent_metadata is not None:
             params["userAgentMetadata"] = user_agent_metadata
@@ -144,25 +151,43 @@ class EmulationDomain(BaseDomain):
 
     async def set_geolocation_override(
         self,
-        latitude: float,
-        longitude: float,
-        accuracy: float = 100.0,
+        latitude: float | None = None,
+        longitude: float | None = None,
+        accuracy: float | None = None,
+        altitude: float | None = None,
+        altitude_accuracy: float | None = None,
+        heading: float | None = None,
+        speed: float | None = None,
     ) -> dict[str, Any]:
         """Override the geolocation position.
 
+        Omitting all parameters emulates position unavailable.
+
         Args:
-            latitude: Latitude in degrees.
-            longitude: Longitude in degrees.
-            accuracy: Accuracy in meters.
+            latitude: Mock latitude.
+            longitude: Mock longitude.
+            accuracy: Mock accuracy.
+            altitude: Mock altitude.
+            altitude_accuracy: Mock altitude accuracy.
+            heading: Mock heading.
+            speed: Mock speed.
         """
-        return await self._call(
-            "Emulation.setGeolocationOverride",
-            {
-                "latitude": latitude,
-                "longitude": longitude,
-                "accuracy": accuracy,
-            },
-        )
+        params: dict[str, Any] = {}
+        if latitude:
+            params["latitude"] = latitude
+        if longitude:
+            params["longitude"] = longitude
+        if accuracy:
+            params["accuracy"] = accuracy
+        if altitude:
+            params["altitude"] = altitude
+        if altitude_accuracy:
+            params["altitudeAccuracy"] = altitude_accuracy
+        if heading:
+            params["heading"] = heading
+        if speed:
+            params["speed"] = speed
+        return await self._call("Emulation.setGeolocationOverride", params)
 
     async def clear_geolocation_override(self) -> dict[str, Any]:
         """Clear any overridden geolocation.
@@ -188,7 +213,7 @@ class EmulationDomain(BaseDomain):
             max_touch_points: Maximum number of touch points supported.
         """
         params: dict[str, Any] = {"enabled": enabled}
-        if max_touch_points is not None:
+        if max_touch_points:
             params["maxTouchPoints"] = max_touch_points
         return await self._call("Emulation.setTouchEmulationEnabled", params)
 
@@ -197,15 +222,17 @@ class EmulationDomain(BaseDomain):
         media: str = "",
         features: list[dict[str, str]] | None = None,
     ) -> dict[str, Any]:
-        """Emulate CSS media features.
+        """Emulate CSS media type or media features.
 
         Args:
             media: Media type to emulate (``"print"``, ``"screen"``, ``""``
                 to clear).
             features: List of media feature dicts with ``name`` and ``value``.
         """
-        params: dict[str, Any] = {"media": media}
-        if features is not None:
+        params: dict[str, Any] = {}
+        if media:
+            params["media"] = media
+        if features:
             params["features"] = features
         return await self._call("Emulation.setEmulatedMedia", params)
 
@@ -214,7 +241,7 @@ class EmulationDomain(BaseDomain):
 
         Resets both media type and features to their defaults.
         """
-        return await self._call("Emulation.setEmulatedMedia", {"media": ""})
+        return await self._call("Emulation.setEmulatedMedia")
 
     async def set_emulated_media_feature(
         self,
@@ -240,27 +267,27 @@ class EmulationDomain(BaseDomain):
         r: int | None = None,
         g: int | None = None,
         b: int | None = None,
-        a: int | None = None,
+        a: float | None = None,
     ) -> dict[str, Any]:
         """Override the default background color of the page.
 
         If ``color`` is provided, uses it directly. Otherwise builds
-        the color dict from ``r``, ``g``, ``b``, ``a`` (0-255 range).
+        the color dict from ``r``, ``g``, ``b``, ``a``.
         If no arguments are provided, clears the override.
 
         Args:
             r: Red channel (0-255).
             g: Green channel (0-255).
             b: Blue channel (0-255).
-            a: Alpha channel (0-255).
-            color: Pre-built color dict with ``r``, ``g``, "b", ``a``.
+            a: Alpha channel (0-1).
+            color: Pre-built color dict with ``r``, ``g``, ``b``, ``a``.
         """
         if color is None and (r is not None or g is not None or b is not None or a is not None):
             color = {
                     "r": r if r is not None else 0,
                     "g": g if g is not None else 0,
                     "b": b if b is not None else 0,
-                    "a": a if a is not None else 255,
+                    "a": a if a is not None else 1.0,
                 }
         params: dict[str, Any] = {}
         if color is not None:
@@ -284,53 +311,29 @@ class EmulationDomain(BaseDomain):
     async def set_idle_override(
         self,
         is_user_active: bool,
-        is_screen_active: bool,
+        is_screen_unlocked: bool,
     ) -> dict[str, Any]:
         """Override the idle state.
 
-        .. deprecated::
-            ``Emulation.setIdleOverride`` was removed in Chrome 120+.
-            This method may return ``CommandError`` on modern Chrome.
-            Use ``set_emulated_idle_state`` instead if available.
-
         Args:
             is_user_active: Whether the user is active.
-            is_screen_active: Whether the screen is unlocked.
+            is_screen_unlocked: Whether the screen is unlocked.
         """
         return await self._call(
             "Emulation.setIdleOverride",
             {
                 "isUserActive": is_user_active,
-                "isScreenActive": is_screen_active,
+                "isScreenUnlocked": is_screen_unlocked,
             },
         )
 
     async def clear_idle_override(self) -> dict[str, Any]:
         """Clear the idle state override.
 
-        .. deprecated::
-            ``Emulation.clearIdleOverride`` was removed in Chrome 120+.
-            This method may return ``CommandError`` on modern Chrome.
-
         Returns:
             Response dict from the CDP.
         """
         return await self._call("Emulation.clearIdleOverride")
-
-    async def set_disabled_sensors(self, disabled: bool) -> dict[str, Any]:
-        """Disable or enable device sensors.
-
-        .. deprecated::
-            ``Emulation.setDisabledSensors`` was removed in modern Chrome.
-            This method may return ``CommandError``.
-
-        Args:
-            disabled: Whether to disable sensors.
-        """
-        return await self._call(
-            "Emulation.setDisabledSensors",
-            {"disabled": disabled},
-        )
 
     async def set_timezone_override(self, timezone_id: str) -> dict[str, Any]:
         """Override the system timezone.
@@ -357,16 +360,19 @@ class EmulationDomain(BaseDomain):
             {"timezoneId": ""},
         )
 
-    async def set_locale_override(self, locale: str) -> dict[str, Any]:
+    async def set_locale_override(self, locale: str = "") -> dict[str, Any]:
         """Override the system locale.
+
+        If ``locale`` is empty, clears the override and restores the
+        default host system locale.
 
         Args:
             locale: Locale string (e.g. ``"en-US"``, ``"es-ES"``).
         """
-        return await self._call(
-            "Emulation.setLocaleOverride",
-            {"locale": locale},
-        )
+        params: dict[str, Any] = {}
+        if locale:
+            params["locale"] = locale
+        return await self._call("Emulation.setLocaleOverride", params)
 
     async def set_sensor_override_readings(
         self,
@@ -377,24 +383,19 @@ class EmulationDomain(BaseDomain):
 
         Args:
             type: Sensor type (``"accelerometer"``, ``"gyroscope"``,
-                ``"linear-accelerometer"``, ``"absolute-orientation"``,
-                ``"relative-orientation"``).
-            reading: Sensor reading dict (e.g. ``{"x": 0, "y": 0, "z": 0}``).
+                ``"linear-acceleration"``, ``"absolute-orientation"``,
+                ``"relative-orientation"``, ``"ambient-light"``,
+                ``"gravity"``, ``"magnetometer"``).
+            reading: Sensor reading dict. Format depends on sensor type:
+                ``{"xyz": {"x": 1.0, "y": 0.0, "z": 9.8}}`` for
+                accelerometer/gyroscope/gravity/magnetometer/linear-acceleration,
+                ``{"single": {"value": 100.0}}`` for ambient-light,
+                ``{"quaternion": {"x": 0, "y": 0, "z": 0, "w": 1}}``
+                for absolute/relative orientation.
         """
         return await self._call(
             "Emulation.setSensorOverrideReadings",
             {"type": type, "reading": reading},
-        )
-
-    async def clear_sensor_override_readings(self, type: str) -> dict[str, Any]:
-        """Clear sensor override readings for a specific sensor type.
-
-        Args:
-            type: Sensor type to clear.
-        """
-        return await self._call(
-            "Emulation.clearSensorOverrideReadings",
-            {"type": type},
         )
 
     async def set_page_scale_factor(self, page_scale_factor: float) -> dict[str, Any]:
@@ -415,9 +416,13 @@ class EmulationDomain(BaseDomain):
     ) -> dict[str, Any]:
         """Set the visible size of the page.
 
+        .. deprecated::
+            This command is deprecated in the CDP spec. Use
+            ``set_device_metrics_override`` instead.
+
         Args:
-            width: Width in CSS pixels.
-            height: Height in CSS pixels.
+            width: Frame width in DIP (Device Independent Pixels).
+            height: Frame height in DIP (Device Independent Pixels).
         """
         return await self._call(
             "Emulation.setVisibleSize",
@@ -435,17 +440,6 @@ class EmulationDomain(BaseDomain):
             {"hidden": hidden},
         )
 
-    async def set_javascript_disabled(self, disabled: bool) -> dict[str, Any]:
-        """Disable or enable JavaScript execution.
-
-        Args:
-            disabled: Whether to disable JavaScript.
-        """
-        return await self._call(
-            "Emulation.setJavaScriptDisabled",
-            {"disabled": disabled},
-        )
-
     async def set_document_cookie_disabled(self, disabled: bool) -> dict[str, Any]:
         """Disable or enable document.cookie access.
 
@@ -460,53 +454,57 @@ class EmulationDomain(BaseDomain):
     async def set_emit_touch_events_for_mouse(
         self,
         enabled: bool,
-        configuration: str = "mobile",
+        configuration: str | None = None,
     ) -> dict[str, Any]:
         """Emit touch events for mouse events.
 
         Args:
             enabled: Whether to emit touch events for mouse.
-            configuration: ``"mobile"`` or ``"desktop"``.
+            configuration: ``"mobile"`` or ``"desktop"``. If not specified,
+                defaults to current platform.
         """
-        return await self._call(
-            "Emulation.setEmitTouchEventsForMouse",
-            {"enabled": enabled, "configuration": configuration},
-        )
+        params: dict[str, Any] = {"enabled": enabled}
+        if configuration:
+            params["configuration"] = configuration
+        return await self._call("Emulation.setEmitTouchEventsForMouse", params)
 
     async def set_auto_dark_mode_override(
         self,
-        enabled: bool | None = None,
+        enabled: bool = False,
     ) -> dict[str, Any]:
         """Override the auto dark mode setting.
 
         Args:
-            enabled: Whether to enable auto dark mode. If not specified,
-                any existing override will be cleared.
+            enabled: Whether to enable auto dark mode. ``False`` clears
+                any existing override.
         """
-        params: dict[str, Any] = {}
-        if enabled is not None:
-            params["enabled"] = enabled
         return await self._call(
             "Emulation.setAutoDarkModeOverride",
-            params,
+            {"enabled": enabled},
         )
 
     async def clear_auto_dark_mode_override(self) -> dict[str, Any]:
         """Clear the auto dark mode override.
 
         Removes the auto dark mode override by calling
-        ``setAutoDarkModeOverride`` with no enabled parameter.
+        ``setAutoDarkModeOverride`` with ``enabled=False``.
 
         Returns:
             Response dict from the CDP.
         """
-        return await self._call("Emulation.setAutoDarkModeOverride")
+        return await self._call(
+            "Emulation.setAutoDarkModeOverride",
+            {"enabled": False},
+        )
 
     async def set_navigator_overrides(
         self,
         platform: str,
     ) -> dict[str, Any]:
         """Override the navigator platform.
+
+        .. deprecated::
+            This command is deprecated in the CDP spec.
 
         Args:
             platform: The platform string navigator.platform should return.
@@ -519,7 +517,7 @@ class EmulationDomain(BaseDomain):
     async def set_virtual_time_policy(
         self,
         policy: str,
-        budget: int | None = None,
+        budget: float | None = None,
         max_virtual_time_task_starvation_count: int | None = None,
         initial_virtual_time: float | None = None,
     ) -> dict[str, Any]:
@@ -541,11 +539,11 @@ class EmulationDomain(BaseDomain):
             Dict with ``virtualTimeTicksBase``.
         """
         params: dict[str, Any] = {"policy": policy}
-        if budget is not None:
+        if budget:
             params["budget"] = budget
-        if max_virtual_time_task_starvation_count is not None:
+        if max_virtual_time_task_starvation_count:
             params["maxVirtualTimeTaskStarvationCount"] = max_virtual_time_task_starvation_count
-        if initial_virtual_time is not None:
+        if initial_virtual_time:
             params["initialVirtualTime"] = initial_virtual_time
         return await self._call("Emulation.setVirtualTimePolicy", params)
 
@@ -554,10 +552,6 @@ class EmulationDomain(BaseDomain):
         enabled: bool,
     ) -> dict[str, Any]:
         """Enable or disable simulating a focused and active page.
-
-        .. deprecated::
-            ``Emulation.setFocusEmulationEnabled`` was removed in modern
-            Chrome. This method may return ``CommandError``.
 
         Args:
             enabled: Whether to enable or disable focus emulation.
@@ -572,10 +566,6 @@ class EmulationDomain(BaseDomain):
         type: str,
     ) -> dict[str, Any]:
         """Emulate a vision deficiency.
-
-        .. deprecated::
-            ``Emulation.setEmulatedVisionDeficiency`` was removed in
-            modern Chrome. This method may return ``CommandError``.
 
         Args:
             type: Vision deficiency to emulate (``"none"``,
@@ -601,28 +591,11 @@ class EmulationDomain(BaseDomain):
             {"type": "none"},
         )
 
-    async def set_scroll_position(
-        self,
-        x: float = 0,
-        y: float = 0,
-    ) -> dict[str, Any]:
-        """Set the scroll position for the current page.
-
-        .. deprecated::
-            ``Emulation.setScrollPositionOverride`` was removed in
-            modern Chrome. This method may return ``CommandError``.
-
-        Args:
-            x: Horizontal scroll position.
-            y: Vertical scroll position.
-        """
-        return await self._call(
-            "Emulation.setScrollPositionOverride",
-            {"x": x, "y": y},
-        )
-
     async def can_emulate(self) -> dict[str, Any]:
         """Check if emulation is supported.
+
+        .. deprecated::
+            This command is deprecated in the CDP spec.
 
         Returns:
             Dict with ``result`` boolean.
@@ -635,22 +608,50 @@ class EmulationDomain(BaseDomain):
 
     async def set_safe_area_insets_override(
         self,
-        top: int = 0,
-        left: int = 0,
-        bottom: int = 0,
-        right: int = 0,
+        top: int | None = None,
+        left: int | None = None,
+        bottom: int | None = None,
+        right: int | None = None,
+        top_max: int | None = None,
+        left_max: int | None = None,
+        bottom_max: int | None = None,
+        right_max: int | None = None,
     ) -> dict[str, Any]:
         """Override safe area insets.
+
+        Unset values will cause the respective env variables to be
+        undefined, even if previously overridden.
 
         Args:
             top: Top safe area inset in CSS pixels.
             left: Left safe area inset in CSS pixels.
             bottom: Bottom safe area inset in CSS pixels.
             right: Right safe area inset in CSS pixels.
+            top_max: Max top safe area inset in CSS pixels.
+            left_max: Max left safe area inset in CSS pixels.
+            bottom_max: Max bottom safe area inset in CSS pixels.
+            right_max: Max right safe area inset in CSS pixels.
         """
+        insets: dict[str, Any] = {}
+        if top:
+            insets["top"] = top
+        if left:
+            insets["left"] = left
+        if bottom:
+            insets["bottom"] = bottom
+        if right:
+            insets["right"] = right
+        if top_max:
+            insets["topMax"] = top_max
+        if left_max:
+            insets["leftMax"] = left_max
+        if bottom_max:
+            insets["bottomMax"] = bottom_max
+        if right_max:
+            insets["rightMax"] = right_max
         return await self._call(
             "Emulation.setSafeAreaInsetsOverride",
-            {"insets": {"top": top, "left": left, "bottom": bottom, "right": right}},
+            {"insets": insets},
         )
 
     async def set_device_posture_override(
@@ -664,7 +665,7 @@ class EmulationDomain(BaseDomain):
         """
         return await self._call(
             "Emulation.setDevicePostureOverride",
-            {"posture": posture},
+            {"posture": {"type": posture}},
         )
 
     async def clear_device_posture_override(self) -> dict[str, Any]:
@@ -673,17 +674,17 @@ class EmulationDomain(BaseDomain):
 
     async def set_display_features_override(
         self,
-        display_features: list[dict[str, Any]],
+        features: list[dict[str, Any]],
     ) -> dict[str, Any]:
         """Override display features (e.g. hinges, cutouts).
 
         Args:
-            display_features: List of display feature dicts with
-                ``orientation``, ``offset``, ``maskLength``, ``maskThickness``.
+            features: List of display feature dicts with
+                ``orientation``, ``offset``, ``maskLength``.
         """
         return await self._call(
             "Emulation.setDisplayFeaturesOverride",
-            {"displayFeatures": display_features},
+            {"features": features},
         )
 
     async def clear_display_features_override(self) -> dict[str, Any]:
@@ -692,22 +693,27 @@ class EmulationDomain(BaseDomain):
 
     async def set_emulated_os_text_scale(
         self,
-        font_scale: float,
+        scale: float = 0.0,
     ) -> dict[str, Any]:
         """Override the OS-level text scaling factor.
 
         Args:
-            font_scale: Text scaling factor (1.0 = default).
+            scale: Text scaling factor (1.0 = default). ``0`` clears
+                the override.
         """
+        params: dict[str, Any] = {}
+        if scale:
+            params["scale"] = scale
         return await self._call(
             "Emulation.setEmulatedOSTextScale",
-            {"fontScale": font_scale},
+            params,
         )
 
     async def set_sensor_override_enabled(
         self,
         enabled: bool,
         type: str,
+        metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Enable or disable sensor override for a specific sensor type.
 
@@ -717,12 +723,17 @@ class EmulationDomain(BaseDomain):
         Args:
             enabled: Whether to enable the sensor override.
             type: Sensor type (``"accelerometer"``, ``"gyroscope"``,
-                ``"linear-accelerometer"``, ``"absolute-orientation"``,
-                ``"relative-orientation"``).
+                ``"linear-acceleration"``, ``"absolute-orientation"``,
+                ``"relative-orientation"``, ``"ambient-light"``,
+                ``"gravity"``, ``"magnetometer"``).
+            metadata: Optional sensor metadata dict.
         """
+        params: dict[str, Any] = {"enabled": enabled, "type": type}
+        if metadata is not None:
+            params["metadata"] = metadata
         return await self._call(
             "Emulation.setSensorOverrideEnabled",
-            {"enabled": enabled, "type": type},
+            params,
         )
 
     async def get_overridden_sensor_information(
@@ -735,7 +746,7 @@ class EmulationDomain(BaseDomain):
             type: Sensor type to query.
 
         Returns:
-            Dict with ``requestedFrequencyHz``.
+            Dict with ``requestedSamplingFrequency``.
         """
         return await self._call(
             "Emulation.getOverriddenSensorInformation",
@@ -751,7 +762,7 @@ class EmulationDomain(BaseDomain):
         """Enable or disable pressure source override.
 
         Args:
-            source: Pressure source (``"cpu"``, ``"gpu"``).
+            source: Pressure source (``"cpu"``).
             enabled: Whether to enable the override.
             metadata: Optional metadata dict.
         """
@@ -767,22 +778,17 @@ class EmulationDomain(BaseDomain):
         self,
         source: str,
         state: str,
-        own_contribution: float | None = None,
     ) -> dict[str, Any]:
         """Override pressure state for a source.
 
         Args:
-            source: Pressure source (``"cpu"``, ``"gpu"``).
-            state: Pressure state (``"nominal"``, ``"fair"``,
+            source: Pressure source (``"cpu"``).
+            state: Pressure state (``"nominal"``, ``"fair"`,
                 ``"serious"``, ``"critical"``).
-            own_contribution: Optional own contribution ratio (0.0-1.0).
         """
-        params: dict[str, Any] = {"source": source, "state": state}
-        if own_contribution is not None:
-            params["ownContribution"] = own_contribution
         return await self._call(
             "Emulation.setPressureStateOverride",
-            params,
+            {"source": source, "state": state},
         )
 
     async def set_disabled_image_types(
@@ -793,7 +799,7 @@ class EmulationDomain(BaseDomain):
 
         Args:
             image_types: List of image types to disable (e.g.
-                ``["avif", "webp", "jpg"]``).
+                ``["avif", "webp", "jxl"]``).
         """
         return await self._call(
             "Emulation.setDisabledImageTypes",
@@ -808,7 +814,7 @@ class EmulationDomain(BaseDomain):
         """
         return await self._call(
             "Emulation.setDataSaverOverride",
-            {"enabled": enabled},
+            {"dataSaverEnabled": enabled},
         )
 
     async def set_hardware_concurrency_override(
@@ -838,16 +844,16 @@ class EmulationDomain(BaseDomain):
 
     async def set_small_viewport_height_difference_override(
         self,
-        enabled: bool,
+        difference: int,
     ) -> dict[str, Any]:
         """Override the small viewport height difference.
 
         Args:
-            enabled: Whether to enable the small viewport height difference.
+            difference: Pixels difference between 100svh and 100lvh.
         """
         return await self._call(
             "Emulation.setSmallViewportHeightDifferenceOverride",
-            {"enabled": enabled},
+            {"difference": difference},
         )
 
     async def get_screen_infos(self) -> dict[str, Any]:
@@ -860,70 +866,106 @@ class EmulationDomain(BaseDomain):
 
     async def add_screen(
         self,
+        left: int,
+        top: int,
         width: int,
         height: int,
-        device_scale_factor: float = 1.0,
-        touch: bool = False,
-        external: bool = False,
+        work_area_insets: dict[str, Any] | None = None,
+        device_pixel_ratio: float | None = None,
+        rotation: int | None = None,
+        color_depth: int | None = None,
         label: str | None = None,
+        is_internal: bool = False,
     ) -> dict[str, Any]:
         """Add a virtual screen.
 
         Args:
-            width: Screen width in CSS pixels.
-            height: Screen height in CSS pixels.
-            device_scale_factor: Device pixel scale factor.
-            touch: Whether the screen supports touch.
-            external: Whether the screen is external.
-            label: Optional screen label.
+            left: Offset of the left edge in pixels.
+            top: Offset of the top edge in pixels.
+            width: Screen width in pixels.
+            height: Screen height in pixels.
+            work_area_insets: Screen work area insets dict.
+            device_pixel_ratio: Device pixel ratio (default 1).
+            rotation: Rotation angle (0, 90, 180, 270).
+            color_depth: Color depth in bits (default 24).
+            label: Descriptive label for the screen.
+            is_internal: Whether the screen is internal.
 
         Returns:
-            Dict with ``screenId``.
+            Dict with ``screenInfo``.
         """
         params: dict[str, Any] = {
+            "left": left,
+            "top": top,
             "width": width,
             "height": height,
-            "deviceScaleFactor": device_scale_factor,
-            "touch": touch,
-            "external": external,
+            "isInternal": is_internal,
         }
-        if label is not None:
+        if work_area_insets is not None:
+            params["workAreaInsets"] = work_area_insets
+        if device_pixel_ratio:
+            params["devicePixelRatio"] = device_pixel_ratio
+        if rotation:
+            params["rotation"] = rotation
+        if color_depth:
+            params["colorDepth"] = color_depth
+        if label:
             params["label"] = label
         return await self._call("Emulation.addScreen", params)
 
     async def update_screen(
         self,
         screen_id: str,
+        left: int | None = None,
+        top: int | None = None,
         width: int | None = None,
         height: int | None = None,
-        device_scale_factor: float | None = None,
-        touch: bool | None = None,
-        external: bool | None = None,
+        work_area_insets: dict[str, Any] | None = None,
+        device_pixel_ratio: float | None = None,
+        rotation: int | None = None,
+        color_depth: int | None = None,
         label: str | None = None,
+        is_internal: bool = False,
     ) -> dict[str, Any]:
         """Update a virtual screen.
 
         Args:
             screen_id: Screen ID to update.
-            width: New width in CSS pixels.
-            height: New height in CSS pixels.
-            device_scale_factor: New device pixel scale factor.
-            touch: Whether the screen supports touch.
-            external: Whether the screen is external.
+            left: Offset of the left edge in pixels.
+            top: Offset of the top edge in pixels.
+            width: New width in pixels.
+            height: New height in pixels.
+            work_area_insets: Screen work area insets dict.
+            device_pixel_ratio: Device pixel ratio.
+            rotation: Rotation angle (0, 90, 180, 270).
+            color_depth: Color depth in bits.
             label: New screen label.
+            is_internal: Whether the screen is internal.
+
+        Returns:
+            Dict with ``screenInfo``.
         """
-        params: dict[str, Any] = {"screenId": screen_id}
-        if width is not None:
+        params: dict[str, Any] = {
+            "screenId": screen_id,
+            "isInternal": is_internal,
+        }
+        if left:
+            params["left"] = left
+        if top:
+            params["top"] = top
+        if width:
             params["width"] = width
-        if height is not None:
+        if height:
             params["height"] = height
-        if device_scale_factor is not None:
-            params["deviceScaleFactor"] = device_scale_factor
-        if touch is not None:
-            params["touch"] = touch
-        if external is not None:
-            params["external"] = external
-        if label is not None:
+        if work_area_insets is not None:
+            params["workAreaInsets"] = work_area_insets
+        if device_pixel_ratio:
+            params["devicePixelRatio"] = device_pixel_ratio
+        if rotation:
+            params["rotation"] = rotation
+        if color_depth:
+            params["colorDepth"] = color_depth
+        if label:
             params["label"] = label
         return await self._call("Emulation.updateScreen", params)
 

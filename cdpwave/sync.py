@@ -176,6 +176,15 @@ class SyncCDPSession:
     def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:
         self.close()
 
+    def __getattr__(self, name: str) -> Any:
+        """Delegate unknown attribute access to the underlying session.
+
+        This makes all CDPSession domain properties (fed_cm, schema,
+        memory, storage, tracing, etc.) accessible from the sync wrapper
+        without explicitly defining each one.
+        """
+        return getattr(self._session, name)
+
 
 class SyncCDPClient:
     """Synchronous wrapper around :class:`CDPClient`.

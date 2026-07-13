@@ -8,7 +8,10 @@ from cdpwave.domains.base import BaseDomain
 class PageDomain(BaseDomain):
     """Wrapper for the CDP Page domain."""
 
-    async def enable(self) -> dict[str, Any]:
+    async def enable(
+        self,
+        enable_file_chooser_opened_event: bool | None = None,
+    ) -> dict[str, Any]:
         """Enable Page domain events.
 
         Activates reporting of page lifecycle events such as navigation,
@@ -16,10 +19,20 @@ class PageDomain(BaseDomain):
         Must be called before using most other Page methods or listening
         to Page events.
 
+        Args:
+            enable_file_chooser_opened_event: If True, emit
+                ``Page.fileChooserOpened`` events.
+
         Returns:
             Response dict from the CDP.
         """
-        return await self._call("Page.enable")
+        params: dict[str, Any] = {}
+        if enable_file_chooser_opened_event is not None:
+            params["enableFileChooserOpenedEvent"] = enable_file_chooser_opened_event
+        return await self._call(
+            "Page.enable",
+            params if params else None,
+        )
 
     async def disable(self) -> dict[str, Any]:
         """Disable Page domain events.
@@ -37,6 +50,8 @@ class PageDomain(BaseDomain):
         url: str,
         referrer: str | None = None,
         transition_type: str | None = None,
+        frame_id: str | None = None,
+        referrer_policy: str | None = None,
     ) -> dict[str, Any]:
         """Navigate the page to a URL.
 
@@ -44,6 +59,8 @@ class PageDomain(BaseDomain):
             url: The URL to navigate to.
             referrer: Optional referrer URL.
             transition_type: Optional transition type hint.
+            frame_id: Optional frame ID to navigate within.
+            referrer_policy: Optional referrer policy.
 
         Returns:
             Response dict containing ``frameId`` and ``loaderId``.
@@ -53,18 +70,55 @@ class PageDomain(BaseDomain):
         if referrer is not None:
             params["referrer"] = referrer
         if transition_type is not None:
+            valid_transitions = {
+                "link", "typed", "address_bar", "auto_bookmark",
+                "auto_subframe", "manual_subframe", "generated",
+                "auto_toplevel", "form_submit", "reload", "keyword",
+                "keyword_generated", "other",
+            }
+            if transition_type not in valid_transitions:
+                raise ValueError(
+                    f"transition_type must be one of {sorted(valid_transitions)}"
+                )
             params["transitionType"] = transition_type
+        if frame_id is not None:
+            params["frameId"] = frame_id
+        if referrer_policy is not None:
+            valid_policies = {
+                "noReferrer", "noReferrerWhenDowngrade", "origin",
+                "originWhenCrossOrigin", "sameOrigin", "strictOrigin",
+                "strictOriginWhenCrossOrigin", "unsafeUrl",
+            }
+            if referrer_policy not in valid_policies:
+                raise ValueError(
+                    f"referrer_policy must be one of {sorted(valid_policies)}"
+                )
+            params["referrerPolicy"] = referrer_policy
         return await self._call("Page.navigate", params)
 
-    async def reload(self, ignore_cache: bool = False) -> dict[str, Any]:
+    async def reload(
+        self,
+        ignore_cache: bool = False,
+        script_to_evaluate_on_load: str | None = None,
+        loader_id: str | None = None,
+    ) -> dict[str, Any]:
         """Reload the current page.
 
         Args:
             ignore_cache: If True, bypass the browser cache.
+            script_to_evaluate_on_load: Optional script to evaluate on load.
+            loader_id: Optional loader ID to reload.
         """
+        params: dict[str, Any] = {}
+        if ignore_cache:
+            params["ignoreCache"] = True
+        if script_to_evaluate_on_load is not None:
+            params["scriptToEvaluateOnLoad"] = script_to_evaluate_on_load
+        if loader_id is not None:
+            params["loaderId"] = loader_id
         return await self._call(
             "Page.reload",
-            {"ignoreCache": ignore_cache},
+            params if params else None,
         )
 
     async def stop(self) -> dict[str, Any]:
@@ -76,7 +130,7 @@ class PageDomain(BaseDomain):
         Returns:
             Response dict from the CDP.
         """
-        return await self._call("Page.stop")
+        return await self._call("Page.stopLoading")
 
     async def capture_screenshot(
         self,
@@ -85,15 +139,17 @@ class PageDomain(BaseDomain):
         clip: dict[str, Any] | None = None,
         from_surface: bool = True,
         capture_beyond_viewport: bool = False,
+        optimize_for_speed: bool | None = None,
     ) -> dict[str, Any]:
         """Capture a screenshot of the page.
 
         Args:
-            format: Image format (``"png"`` or ``"jpeg"``).
-            quality: JPEG quality (0-100). Ignored for PNG.
+            format: Image format (``"png"``, ``"jpeg"``, or ``"webp"``).
+            quality: JPEG/WebP quality (0-100). Ignored for PNG.
             clip: Optional clip region dict with x, y, width, height, scale.
             from_surface: Capture from the surface rather than the view.
             capture_beyond_viewport: Capture content beyond the viewport.
+            optimize_for_speed: Optimize screenshot for speed over quality.
 
         Returns:
             Response dict containing base64-encoded ``data``.
@@ -110,6 +166,8 @@ class PageDomain(BaseDomain):
         }
         if clip is not None:
             params["clip"] = clip
+        if optimize_for_speed is not None:
+            params["optimizeForSpeed"] = optimize_for_speed
         return await self._call("Page.captureScreenshot", params)
 
     async def print_to_pdf(
@@ -129,6 +187,8 @@ class PageDomain(BaseDomain):
         footer_template: str | None = None,
         prefer_css_page_size: bool = False,
         return_as_stream: bool = False,
+        generate_tagged_pdf: bool | None = None,
+        generate_document_outline: bool | None = None,
     ) -> dict[str, Any]:
         """Print the page to PDF.
 
@@ -148,6 +208,8 @@ class PageDomain(BaseDomain):
             footer_template: Optional HTML template for the footer.
             prefer_css_page_size: Use CSS page sizes over default paper size.
             return_as_stream: Return a stream handle instead of base64 data.
+            generate_tagged_pdf: Whether to generate a tagged PDF.
+            generate_document_outline: Whether to generate a document outline.
 
         Returns:
             Response dict with ``data`` (base64-encoded PDF) when
@@ -176,6 +238,10 @@ class PageDomain(BaseDomain):
             params["headerTemplate"] = header_template
         if footer_template is not None:
             params["footerTemplate"] = footer_template
+        if generate_tagged_pdf is not None:
+            params["generateTaggedPDF"] = generate_tagged_pdf
+        if generate_document_outline is not None:
+            params["generateDocumentOutline"] = generate_document_outline
         return await self._call("Page.printToPDF", params)
 
     async def get_layout_metrics(self) -> dict[str, Any]:
@@ -251,6 +317,7 @@ class PageDomain(BaseDomain):
         self,
         source: str,
         world_name: str | None = None,
+        include_command_line_api: bool | None = None,
         run_immediately: bool = False,
     ) -> dict[str, Any]:
         """Add a script to evaluate on every new document.
@@ -261,6 +328,7 @@ class PageDomain(BaseDomain):
         Args:
             source: JavaScript source code to inject.
             world_name: Optional isolated world name to run the script in.
+            include_command_line_api: Whether to include the command line API.
             run_immediately: If True, run the script immediately in existing documents.
 
         Returns:
@@ -269,6 +337,8 @@ class PageDomain(BaseDomain):
         params: dict[str, Any] = {"source": source}
         if world_name is not None:
             params["worldName"] = world_name
+        if include_command_line_api is not None:
+            params["includeCommandLineAPI"] = include_command_line_api
         if run_immediately:
             params["runImmediately"] = True
         return await self._call("Page.addScriptToEvaluateOnNewDocument", params)
@@ -389,19 +459,32 @@ class PageDomain(BaseDomain):
 
     handle_javascript_dialog = handle_java_script_dialog
 
-    async def get_app_manifest(self) -> dict[str, Any]:
+    async def get_app_manifest(
+        self,
+        manifest_id: str | None = None,
+    ) -> dict[str, Any]:
         """Get the web app manifest for the current page.
+
+        Args:
+            manifest_id: Optional manifest ID to retrieve.
 
         Returns:
             Dict with ``url``, ``data``, ``errors``, and ``parsed`` keys.
         """
-        return await self._call("Page.getAppManifest")
+        params: dict[str, Any] = {}
+        if manifest_id is not None:
+            params["manifestId"] = manifest_id
+        return await self._call(
+            "Page.getAppManifest",
+            params if params else None,
+        )
 
     async def create_isolated_world(
         self,
         frame_id: str,
         world_name: str | None = None,
         grant_universal_access: bool = False,
+        content_security_policy: str | None = None,
     ) -> dict[str, Any]:
         """Create an isolated world for the given frame.
 
@@ -409,6 +492,7 @@ class PageDomain(BaseDomain):
             frame_id: Frame ID to create the world in.
             world_name: Optional name for the isolated world.
             grant_universal_access: Whether to grant universal access.
+            content_security_policy: Optional CSP for the isolated world.
 
         Returns:
             Dict with ``executionContextId``.
@@ -417,7 +501,9 @@ class PageDomain(BaseDomain):
         if world_name is not None:
             params["worldName"] = world_name
         if grant_universal_access:
-            params["grantUniversalAccess"] = True
+            params["grantUniveralAccess"] = True
+        if content_security_policy is not None:
+            params["contentSecurityPolicy"] = content_security_policy
         return await self._call("Page.createIsolatedWorld", params)
 
     async def set_document_content(
@@ -439,6 +525,7 @@ class PageDomain(BaseDomain):
     async def set_intercept_file_chooser_dialog(
         self,
         enabled: bool,
+        cancel: bool | None = None,
     ) -> dict[str, Any]:
         """Enable or disable file chooser dialog interception.
 
@@ -447,11 +534,12 @@ class PageDomain(BaseDomain):
 
         Args:
             enabled: Whether to intercept file chooser dialogs.
+            cancel: Whether to cancel the dialog instead of showing it.
         """
-        return await self._call(
-            "Page.setInterceptFileChooserDialog",
-            {"enabled": enabled},
-        )
+        params: dict[str, Any] = {"enabled": enabled}
+        if cancel is not None:
+            params["cancel"] = cancel
+        return await self._call("Page.setInterceptFileChooserDialog", params)
 
     async def capture_snapshot(
         self,
@@ -465,6 +553,8 @@ class PageDomain(BaseDomain):
         Returns:
             Dict with ``data`` containing the MHTML content.
         """
+        if format not in ("mhtml",):
+            raise ValueError("format must be 'mhtml'")
         return await self._call("Page.captureSnapshot", {"format": format})
 
     async def stop_loading(self) -> dict[str, Any]:
@@ -498,7 +588,7 @@ class PageDomain(BaseDomain):
         """
         return await self._call(
             "Page.addScriptToEvaluateOnLoad",
-            {"source": source},
+            {"scriptSource": source},
         )
 
     async def remove_script_to_evaluate_on_load(
@@ -681,24 +771,30 @@ class PageDomain(BaseDomain):
 
     async def set_geolocation_override(
         self,
-        latitude: float,
-        longitude: float,
-        accuracy: float = 0.0,
+        latitude: float | None = None,
+        longitude: float | None = None,
+        accuracy: float | None = None,
     ) -> dict[str, Any]:
         """Override geolocation.
+
+        All parameters are optional — calling with no arguments clears
+        the override.
 
         Args:
             latitude: Latitude in degrees.
             longitude: Longitude in degrees.
             accuracy: Accuracy in meters.
         """
+        params: dict[str, Any] = {}
+        if latitude is not None:
+            params["latitude"] = latitude
+        if longitude is not None:
+            params["longitude"] = longitude
+        if accuracy is not None:
+            params["accuracy"] = accuracy
         return await self._call(
             "Page.setGeolocationOverride",
-            {
-                "latitude": latitude,
-                "longitude": longitude,
-                "accuracy": accuracy,
-            },
+            params if params else None,
         )
 
     async def clear_geolocation_override(self) -> dict[str, Any]:
@@ -719,6 +815,8 @@ class PageDomain(BaseDomain):
         """
         params: dict[str, Any] = {"enabled": enabled}
         if configuration is not None:
+            if configuration not in ("mobile", "desktop"):
+                raise ValueError("configuration must be 'mobile' or 'desktop'")
             params["configuration"] = configuration
         return await self._call("Page.setTouchEmulationEnabled", params)
 
@@ -726,7 +824,6 @@ class PageDomain(BaseDomain):
         self,
         behavior: str,
         download_path: str | None = None,
-        events_enabled: bool = False,
     ) -> dict[str, Any]:
         """Set download behavior for the page.
 
@@ -734,29 +831,30 @@ class PageDomain(BaseDomain):
             behavior: ``"allow"``, ``"deny"``, or ``"default"``.
             download_path: Path for downloads (when ``behavior`` is
                 ``"allow"``).
-            events_enabled: Whether to emit download events.
         """
+        if behavior not in ("allow", "deny", "default"):
+            raise ValueError("behavior must be 'allow', 'deny', or 'default'")
         params: dict[str, Any] = {"behavior": behavior}
         if download_path is not None:
             params["downloadPath"] = download_path
-        if events_enabled:
-            params["eventsEnabled"] = True
         return await self._call("Page.setDownloadBehavior", params)
 
     async def set_font_families(
         self,
-        font_family: dict[str, str] | None = None,
+        font_families: dict[str, str],
+        for_scripts: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Set font families override.
 
         Args:
-            font_family: Dict mapping font family names to overrides
+            font_families: Dict mapping font family names to overrides
                 (e.g. ``{"standard": "Arial"}``).
+            for_scripts: Optional list of per-script font family overrides.
         """
-        params: dict[str, Any] = {}
-        if font_family is not None:
-            params["fontFamilies"] = font_family
-        return await self._call("Page.setFontFamilies", params if params else None)
+        params: dict[str, Any] = {"fontFamilies": font_families}
+        if for_scripts is not None:
+            params["forScripts"] = for_scripts
+        return await self._call("Page.setFontFamilies", params)
 
     async def set_font_sizes(
         self,
@@ -785,15 +883,15 @@ class PageDomain(BaseDomain):
             {"enabled": enabled},
         )
 
-    async def set_prerendering_allowed(self, allowed: bool) -> dict[str, Any]:
+    async def set_prerendering_allowed(self, is_allowed: bool) -> dict[str, Any]:
         """Enable or disable prerendering.
 
         Args:
-            allowed: Whether prerendering is allowed.
+            is_allowed: Whether prerendering is allowed.
         """
         return await self._call(
             "Page.setPrerenderingAllowed",
-            {"allowed": allowed},
+            {"isAllowed": is_allowed},
         )
 
     async def wait_for_debugger(self) -> dict[str, Any]:
@@ -818,20 +916,17 @@ class PageDomain(BaseDomain):
 
     async def produce_compilation_cache(
         self,
-        scripts: list[dict[str, Any]] | None = None,
+        scripts: list[dict[str, Any]],
     ) -> dict[str, Any]:
         """Produce compilation cache for scripts.
 
         Args:
-            scripts: Optional list of script dicts with ``url`` and
-                optional ``forced`` flag.
+            scripts: List of script dicts with ``url`` and optional
+                ``eager`` flag.
         """
-        params: dict[str, Any] = {}
-        if scripts is not None:
-            params["scripts"] = scripts
         return await self._call(
             "Page.produceCompilationCache",
-            params if params else None,
+            {"scripts": scripts},
         )
 
     async def add_compilation_cache(
@@ -858,8 +953,18 @@ class PageDomain(BaseDomain):
         """Set the SPC (Secure Payment Confirmation) transaction mode.
 
         Args:
-            mode: Transaction mode (``"auto"``, ``"enforce"``, ``"opt-out"``).
+            mode: One of ``"none"``, ``"autoAccept"``,
+                ``"autoChooseToAuthAnotherWay"``, ``"autoReject"``,
+                ``"autoOptOut"``.
         """
+        valid = {
+            "none", "autoAccept", "autoChooseToAuthAnotherWay",
+            "autoReject", "autoOptOut",
+        }
+        if mode not in valid:
+            raise ValueError(
+                f"mode must be one of {sorted(valid)}"
+            )
         return await self._call(
             "Page.setSPCTransactionMode",
             {"mode": mode},
@@ -869,8 +974,13 @@ class PageDomain(BaseDomain):
         """Set the RPH (Register Protocol Handler) registration mode.
 
         Args:
-            mode: Registration mode (``"auto"``, ``"block"``).
+            mode: One of ``"none"``, ``"autoAccept"``, ``"autoReject"``.
         """
+        valid = {"none", "autoAccept", "autoReject"}
+        if mode not in valid:
+            raise ValueError(
+                f"mode must be one of {sorted(valid)}"
+            )
         return await self._call(
             "Page.setRPHRegistrationMode",
             {"mode": mode},
@@ -970,10 +1080,23 @@ class PageDomain(BaseDomain):
             params if params else None,
         )
 
-    async def get_annotated_page_content(self) -> dict[str, Any]:
+    async def get_annotated_page_content(
+        self,
+        include_actionable_information: bool | None = None,
+    ) -> dict[str, Any]:
         """Get annotated page content.
+
+        Args:
+            include_actionable_information: Whether to include actionable
+                information in the annotated content.
 
         Returns:
             Dict with ``content`` containing annotated DOM tree.
         """
-        return await self._call("Page.getAnnotatedPageContent")
+        params: dict[str, Any] = {}
+        if include_actionable_information is not None:
+            params["includeActionableInformation"] = include_actionable_information
+        return await self._call(
+            "Page.getAnnotatedPageContent",
+            params if params else None,
+        )

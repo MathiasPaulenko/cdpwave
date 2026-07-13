@@ -1,4 +1,85 @@
-"""Preload domain: control speculative loading and prefetching."""
+"""Preload domain: control speculative loading and prefetching.
+
+Types:
+
+    ``RuleSetID`` — str. Unique id.
+
+    ``RuleSet`` — dict. Corresponds to SpeculationRuleSet. Fields:
+    ``id`` (RuleSetID), ``loaderId`` (str — identifies a document
+    which the rule set is associated with), ``sourceText`` (str —
+    source text of JSON representing the rule set),
+    ``backendNodeId`` (int, optional — BackendNodeId of the relevant
+    ``<script>`` tag), ``url`` (str, optional), ``requestId`` (str,
+    optional), ``errorType`` (str, optional — ``"SourceIsNotJsonObject"``,
+    ``"InvalidRulesSkipped"``, ``"InvalidRulesetLevelTag"``),
+    ``tag`` (str, optional).
+
+    ``RuleSetErrorType`` — str. Values: ``"SourceIsNotJsonObject"``,
+    ``"InvalidRulesSkipped"``, ``"InvalidRulesetLevelTag"``.
+
+    ``SpeculationAction`` — str. Values: ``"Prefetch"``,
+    ``"Prerender"``, ``"PrerenderUntilScript"``.
+
+    ``SpeculationTargetHint`` — str. Values: ``"Blank"``, ``"Self"``.
+
+    ``IngAttemptKey`` — dict. A key that identifies a preloading
+    attempt. Fields: ``loaderId`` (str), ``action``
+    (SpeculationAction), ``url`` (str), ``formSubmission`` (bool),
+    ``targetHint`` (SpeculationTargetHint, optional).
+
+    ``IngAttemptSource`` — dict. Lists sources for a preloading
+    attempt. Fields: ``key`` (IngAttemptKey), ``ruleSetIds``
+    (list[RuleSetID]), ``nodeIds`` (list[int]).
+
+    ``PipelineID`` — str. Preloading pipeline id.
+
+    ``PrerenderFinalStatus`` — str. List of FinalStatus reasons for
+    Prerender2.
+
+    ``IngStatus`` — str. Preloading status values. Values:
+    ``"Pending"``, ``"Running"``, ``"Ready"``, ``"Success"``,
+    ``"Failure"``, ``"NotSupported"``.
+
+    ``PrefetchStatus`` — str. Prefetch status values.
+
+    ``PrerenderMismatchedHeaders`` — dict. Information of headers to
+    be displayed when the header mismatch occurred. Fields:
+    ``headerName`` (str), ``initialValue`` (str, optional),
+    ``activationValue`` (str, optional).
+
+Events:
+
+    ``Preload.ruleSetUpdated`` — Upsert. Currently, it is only
+    emitted when a rule set added. Params: ``ruleSet`` (RuleSet).
+
+    ``Preload.ruleSetRemoved`` — [no description]. Params: ``id``
+    (RuleSetID).
+
+    ``Preload.preloadEnabledStateUpdated`` — Fired when a preload
+    enabled state is updated. Params: ``disabledByPreference`` (bool),
+    ``disabledByDataSaver`` (bool), ``disabledByBatterySaver`` (bool),
+    ``disabledByHoldbackPrefetchSpeculationRules`` (bool),
+    ``disabledByHoldbackPrerenderSpeculationRules`` (bool).
+
+    ``Preload.prefetchStatusUpdated`` — Fired when a prefetch attempt
+    is updated. Params: ``key`` (IngAttemptKey), ``pipelineId``
+    (PipelineID), ``initiatingFrameId`` (str — frame id of the frame
+    initiating prefetch), ``prefetchUrl`` (str), ``status``
+    (IngStatus), ``prefetchStatus`` (PrefetchStatus), ``requestId``
+    (str).
+
+    ``Preload.prerenderStatusUpdated`` — Fired when a prerender
+    attempt is updated. Params: ``key`` (IngAttemptKey),
+    ``pipelineId`` (PipelineID), ``status`` (IngStatus),
+    ``prerenderStatus`` (PrerenderFinalStatus, optional),
+    ``disallowedMojoInterface`` (str, optional), ``mismatchedHeaders``
+    (list[PrerenderMismatchedHeaders], optional).
+
+    ``Preload.preloadingAttemptSourcesUpdated`` — Send a list of
+    sources for all preloading attempts in a document. Params:
+    ``loaderId`` (str), ``preloadingAttemptSources``
+    (list[IngAttemptSource]).
+"""
 
 from typing import Any
 
@@ -10,48 +91,44 @@ class PreloadDomain(BaseDomain):
 
     Provides control over speculative loading, prefetching, and
     prerendering of pages for performance optimization.
+
+    **Experimental domain.**
+
+    Events:
+
+    - ``ruleSetUpdated`` — Params: ``ruleSet`` (RuleSet).
+    - ``ruleSetRemoved`` — Params: ``id`` (RuleSetID).
+    - ``preloadEnabledStateUpdated`` — Params:
+      ``disabledByPreference`` (bool), ``disabledByDataSaver`` (bool),
+      ``disabledByBatterySaver`` (bool),
+      ``disabledByHoldbackPrefetchSpeculationRules`` (bool),
+      ``disabledByHoldbackPrerenderSpeculationRules`` (bool).
+    - ``prefetchStatusUpdated`` — Params: ``key`` (IngAttemptKey),
+      ``pipelineId`` (PipelineID), ``initiatingFrameId`` (str),
+      ``prefetchUrl`` (str), ``status`` (IngStatus),
+      ``prefetchStatus`` (PrefetchStatus), ``requestId`` (str).
+    - ``prerenderStatusUpdated`` — Params: ``key`` (IngAttemptKey),
+      ``pipelineId`` (PipelineID), ``status`` (IngStatus),
+      ``prerenderStatus`` (PrerenderFinalStatus, optional),
+      ``disallowedMojoInterface`` (str, optional),
+      ``mismatchedHeaders`` (list[PrerenderMismatchedHeaders],
+      optional).
+    - ``preloadingAttemptSourcesUpdated`` — Params: ``loaderId``
+      (str), ``preloadingAttemptSources`` (list[IngAttemptSource]).
     """
 
-    async def enable(self) -> dict[str, Any]:
-        """Enable the Preload domain.
-
-        Activates Preload domain events and reporting.
-        Must be called before using other methods in this domain.
-
-        Returns:
-            Response dict from the CDP.
-        """
-        return await self._call("Preload.enable")
-
     async def disable(self) -> dict[str, Any]:
-        """Disable the Preload domain.
-
-        Deactivates Preload domain events and reporting.
+        """[no description].
 
         Returns:
-            Response dict from the CDP.
+            Empty dict (no return value from CDP).
         """
         return await self._call("Preload.disable")
 
-    async def get_preload_policy(self) -> dict[str, Any]:
-        """Get the current preload policy.
+    async def enable(self) -> dict[str, Any]:
+        """[no description].
 
         Returns:
-            Dict with ``preloadPolicy`` string.
+            Empty dict (no return value from CDP).
         """
-        return await self._call("Preload.getPreloadPolicy")
-
-    async def set_preload_policy(
-        self,
-        preload_policy: str,
-    ) -> dict[str, Any]:
-        """Set the preload policy.
-
-        Args:
-            preload_policy: Policy name (e.g. ``"always"``,
-                ``"no-preload"``, ``"eligible-non-mobile"``).
-        """
-        return await self._call(
-            "Preload.setPreloadPolicy",
-            {"preloadPolicy": preload_policy},
-        )
+        return await self._call("Preload.enable")

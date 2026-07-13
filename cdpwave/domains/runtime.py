@@ -41,6 +41,14 @@ class RuntimeDomain(BaseDomain):
         generate_preview: bool = False,
         silent: bool = False,
         execution_context_id: int | None = None,
+        include_command_line_api: bool | None = None,
+        throw_on_side_effect: bool = False,
+        timeout: int | None = None,
+        disable_breaks: bool = False,
+        repl_mode: bool = False,
+        allow_unsafe_eval_blocked_by_csp: bool = True,
+        unique_context_id: str | None = None,
+        serialization_options: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Evaluate a JavaScript expression.
 
@@ -53,13 +61,30 @@ class RuntimeDomain(BaseDomain):
             generate_preview: Generate preview for the result object.
             silent: If True, do not report exceptions thrown.
             execution_context_id: Optional context to evaluate in.
+            include_command_line_api: Whether to include the command line API.
+            throw_on_side_effect: Throw if evaluation has side effects.
+            timeout: Timeout in milliseconds.
+            disable_breaks: Disable breakpoints during evaluation.
+            repl_mode: Execute in REPL mode.
+            allow_unsafe_eval_blocked_by_csp: Allow unsafe eval blocked by CSP.
+            unique_context_id: Alternative context ID (string).
+            serialization_options: Serialization options dict.
 
         Returns:
-            Response dict containing ``result`` with the evaluation result.
-            Typed as ``RuntimeEvaluateResult`` for autocompletion.
+            Response dict containing ``result`` with the evaluation result,
+            and ``exceptionDetails`` (if an exception was thrown).
+
+        Raises:
+            ValueError: If both ``execution_context_id`` and
+                ``unique_context_id`` are provided.
         """
+        if execution_context_id is not None and unique_context_id is not None:
+            raise ValueError(
+                "execution_context_id and unique_context_id are "
+                "mutually exclusive"
+            )
         params: dict[str, Any] = {"expression": expression}
-        if not return_by_value:
+        if return_by_value:
             params["returnByValue"] = return_by_value
         if await_promise:
             params["awaitPromise"] = await_promise
@@ -73,6 +98,22 @@ class RuntimeDomain(BaseDomain):
             params["silent"] = silent
         if execution_context_id is not None:
             params["contextId"] = execution_context_id
+        if include_command_line_api is not None:
+            params["includeCommandLineAPI"] = include_command_line_api
+        if throw_on_side_effect:
+            params["throwOnSideEffect"] = throw_on_side_effect
+        if timeout is not None:
+            params["timeout"] = timeout
+        if disable_breaks:
+            params["disableBreaks"] = disable_breaks
+        if repl_mode:
+            params["replMode"] = repl_mode
+        if not allow_unsafe_eval_blocked_by_csp:
+            params["allowUnsafeEvalBlockedByCSP"] = allow_unsafe_eval_blocked_by_csp
+        if unique_context_id is not None:
+            params["uniqueContextId"] = unique_context_id
+        if serialization_options is not None:
+            params["serializationOptions"] = serialization_options
         return await self._call("Runtime.evaluate", params)
 
     async def call_function_on(
@@ -86,10 +127,15 @@ class RuntimeDomain(BaseDomain):
         generate_preview: bool = False,
         silent: bool = False,
         object_group: str | None = None,
+        user_gesture: bool = False,
+        throw_on_side_effect: bool = False,
+        unique_context_id: str | None = None,
+        serialization_options: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Call a function on a remote object or in a context.
 
-        Either ``object_id`` or ``execution_context_id`` must be provided.
+        Either ``object_id``, ``execution_context_id``, or
+        ``unique_context_id`` must be provided.
 
         Args:
             function_declaration: JavaScript function declaration string.
@@ -101,23 +147,39 @@ class RuntimeDomain(BaseDomain):
             generate_preview: Generate preview for the result object.
             silent: If True, do not report exceptions thrown.
             object_group: Optional name for the object group.
+            user_gesture: Treat the call as a user gesture.
+            throw_on_side_effect: Throw if call has side effects.
+            unique_context_id: Alternative context ID (string).
+            serialization_options: Serialization options dict.
 
         Returns:
-            Response dict containing ``result``.
+            Response dict containing ``result`` with the call result,
+            and ``exceptionDetails`` (if an exception was thrown).
 
         Raises:
-            ValueError: If neither ``object_id`` nor ``execution_context_id``
-                is provided.
+            ValueError: If none of ``object_id``, ``execution_context_id``,
+                or ``unique_context_id`` is provided, or if more than one
+                is provided (they are mutually exclusive).
         """
-        if object_id is None and execution_context_id is None:
+        provided = [
+            p is not None
+            for p in (object_id, execution_context_id, unique_context_id)
+        ]
+        if sum(provided) == 0:
             raise ValueError(
-                "Either object_id or execution_context_id must be provided"
+                "Either object_id, execution_context_id, or "
+                "unique_context_id must be provided"
             )
-        params: dict[str, Any] = {
-            "functionDeclaration": function_declaration,
-            "returnByValue": return_by_value,
-            "awaitPromise": await_promise,
-        }
+        if sum(provided) > 1:
+            raise ValueError(
+                "object_id, execution_context_id, and "
+                "unique_context_id are mutually exclusive"
+            )
+        params: dict[str, Any] = {"functionDeclaration": function_declaration}
+        if return_by_value:
+            params["returnByValue"] = return_by_value
+        if await_promise:
+            params["awaitPromise"] = await_promise
         if object_id is not None:
             params["objectId"] = object_id
         if execution_context_id is not None:
@@ -130,6 +192,14 @@ class RuntimeDomain(BaseDomain):
             params["silent"] = silent
         if object_group is not None:
             params["objectGroup"] = object_group
+        if user_gesture:
+            params["userGesture"] = user_gesture
+        if throw_on_side_effect:
+            params["throwOnSideEffect"] = throw_on_side_effect
+        if unique_context_id is not None:
+            params["uniqueContextId"] = unique_context_id
+        if serialization_options is not None:
+            params["serializationOptions"] = serialization_options
         return await self._call("Runtime.callFunctionOn", params)
 
     async def release_object(self, object_id: str) -> dict[str, Any]:
@@ -170,26 +240,44 @@ class RuntimeDomain(BaseDomain):
     async def get_properties(
         self,
         object_id: str,
-        own_properties: bool = True,
+        own_properties: bool = False,
+        accessor_properties_only: bool | None = None,
+        generate_preview: bool = False,
+        non_indexed_properties_only: bool | None = None,
     ) -> dict[str, Any]:
         """Get properties of a remote object.
 
         Args:
             object_id: ID of the remote object.
-            own_properties: If True, return only own properties.
+            own_properties: If True, return only own properties (not
+                inherited from the prototype chain).
+            accessor_properties_only: If True, return only accessor properties.
+            generate_preview: Generate preview for the property values.
+            non_indexed_properties_only: If True, return only non-indexed
+                properties.
 
         Returns:
-            Response dict containing ``result`` with property descriptors.
+            Response dict containing ``result`` with property descriptors,
+            ``internalProperties``, ``privateProperties``, and
+            ``exceptionDetails`` (if any).
         """
-        return await self._call(
-            "Runtime.getProperties",
-            {
-                "objectId": object_id,
-                "ownProperties": own_properties,
-            },
-        )
+        params: dict[str, Any] = {"objectId": object_id}
+        if own_properties:
+            params["ownProperties"] = own_properties
+        if accessor_properties_only is not None:
+            params["accessorPropertiesOnly"] = accessor_properties_only
+        if generate_preview:
+            params["generatePreview"] = generate_preview
+        if non_indexed_properties_only is not None:
+            params["nonIndexedPropertiesOnly"] = non_indexed_properties_only
+        return await self._call("Runtime.getProperties", params)
 
-    async def add_binding(self, name: str) -> dict[str, Any]:
+    async def add_binding(
+        self,
+        name: str,
+        execution_context_id: int | None = None,
+        execution_context_name: str | None = None,
+    ) -> dict[str, Any]:
         """Add a binding that exposes a Python callback to JavaScript.
 
         After calling this, JS code can call ``window.<name>()`` which
@@ -197,14 +285,37 @@ class RuntimeDomain(BaseDomain):
 
         Args:
             name: Name of the binding (becomes ``window.<name>`` in JS).
+            execution_context_id: Deprecated. Optional context to add the
+                binding in. Use ``execution_context_name`` instead.
+            execution_context_name: Optional context name to add the binding in.
+
+        Returns:
+            Response dict from the CDP.
+
+        Raises:
+            ValueError: If both ``execution_context_id`` and
+                ``execution_context_name`` are provided.
         """
-        return await self._call("Runtime.addBinding", {"name": name})
+        if execution_context_id is not None and execution_context_name is not None:
+            raise ValueError(
+                "execution_context_id and execution_context_name are "
+                "mutually exclusive"
+            )
+        params: dict[str, Any] = {"name": name}
+        if execution_context_id is not None:
+            params["executionContextId"] = execution_context_id
+        if execution_context_name is not None:
+            params["executionContextName"] = execution_context_name
+        return await self._call("Runtime.addBinding", params)
 
     async def remove_binding(self, name: str) -> dict[str, Any]:
         """Remove a previously added binding.
 
         Args:
             name: Name of the binding to remove.
+
+        Returns:
+            Response dict from the CDP.
         """
         return await self._call("Runtime.removeBinding", {"name": name})
 
@@ -229,8 +340,9 @@ class RuntimeDomain(BaseDomain):
         params: dict[str, Any] = {
             "expression": expression,
             "sourceURL": source_url,
-            "persistScript": persist_script,
         }
+        if persist_script:
+            params["persistScript"] = persist_script
         if execution_context_id is not None:
             params["executionContextId"] = execution_context_id
         return await self._call("Runtime.compileScript", params)
@@ -241,6 +353,10 @@ class RuntimeDomain(BaseDomain):
         execution_context_id: int | None = None,
         await_promise: bool = False,
         return_by_value: bool = False,
+        object_group: str | None = None,
+        silent: bool = False,
+        include_command_line_api: bool | None = None,
+        generate_preview: bool = False,
     ) -> dict[str, Any]:
         """Run a previously compiled script.
 
@@ -249,18 +365,40 @@ class RuntimeDomain(BaseDomain):
             execution_context_id: Optional execution context ID.
             await_promise: Await any returned Promise.
             return_by_value: Return the result as a JSON value.
+            object_group: Optional object group for remote objects.
+            silent: If True, do not report exceptions thrown.
+            include_command_line_api: Whether to include the command line API.
+            generate_preview: Generate preview for the result object.
+
+        Returns:
+            Response dict containing ``result`` with the run result,
+            and ``exceptionDetails`` (if an exception was thrown).
         """
         params: dict[str, Any] = {
             "scriptId": script_id,
-            "awaitPromise": await_promise,
-            "returnByValue": return_by_value,
         }
+        if await_promise:
+            params["awaitPromise"] = await_promise
+        if return_by_value:
+            params["returnByValue"] = return_by_value
         if execution_context_id is not None:
             params["executionContextId"] = execution_context_id
+        if object_group is not None:
+            params["objectGroup"] = object_group
+        if silent:
+            params["silent"] = silent
+        if include_command_line_api is not None:
+            params["includeCommandLineAPI"] = include_command_line_api
+        if generate_preview:
+            params["generatePreview"] = generate_preview
         return await self._call("Runtime.runScript", params)
 
     async def run_if_waiting_for_debugger(self) -> dict[str, Any]:
-        """Run if the page is waiting for a debugger to attach."""
+        """Run if the page is waiting for a debugger to attach.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Runtime.runIfWaitingForDebugger")
 
     async def get_exception_details(
@@ -323,7 +461,8 @@ class RuntimeDomain(BaseDomain):
         """Get the current JavaScript heap usage.
 
         Returns:
-            Dict with ``usedSize`` and ``totalSize`` in bytes.
+            Dict with ``usedSize``, ``totalSize``,
+            ``embedderHeapUsedSize``, and ``backingStorageSize`` in bytes.
         """
         return await self._call("Runtime.getHeapUsage")
 
@@ -332,6 +471,12 @@ class RuntimeDomain(BaseDomain):
 
         Args:
             depth: Maximum async call stack depth (0 to disable).
+
+        Returns:
+            Response dict from the CDP.
+
+        Raises:
+            ValueError: If ``depth`` is negative.
         """
         if depth < 0:
             raise ValueError("depth must be >= 0")
@@ -344,6 +489,9 @@ class RuntimeDomain(BaseDomain):
         """Terminate the current JavaScript execution.
 
         This will abort the current script execution immediately.
+
+        Returns:
+            Response dict from the CDP.
         """
         return await self._call("Runtime.terminateExecution")
 
@@ -351,23 +499,27 @@ class RuntimeDomain(BaseDomain):
         self,
         promise_object_id: str,
         return_by_value: bool = False,
+        generate_preview: bool = False,
     ) -> dict[str, Any]:
         """Await a Promise remote object.
 
         Args:
             promise_object_id: Object ID of the Promise.
             return_by_value: Return the result as a JSON value.
+            generate_preview: Generate preview for the result object.
 
         Returns:
-            Dict with ``result`` remote object.
+            Dict with ``result`` remote object, and ``exceptionDetails``
+            (if the promise was rejected).
         """
-        return await self._call(
-            "Runtime.awaitPromise",
-            {
-                "promiseObjectId": promise_object_id,
-                "returnByValue": return_by_value,
-            },
-        )
+        params: dict[str, Any] = {
+            "promiseObjectId": promise_object_id,
+        }
+        if return_by_value:
+            params["returnByValue"] = return_by_value
+        if generate_preview:
+            params["generatePreview"] = generate_preview
+        return await self._call("Runtime.awaitPromise", params)
 
     async def discard_console_entries(self) -> dict[str, Any]:
         """Discard all collected console entries.
@@ -384,12 +536,16 @@ class RuntimeDomain(BaseDomain):
         """Get the isolate id.
 
         Returns:
-            Dict with ``isolateId`` string.
+            Dict with ``id`` string.
         """
         return await self._call("Runtime.getIsolateId")
 
     async def collect_garbage(self) -> dict[str, Any]:
-        """Run garbage collection."""
+        """Run garbage collection.
+
+        Returns:
+            Response dict from the CDP.
+        """
         return await self._call("Runtime.collectGarbage")
 
     async def set_custom_object_formatter_enabled(
@@ -400,8 +556,33 @@ class RuntimeDomain(BaseDomain):
 
         Args:
             enabled: Whether to enable custom object formatting.
+
+        Returns:
+            Response dict from the CDP.
         """
         return await self._call(
             "Runtime.setCustomObjectFormatterEnabled",
             {"enabled": enabled},
+        )
+
+    async def set_max_call_stack_size_to_capture(
+        self,
+        size: int,
+    ) -> dict[str, Any]:
+        """Set the maximum call stack size to capture.
+
+        Args:
+            size: Maximum call stack size to capture.
+
+        Returns:
+            Response dict from the CDP.
+
+        Raises:
+            ValueError: If ``size`` is negative.
+        """
+        if size < 0:
+            raise ValueError("size must be >= 0")
+        return await self._call(
+            "Runtime.setMaxCallStackSizeToCapture",
+            {"size": size},
         )

@@ -45,19 +45,22 @@ class AuditsDomain(BaseDomain):
         self,
         request_id: str,
         encoding: str,
-        quality: int | None = None,
+        quality: float | None = None,
         size_only: bool | None = None,
     ) -> dict[str, Any]:
         """Get the encoded response body for a request.
 
+        Only applies to images.
+
         Args:
             request_id: Request ID from Network domain.
-            encoding: ``"base64"`` or ``"binary"``.
-            quality: Optional quality (0-100) for image encoding.
+            encoding: ``"webp"``, ``"jpeg"``, or ``"png"``.
+            quality: Optional quality (0.0-1.0, defaults to 1).
             size_only: Whether to return only the size without the body.
 
         Returns:
-            Dict with ``body``, ``byteSize``, and optional ``content``.
+            Dict with ``body`` (base64), ``originalSize``, and
+            ``encodedSize``.
         """
         params: dict[str, Any] = {
             "requestId": request_id,
@@ -68,3 +71,13 @@ class AuditsDomain(BaseDomain):
         if size_only is not None:
             params["sizeOnly"] = size_only
         return await self._call("Audits.getEncodedResponse", params)
+
+    async def check_forms_issues(self) -> dict[str, Any]:
+        """Run the form issues check for the target page.
+
+        Found issues are reported via ``Audits.issueAdded`` events.
+
+        Returns:
+            Dict with ``issues`` list of GenericIssueDetails.
+        """
+        return await self._call("Audits.checkFormsIssues")

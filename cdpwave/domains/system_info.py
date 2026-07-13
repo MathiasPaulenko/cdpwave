@@ -1,4 +1,30 @@
-"""SystemInfo domain: system and GPU information."""
+"""SystemInfo domain: system and GPU information.
+
+Types:
+
+    ``GPUDevice`` — dict.  Describes a single graphics processor.
+    Fields: ``vendorId`` (float), ``deviceId`` (float),
+    ``subSysId`` (float, optional), ``revision`` (float, optional),
+    ``vendorString`` (str), ``deviceString`` (str),
+    ``driverVendor`` (str), ``driverVersion`` (str).
+
+    ``Size`` — dict.  Width and height dimensions.
+    Fields: ``width`` (int), ``height`` (int).
+
+    ``GPUInfo`` — dict.  Information about the GPU(s) on the system.
+    Fields: ``devices`` (list[GPUDevice]), ``auxAttributes`` (dict,
+    optional), ``featureStatus`` (dict, optional),
+    ``driverBugWorkarounds`` (list[str]),
+    ``videoDecoding`` (list[dict]),
+    ``videoEncoding`` (list[dict]).
+
+    ``ProcessInfo`` — dict.  Represents process info.
+    Fields: ``type`` (str), ``id`` (int), ``cpuTime`` (float).
+
+Events:
+
+    None.
+"""
 
 from typing import Any
 
@@ -8,49 +34,48 @@ from cdpwave.domains.base import BaseDomain
 class SystemInfoDomain(BaseDomain):
     """Wrapper for the CDP SystemInfo domain.
 
-    Provides access to system-level information including GPU info,
-    process info, and feature state.
+    Defines methods and events for querying low-level system
+    information.
     """
 
     async def get_info(self) -> dict[str, Any]:
-        """Get system information.
+        """Returns information about the system.
 
         Returns:
-            Dict with ``gpu``, ``modelName``, ``modelVersion``,
-            ``commandLine``, and other system info.
+            Dict with ``gpu`` (GPUInfo), ``modelName``,
+            ``modelVersion``, and ``commandLine``.
         """
         return await self._call("SystemInfo.getInfo")
 
-    async def get_process_info(self) -> dict[str, Any]:
-        """Get process information.
-
-        Returns:
-            Dict with ``processInfo`` list of process dicts.
-        """
-        return await self._call("SystemInfo.getProcessInfo")
-
     async def get_feature_state(
         self,
-        feature_name: str,
+        feature_state: str,
     ) -> dict[str, Any]:
-        """Get the state of a feature flag.
+        """Returns information about the feature state.
 
         Args:
-            feature_name: Name of the feature to query.
+            feature_state: Feature state to query.
 
         Returns:
             Dict with ``featureEnabled`` boolean.
+
+        Raises:
+            TypeError: If ``feature_state`` is not a str.
         """
+        if not isinstance(feature_state, str):
+            raise TypeError(
+                f"feature_state must be a str, "
+                f"got {type(feature_state).__name__}"
+            )
         return await self._call(
             "SystemInfo.getFeatureState",
-            {"featureName": feature_name},
+            {"featureState": feature_state},
         )
 
-    async def get_gpu_info(self) -> dict[str, Any]:
-        """Get GPU information.
+    async def get_process_info(self) -> dict[str, Any]:
+        """Returns information about all running processes.
 
         Returns:
-            Dict with ``gpu`` containing GPU device info, driver info,
-            and feature status.
+            Dict with ``processInfo`` list of process info blocks.
         """
-        return await self._call("SystemInfo.getGPUInfo")
+        return await self._call("SystemInfo.getProcessInfo")

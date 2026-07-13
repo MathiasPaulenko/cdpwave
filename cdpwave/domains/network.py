@@ -13,6 +13,8 @@ class NetworkDomain(BaseDomain):
         max_total_buffer_size: int | None = None,
         max_resource_buffer_size: int | None = None,
         max_post_data_size: int | None = None,
+        report_direct_socket_traffic: bool = False,
+        enable_durable_messages: bool = False,
     ) -> dict[str, Any]:
         """Enable Network domain events.
 
@@ -20,15 +22,22 @@ class NetworkDomain(BaseDomain):
             max_total_buffer_size: Optional max total buffer size in bytes.
             max_resource_buffer_size: Optional max per-resource buffer size.
             max_post_data_size: Optional max POST data size to capture.
+            report_direct_socket_traffic: Whether DirectSocket chunk events
+                should be reported.
+            enable_durable_messages: Enable storing response bodies outside
+                renderer. Deprecated in favor of configure_durable_messages.
         """
-        params: dict[str, Any] = {}
+        params: dict[str, Any] = {
+            "reportDirectSocketTraffic": report_direct_socket_traffic,
+            "enableDurableMessages": enable_durable_messages,
+        }
         if max_total_buffer_size is not None:
             params["maxTotalBufferSize"] = max_total_buffer_size
         if max_resource_buffer_size is not None:
             params["maxResourceBufferSize"] = max_resource_buffer_size
         if max_post_data_size is not None:
             params["maxPostDataSize"] = max_post_data_size
-        return await self._call("Network.enable", params if params else None)
+        return await self._call("Network.enable", params)
 
     async def disable(self) -> dict[str, Any]:
         """Disable Network domain events.
@@ -46,6 +55,7 @@ class NetworkDomain(BaseDomain):
         user_agent: str,
         accept_language: str | None = None,
         platform: str | None = None,
+        user_agent_metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Override the browser's User-Agent string.
 
@@ -53,12 +63,15 @@ class NetworkDomain(BaseDomain):
             user_agent: The User-Agent string to use.
             accept_language: Optional Accept-Language header value.
             platform: Optional platform override.
+            user_agent_metadata: Optional metadata for Sec-CH-UA-* headers.
         """
         params: dict[str, Any] = {"userAgent": user_agent}
         if accept_language is not None:
             params["acceptLanguage"] = accept_language
         if platform is not None:
             params["platform"] = platform
+        if user_agent_metadata is not None:
+            params["userAgentMetadata"] = user_agent_metadata
         return await self._call("Network.setUserAgentOverride", params)
 
     async def set_extra_request_headers(
@@ -113,7 +126,7 @@ class NetworkDomain(BaseDomain):
         params: dict[str, Any] = {}
         if urls is not None:
             params["urls"] = urls
-        return await self._call("Network.getCookies", params if params else None)
+        return await self._call("Network.getCookies", params)
 
     async def set_cookie(
         self,
@@ -126,8 +139,12 @@ class NetworkDomain(BaseDomain):
         http_only: bool = False,
         same_site: str | None = None,
         expires: float | None = None,
+        priority: str | None = None,
+        source_scheme: str | None = None,
+        source_port: int | None = None,
+        partition_key: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Set a cookie.
+        """Set a cookie with the given cookie data; may overwrite equivalent.
 
         Args:
             name: Cookie name.
@@ -139,6 +156,10 @@ class NetworkDomain(BaseDomain):
             http_only: If True, cookie is HTTP-only.
             same_site: Optional SameSite attribute.
             expires: Optional expiration time as Unix timestamp.
+            priority: Optional cookie priority ("Low", "Medium", "High").
+            source_scheme: Optional cookie source scheme.
+            source_port: Optional cookie source port.
+            partition_key: Optional cookie partition key.
 
         Returns:
             Response dict indicating success.
@@ -159,6 +180,14 @@ class NetworkDomain(BaseDomain):
             params["sameSite"] = same_site
         if expires is not None:
             params["expires"] = expires
+        if priority is not None:
+            params["priority"] = priority
+        if source_scheme is not None:
+            params["sourceScheme"] = source_scheme
+        if source_port is not None:
+            params["sourcePort"] = source_port
+        if partition_key is not None:
+            params["partitionKey"] = partition_key
         return await self._call("Network.setCookie", params)
 
     async def delete_cookies(
@@ -167,6 +196,7 @@ class NetworkDomain(BaseDomain):
         url: str | None = None,
         domain: str | None = None,
         path: str | None = None,
+        partition_key: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Delete cookies matching the given name and constraints.
 
@@ -175,6 +205,7 @@ class NetworkDomain(BaseDomain):
             url: Optional URL to scope the deletion.
             domain: Optional domain to scope the deletion.
             path: Optional path to scope the deletion.
+            partition_key: Optional cookie partition key.
         """
         params: dict[str, Any] = {"name": name}
         if url is not None:
@@ -183,6 +214,8 @@ class NetworkDomain(BaseDomain):
             params["domain"] = domain
         if path is not None:
             params["path"] = path
+        if partition_key is not None:
+            params["partitionKey"] = partition_key
         return await self._call("Network.deleteCookies", params)
 
     async def get_response_body(
@@ -205,66 +238,36 @@ class NetworkDomain(BaseDomain):
     async def set_cache_disabled(
         self,
         cache_disabled: bool,
-        resource_types: list[str] | None = None,
     ) -> dict[str, Any]:
         """Enable or disable the browser cache.
 
         Args:
             cache_disabled: If True, disable the cache.
-            resource_types: Optional list of resource types to apply to.
         """
-        params: dict[str, Any] = {"cacheDisabled": cache_disabled}
-        if resource_types is not None:
-            params["resourceTypes"] = resource_types
-        return await self._call("Network.setCacheDisabled", params)
+        return await self._call(
+            "Network.setCacheDisabled",
+            {"cacheDisabled": cache_disabled},
+        )
 
-    async def emulate_network_conditions(
+    async def set_blocked_urls(
         self,
-        offline: bool = False,
-        latency: int = 0,
-        download_throughput: float = -1,
-        upload_throughput: float = -1,
-        resource_types: list[str] | None = None,
+        urls: list[str] | None = None,
+        url_patterns: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
-        """Emulate network conditions.
-
-        Args:
-            offline: If True, emulate being offline.
-            latency: Latency in milliseconds.
-            download_throughput: Download throughput in bytes/sec (-1 for unlimited).
-            upload_throughput: Upload throughput in bytes/sec (-1 for unlimited).
-            resource_types: Optional list of resource types to apply to.
-        """
-        params: dict[str, Any] = {
-            "offline": offline,
-            "latency": latency,
-            "downloadThroughput": download_throughput,
-            "uploadThroughput": upload_throughput,
-        }
-        if resource_types is not None:
-            params["resourceTypes"] = resource_types
-        return await self._call("Network.emulateNetworkConditions", params)
-
-    async def get_all_cookies(self) -> dict[str, Any]:
-        """Get all cookies from the browser.
-
-        Unlike ``get_cookies``, this returns cookies from all contexts.
-
-        Returns:
-            Dict with ``cookies`` list.
-        """
-        return await self._call("Network.getAllCookies")
-
-    async def set_blocked_urls(self, urls: list[str]) -> dict[str, Any]:
         """Block specific URLs from loading.
 
         Args:
             urls: List of URL patterns to block (supports wildcards).
+            url_patterns: List of BlockPattern dicts with ``urlPattern``
+                (absolute URLPattern syntax, e.g. ``*://*:*/*.css``) and
+                ``block`` (bool).
         """
-        return await self._call(
-            "Network.setBlockedURLs",
-            {"urls": urls},
-        )
+        params: dict[str, Any] = {}
+        if url_patterns is not None:
+            params["urlPatterns"] = url_patterns
+        if urls is not None:
+            params["urls"] = urls
+        return await self._call("Network.setBlockedURLs", params)
 
     async def set_bypass_service_worker(self, bypass: bool) -> dict[str, Any]:
         """Bypass the service worker for all network requests.
@@ -279,23 +282,24 @@ class NetworkDomain(BaseDomain):
 
     async def load_network_resource(
         self,
-        frame_id: str,
         url: str,
-        options: dict[str, Any] | None = None,
+        options: dict[str, Any],
+        frame_id: str | None = None,
     ) -> dict[str, Any]:
         """Load a network resource directly.
 
         Args:
-            frame_id: Frame ID to load the resource for.
             url: URL of the resource to load.
-            options: Optional resource load options dict.
+            options: Resource load options dict.
+            frame_id: Optional frame ID (mandatory for frame targets,
+                omitted for worker targets).
 
         Returns:
             Dict with ``resource`` containing ``headers`` and ``statusCode``.
         """
-        params: dict[str, Any] = {"frameId": frame_id, "url": url}
-        if options is not None:
-            params["options"] = options
+        params: dict[str, Any] = {"url": url, "options": options}
+        if frame_id is not None:
+            params["frameId"] = frame_id
         return await self._call("Network.loadNetworkResource", params)
 
     async def get_request_post_data(self, request_id: str) -> dict[str, Any]:
@@ -312,30 +316,6 @@ class NetworkDomain(BaseDomain):
             {"requestId": request_id},
         )
 
-    async def can_emulate_network_conditions(self) -> dict[str, Any]:
-        """Check if network conditions emulation is supported.
-
-        Returns:
-            Dict with ``result`` boolean.
-        """
-        return await self._call("Network.canEmulateNetworkConditions")
-
-    async def can_clear_browser_cache(self) -> dict[str, Any]:
-        """Check if the browser cache can be cleared.
-
-        Returns:
-            Dict with ``result`` boolean.
-        """
-        return await self._call("Network.canClearBrowserCache")
-
-    async def can_clear_browser_cookies(self) -> dict[str, Any]:
-        """Check if browser cookies can be cleared.
-
-        Returns:
-            Dict with ``result`` boolean.
-        """
-        return await self._call("Network.canClearBrowserCookies")
-
     async def set_cookies(
         self,
         cookies: list[dict[str, Any]],
@@ -350,31 +330,54 @@ class NetworkDomain(BaseDomain):
 
     async def emulate_network_conditions_by_rule(
         self,
-        network_id: str,
+        matched_network_conditions: list[dict[str, Any]],
+        emulate_offline_service_worker: bool = False,
     ) -> dict[str, Any]:
-        """Emulate network conditions by a pre-defined rule ID.
+        """Emulate network conditions for individual requests using URL patterns.
+
+        Unlike the deprecated emulate_network_conditions, this does not affect
+        navigator state. Use override_network_state to modify navigator behavior.
 
         Args:
-            network_id: Network rule ID (e.g. ``"Slow 3G"``).
+            matched_network_conditions: List of NetworkConditions dicts with
+                ``urlPattern``, ``offline``, ``latency``, ``downloadThroughput``,
+                ``uploadThroughput``.
+            emulate_offline_service_worker: True to emulate offline service worker.
         """
         return await self._call(
             "Network.emulateNetworkConditionsByRule",
-            {"networkId": network_id},
+            {
+                "emulateOfflineServiceWorker": emulate_offline_service_worker,
+                "matchedNetworkConditions": matched_network_conditions,
+            },
         )
 
     async def override_network_state(
         self,
-        network_id: str,
+        offline: bool,
+        latency: float,
+        download_throughput: float,
+        upload_throughput: float,
+        connection_type: str | None = None,
     ) -> dict[str, Any]:
-        """Override the network state by a pre-defined rule ID.
+        """Override the state of navigator.onLine and navigator.connection.
 
         Args:
-            network_id: Network rule ID.
+            offline: True to emulate internet disconnection.
+            latency: Minimum latency from request sent to response headers (ms).
+            download_throughput: Max download throughput (bytes/sec). -1 disables.
+            upload_throughput: Max upload throughput (bytes/sec). -1 disables.
+            connection_type: Optional connection type if known.
         """
-        return await self._call(
-            "Network.overrideNetworkState",
-            {"networkId": network_id},
-        )
+        params: dict[str, Any] = {
+            "offline": offline,
+            "latency": latency,
+            "downloadThroughput": download_throughput,
+            "uploadThroughput": upload_throughput,
+        }
+        if connection_type is not None:
+            params["connectionType"] = connection_type
+        return await self._call("Network.overrideNetworkState", params)
 
     async def set_accepted_encodings(
         self,
@@ -423,7 +426,7 @@ class NetworkDomain(BaseDomain):
             params["frameId"] = frame_id
         return await self._call(
             "Network.getSecurityIsolationStatus",
-            params if params else None,
+            params,
         )
 
     async def enable_reporting_api(self, enable: bool) -> dict[str, Any]:
@@ -471,67 +474,16 @@ class NetworkDomain(BaseDomain):
         }
         return await self._call("Network.searchInResponseBody", params)
 
-    async def set_attach_debug_stack(self, attach: bool) -> dict[str, Any]:
+    async def set_attach_debug_stack(self, enabled: bool) -> dict[str, Any]:
         """Enable or disable attaching debug stack traces to requests.
 
         Args:
-            attach: Whether to attach debug stacks.
+            enabled: Whether to attach debug stacks.
         """
         return await self._call(
             "Network.setAttachDebugStack",
-            {"attach": attach},
+            {"enabled": enabled},
         )
-
-    async def set_request_interception(
-        self,
-        patterns: list[dict[str, Any]],
-    ) -> dict[str, Any]:
-        """Set up request interception.
-
-        Args:
-            patterns: List of interception pattern dicts with
-                ``urlPattern``, ``resourceType``, ``interceptionStage``.
-        """
-        return await self._call(
-            "Network.setRequestInterception",
-            {"patterns": patterns},
-        )
-
-    async def continue_intercepted_request(
-        self,
-        interception_id: str,
-        error_reason: str | None = None,
-        raw_response: str | None = None,
-        url: str | None = None,
-        method: str | None = None,
-        headers: dict[str, str] | None = None,
-        post_data: str | None = None,
-    ) -> dict[str, Any]:
-        """Continue an intercepted request.
-
-        Args:
-            interception_id: Interception ID from ``Network.requestIntercepted``.
-            error_reason: Optional error reason to fail the request.
-            raw_response: Optional raw HTTP response to return.
-            url: Optional URL override.
-            method: Optional HTTP method override.
-            headers: Optional headers override.
-            post_data: Optional POST data override.
-        """
-        params: dict[str, Any] = {"interceptionId": interception_id}
-        if error_reason is not None:
-            params["errorReason"] = error_reason
-        if raw_response is not None:
-            params["rawResponse"] = raw_response
-        if url is not None:
-            params["url"] = url
-        if method is not None:
-            params["method"] = method
-        if headers is not None:
-            params["headers"] = headers
-        if post_data is not None:
-            params["postData"] = post_data
-        return await self._call("Network.continueInterceptedRequest", params)
 
     async def get_response_body_for_interception(
         self,
@@ -586,41 +538,35 @@ class NetworkDomain(BaseDomain):
 
     async def fetch_schemeful_site(
         self,
-        request_id: str,
+        origin: str,
     ) -> dict[str, Any]:
-        """Fetch the schemeful site for a request.
+        """Fetch the schemeful site for a specific origin.
 
         Args:
-            request_id: Request ID from a network event.
+            origin: The URL origin.
 
         Returns:
             Dict with ``schemefulSite`` string.
         """
         return await self._call(
             "Network.fetchSchemefulSite",
-            {"requestId": request_id},
+            {"origin": origin},
         )
 
     async def set_cookie_controls(
         self,
         enable_third_party_cookie_restriction: bool = False,
-        enable_same_site_by_default: bool = False,
-        without_same_site_lax_by_default: bool = False,
     ) -> dict[str, Any]:
-        """Set cookie controls.
+        """Set controls for third-party cookie access.
+
+        Page reload is required before the new cookie behavior will be observed.
 
         Args:
-            enable_third_party_cookie_restriction: Block third-party cookies.
-            enable_same_site_by_default: Enable SameSite by default.
-            without_same_site_lax_by_default: Disable SameSite=Lax by default.
+            enable_third_party_cookie_restriction: Whether 3pc restriction is enabled.
         """
         return await self._call(
             "Network.setCookieControls",
-            {
-                "enableThirdPartyCookieRestriction": enable_third_party_cookie_restriction,
-                "enableSameSiteByDefault": enable_same_site_by_default,
-                "withoutSameSiteLaxByDefault": without_same_site_lax_by_default,
-            },
+            {"enableThirdPartyCookieRestriction": enable_third_party_cookie_restriction},
         )
 
     async def enable_device_bound_sessions(self, enable: bool) -> dict[str, Any]:
@@ -636,31 +582,37 @@ class NetworkDomain(BaseDomain):
 
     async def delete_device_bound_session(
         self,
-        session_id: str,
+        key: dict[str, Any],
     ) -> dict[str, Any]:
         """Delete a device bound session.
 
         Args:
-            session_id: Session ID to delete.
+            key: DeviceBoundSessionKey dict identifying the session.
         """
         return await self._call(
             "Network.deleteDeviceBoundSession",
-            {"sessionId": session_id},
+            {"key": key},
         )
 
     async def configure_durable_messages(
         self,
-        max_messages: int | None = None,
+        max_total_buffer_size: int | None = None,
+        max_resource_buffer_size: int | None = None,
     ) -> dict[str, Any]:
-        """Configure durable messages.
+        """Configure storing response bodies outside of renderer.
+
+        If max_total_buffer_size is not set, durable messages are disabled.
 
         Args:
-            max_messages: Optional max number of durable messages.
+            max_total_buffer_size: Optional buffer size in bytes.
+            max_resource_buffer_size: Optional per-resource buffer size in bytes.
         """
         params: dict[str, Any] = {}
-        if max_messages is not None:
-            params["maxMessages"] = max_messages
+        if max_total_buffer_size is not None:
+            params["maxTotalBufferSize"] = max_total_buffer_size
+        if max_resource_buffer_size is not None:
+            params["maxResourceBufferSize"] = max_resource_buffer_size
         return await self._call(
             "Network.configureDurableMessages",
-            params if params else None,
+            params,
         )
