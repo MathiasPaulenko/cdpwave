@@ -244,7 +244,11 @@ class TestWebAuthnDomain:
     async def test_add_credential(self) -> None:
         fake = FakeSender({})
         domain = WebAuthnDomain(fake)
-        await domain.add_credential("auth1", {"credentialId": "cred1"})
+        await domain.add_credential("auth1", {
+            "credentialId": "cred1",
+            "isResidentCredential": False,
+            "privateKey": "key1",
+        })
         method, params = fake.last_call
         assert method == "WebAuthn.addCredential"
         assert params is not None

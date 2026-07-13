@@ -2047,41 +2047,35 @@ class TestIndexedDBBoundary:
     async def test_page_size_true_bool(self) -> None:
         fake = FakeSender({"objectStoreDataEntries": [], "hasMore": False})
         domain = IndexedDBDomain(fake)
-        await domain.request_data(
-            security_origin="https://example.com",
-            database_name="db1",
-            object_store_name="s1",
-            page_size=True,
-        )
-        _, params = fake.last_call
-        assert params is not None
-        assert params["pageSize"] is True
+        with pytest.raises(TypeError, match="page_size must be an int"):
+            await domain.request_data(
+                security_origin="https://example.com",
+                database_name="db1",
+                object_store_name="s1",
+                page_size=True,
+            )
 
     async def test_page_size_false_bool(self) -> None:
         fake = FakeSender({"objectStoreDataEntries": [], "hasMore": False})
         domain = IndexedDBDomain(fake)
-        await domain.request_data(
-            security_origin="https://example.com",
-            database_name="db1",
-            object_store_name="s1",
-            page_size=False,
-        )
-        _, params = fake.last_call
-        assert params is not None
-        assert params["pageSize"] is False
+        with pytest.raises(TypeError, match="page_size must be an int"):
+            await domain.request_data(
+                security_origin="https://example.com",
+                database_name="db1",
+                object_store_name="s1",
+                page_size=False,
+            )
 
     async def test_skip_count_true_bool(self) -> None:
         fake = FakeSender({"objectStoreDataEntries": [], "hasMore": False})
         domain = IndexedDBDomain(fake)
-        await domain.request_data(
-            security_origin="https://example.com",
-            database_name="db1",
-            object_store_name="s1",
-            skip_count=True,
-        )
-        _, params = fake.last_call
-        assert params is not None
-        assert params["skipCount"] is True
+        with pytest.raises(TypeError, match="skip_count must be an int"):
+            await domain.request_data(
+                security_origin="https://example.com",
+                database_name="db1",
+                object_store_name="s1",
+                skip_count=True,
+            )
 
     async def test_key_range_nested_complex(self) -> None:
         fake = FakeSender({"objectStoreDataEntries": [], "hasMore": False})

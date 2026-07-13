@@ -31,6 +31,8 @@ class CacheStorageDomain(BaseDomain):
         Returns:
             Response dict from the CDP.
         """
+        if not isinstance(cache_id, str):
+            raise TypeError("cache_id must be a string")
         return await self._call(
             "CacheStorage.deleteCache",
             {"cacheId": cache_id},
@@ -50,6 +52,10 @@ class CacheStorageDomain(BaseDomain):
         Returns:
             Response dict from the CDP.
         """
+        if not isinstance(cache_id, str):
+            raise TypeError("cache_id must be a string")
+        if not isinstance(request, str):
+            raise TypeError("request must be a string")
         return await self._call(
             "CacheStorage.deleteEntry",
             {"cacheId": cache_id, "request": request},
@@ -75,6 +81,12 @@ class CacheStorageDomain(BaseDomain):
         Returns:
             Dict with ``caches`` list.
         """
+        if security_origin is not None and not isinstance(security_origin, str):
+            raise TypeError("security_origin must be a str or None")
+        if storage_key is not None and not isinstance(storage_key, str):
+            raise TypeError("storage_key must be a str or None")
+        if storage_bucket is not None and not isinstance(storage_bucket, dict):
+            raise TypeError("storage_bucket must be a dict or None")
         params: dict[str, Any] = {}
         if security_origin:
             params["securityOrigin"] = security_origin
@@ -100,6 +112,12 @@ class CacheStorageDomain(BaseDomain):
         Returns:
             Dict with ``response`` containing ``body`` (base64-encoded str).
         """
+        if not isinstance(cache_id, str):
+            raise TypeError("cache_id must be a string")
+        if not isinstance(request_url, str):
+            raise TypeError("request_url must be a string")
+        if not isinstance(request_headers, list):
+            raise TypeError("request_headers must be a list")
         return await self._call(
             "CacheStorage.requestCachedResponse",
             {
@@ -128,6 +146,18 @@ class CacheStorageDomain(BaseDomain):
         Returns:
             Dict with ``cacheDataEntries`` and ``returnCount``.
         """
+        if not isinstance(cache_id, str):
+            raise TypeError("cache_id must be a string")
+        if skip_count is not None and (
+            isinstance(skip_count, bool) or not isinstance(skip_count, int)
+        ):
+            raise TypeError("skip_count must be an int or None")
+        if page_size is not None and (
+            isinstance(page_size, bool) or not isinstance(page_size, int)
+        ):
+            raise TypeError("page_size must be an int or None")
+        if path_filter is not None and not isinstance(path_filter, str):
+            raise TypeError("path_filter must be a str or None")
         params: dict[str, Any] = {"cacheId": cache_id}
         if skip_count is not None:
             params["skipCount"] = skip_count

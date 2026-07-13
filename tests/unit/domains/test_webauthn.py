@@ -21,6 +21,8 @@ from cdpwave.domains.web_authn import WebAuthnDomain
 from cdpwave.exceptions import CommandError
 from tests.unit.fake_sender import FakeSender
 
+_VALID_CRED = {"credentialId": "c1", "isResidentCredential": False, "privateKey": "k1"}
+
 
 class ErrorSender:
     """Sender that raises CommandError on every call."""
@@ -57,7 +59,7 @@ class TestAddCredential:
     async def test_params(self) -> None:
         fake = FakeSender({})
         domain = WebAuthnDomain(fake)
-        cred = {"credentialId": "cred1", "isResidentCredential": True}
+        cred = {"credentialId": "cred1", "isResidentCredential": True, "privateKey": "key1"}
         await domain.add_credential("auth-1", cred)
         method, params = fake.last_call
         assert method == "WebAuthn.addCredential"
@@ -68,25 +70,33 @@ class TestAddCredential:
     async def test_returns_empty(self) -> None:
         fake = FakeSender({})
         domain = WebAuthnDomain(fake)
-        result = await domain.add_credential("auth-1", {})
+        result = await domain.add_credential("auth-1", {
+            "credentialId": "c1",
+            "isResidentCredential": False,
+            "privateKey": "k1",
+        })
         assert result == {}
 
     async def test_returns_response(self) -> None:
         fake = FakeSender({"ok": True})
         domain = WebAuthnDomain(fake)
-        result = await domain.add_credential("auth-1", {})
+        result = await domain.add_credential("auth-1", {
+            "credentialId": "c1",
+            "isResidentCredential": False,
+            "privateKey": "k1",
+        })
         assert result == {"ok": True}
 
     async def test_single_call(self) -> None:
         fake = FakeSender({})
         domain = WebAuthnDomain(fake)
-        await domain.add_credential("auth-1", {})
+        await domain.add_credential("auth-1", _VALID_CRED)
         assert len(fake.calls) == 1
 
     async def test_only_keys_in_params(self) -> None:
         fake = FakeSender({})
         domain = WebAuthnDomain(fake)
-        await domain.add_credential("auth-1", {})
+        await domain.add_credential("auth-1", _VALID_CRED)
         _, params = fake.last_call
         assert params is not None
         assert set(params.keys()) == {"authenticatorId", "credential"}
@@ -94,7 +104,7 @@ class TestAddCredential:
     async def test_camel_case_keys(self) -> None:
         fake = FakeSender({})
         domain = WebAuthnDomain(fake)
-        await domain.add_credential("auth-1", {})
+        await domain.add_credential("auth-1", _VALID_CRED)
         _, params = fake.last_call
         assert params is not None
         assert "authenticatorId" in params
@@ -103,9 +113,9 @@ class TestAddCredential:
     async def test_creates_new_dict_each_call(self) -> None:
         fake = FakeSender({})
         domain = WebAuthnDomain(fake)
-        await domain.add_credential("auth-1", {})
+        await domain.add_credential("auth-1", _VALID_CRED)
         first = fake.calls[0][1]
-        await domain.add_credential("auth-1", {})
+        await domain.add_credential("auth-1", _VALID_CRED)
         second = fake.calls[1][1]
         assert first is not None
         assert second is not None
@@ -1401,7 +1411,7 @@ class TestErrorPropagation:
         sender = ErrorSender(code=-32003, message="Add cred failed")
         domain = WebAuthnDomain(sender)
         with pytest.raises(CommandError):
-            await domain.add_credential("auth-1", {})
+            await domain.add_credential("auth-1", _VALID_CRED)
 
     async def test_get_credentials_raises_command_error(self) -> None:
         sender = ErrorSender(code=-32004, message="Get creds failed")
@@ -1487,7 +1497,7 @@ class TestConcurrency:
             domain.disable(),
             domain.enable(),
             domain.add_virtual_authenticator("ctap2", "internal"),
-            domain.add_credential("auth-1", {}),
+            domain.add_credential("auth-1", _VALID_CRED),
             domain.get_credentials("auth-1"),
             domain.set_user_verified("auth-1", True),
             domain.set_automatic_presence_simulation("auth-1", True),
@@ -1562,7 +1572,7 @@ class TestCallSequence:
         domain = WebAuthnDomain(fake)
         await domain.enable()
         await domain.add_virtual_authenticator("ctap2", "internal")
-        await domain.add_credential("auth-1", {})
+        await domain.add_credential("auth-1", _VALID_CRED)
         await domain.get_credentials("auth-1")
         await domain.get_credential("auth-1", "cred-1")
         await domain.set_user_verified("auth-1", True)
@@ -1594,7 +1604,7 @@ class TestCallSequence:
         await domain.enable()
         await domain.disable()
         await domain.add_virtual_authenticator("ctap2", "internal")
-        await domain.add_credential("auth-1", {})
+        await domain.add_credential("auth-1", _VALID_CRED)
         await domain.get_credential("auth-1", "cred-1")
         await domain.get_credentials("auth-1")
         await domain.remove_credential("auth-1", "cred-1")
@@ -1665,10 +1675,10 @@ class TestEdgeCases:
     async def test_empty_credential_dict(self) -> None:
         fake = FakeSender({})
         domain = WebAuthnDomain(fake)
-        await domain.add_credential("auth-1", {})
+        await domain.add_credential("auth-1", _VALID_CRED)
         _, params = fake.last_call
         assert params is not None
-        assert params["credential"] == {}
+        assert params["credential"] == _VALID_CRED
 
 
 # ---------------------------------------------------------------------------

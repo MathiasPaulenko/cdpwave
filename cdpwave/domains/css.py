@@ -81,6 +81,17 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``rule`` CSSRule object.
         """
+        if not isinstance(style_sheet_id, str):
+            raise TypeError("style_sheet_id must be a string")
+        if not isinstance(rule_text, str):
+            raise TypeError("rule_text must be a string")
+        if not isinstance(location, dict):
+            raise TypeError("location must be a dict")
+        if node_for_property_syntax_validation is not None and (
+            isinstance(node_for_property_syntax_validation, bool)
+            or not isinstance(node_for_property_syntax_validation, int)
+        ):
+            raise TypeError("node_for_property_syntax_validation must be an int or None")
         params: dict[str, Any] = {
             "styleSheetId": style_sheet_id,
             "ruleText": rule_text,
@@ -104,6 +115,8 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``classNames`` list.
         """
+        if not isinstance(style_sheet_id, str):
+            raise TypeError("style_sheet_id must be a string")
         return await self._call(
             "CSS.collectClassNames",
             {"styleSheetId": style_sheet_id},
@@ -128,6 +141,10 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``styleSheetId``.
         """
+        if not isinstance(frame_id, str):
+            raise TypeError("frame_id must be a string")
+        if not isinstance(force, bool):
+            raise TypeError("force must be a bool")
         return await self._call(
             "CSS.createStyleSheet",
             {"frameId": frame_id, "force": force},
@@ -165,6 +182,10 @@ class CSSDomain(BaseDomain):
             forced_pseudo_classes: Element pseudo classes to force when
                 computing the element's style.
         """
+        if isinstance(node_id, bool) or not isinstance(node_id, int):
+            raise TypeError("node_id must be an int")
+        if not isinstance(forced_pseudo_classes, list):
+            raise TypeError("forced_pseudo_classes must be a list")
         return await self._call(
             "CSS.forcePseudoState",
             {"nodeId": node_id, "forcedPseudoClasses": forced_pseudo_classes},
@@ -182,6 +203,10 @@ class CSSDomain(BaseDomain):
                 state.
             forced: Boolean indicating if this is on or off.
         """
+        if isinstance(node_id, bool) or not isinstance(node_id, int):
+            raise TypeError("node_id must be an int")
+        if not isinstance(forced, bool):
+            raise TypeError("forced must be a bool")
         return await self._call(
             "CSS.forceStartingStyle",
             {"nodeId": node_id, "forced": forced},
@@ -200,6 +225,8 @@ class CSSDomain(BaseDomain):
             Dict with ``backgroundColors`` list, ``computedFontSize`` str,
             ``computedFontWeight`` str.
         """
+        if isinstance(node_id, bool) or not isinstance(node_id, int):
+            raise TypeError("node_id must be an int")
         return await self._call(
             "CSS.getBackgroundColors",
             {"nodeId": node_id},
@@ -217,6 +244,8 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``computedStyle`` list and ``extraFields``.
         """
+        if isinstance(node_id, bool) or not isinstance(node_id, int):
+            raise TypeError("node_id must be an int")
         return await self._call(
             "CSS.getComputedStyleForNode",
             {"nodeId": node_id},
@@ -258,6 +287,16 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``results`` list.
         """
+        if not isinstance(values, list):
+            raise TypeError("values must be a list")
+        if isinstance(node_id, bool) or not isinstance(node_id, int):
+            raise TypeError("node_id must be an int")
+        if not isinstance(property_name, str):
+            raise TypeError("property_name must be a string")
+        if not isinstance(pseudo_type, str):
+            raise TypeError("pseudo_type must be a string")
+        if not isinstance(pseudo_identifier, str):
+            raise TypeError("pseudo_identifier must be a string")
         params: dict[str, Any] = {
             "values": values,
             "nodeId": node_id,
@@ -284,6 +323,10 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``longhandProperties`` list.
         """
+        if not isinstance(shorthand_name, str):
+            raise TypeError("shorthand_name must be a string")
+        if not isinstance(value, str):
+            raise TypeError("value must be a string")
         return await self._call(
             "CSS.getLonghandProperties",
             {"shorthandName": shorthand_name, "value": value},
@@ -303,6 +346,8 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``inlineStyle`` and ``attributesStyle``.
         """
+        if isinstance(node_id, bool) or not isinstance(node_id, int):
+            raise TypeError("node_id must be an int")
         return await self._call(
             "CSS.getInlineStylesForNode",
             {"nodeId": node_id},
@@ -322,6 +367,8 @@ class CSSDomain(BaseDomain):
             Dict with ``animationStyles``, ``transitionsStyle``,
             ``inherited``.
         """
+        if isinstance(node_id, bool) or not isinstance(node_id, int):
+            raise TypeError("node_id must be an int")
         return await self._call(
             "CSS.getAnimatedStylesForNode",
             {"nodeId": node_id},
@@ -344,6 +391,8 @@ class CSSDomain(BaseDomain):
             ``cssPropertyRules``, ``cssPropertyRegistrations``,
             ``cssAtRules``, ``parentLayoutNodeId``, ``cssFunctionRules``.
         """
+        if isinstance(node_id, bool) or not isinstance(node_id, int):
+            raise TypeError("node_id must be an int")
         return await self._call(
             "CSS.getMatchedStylesForNode",
             {"nodeId": node_id},
@@ -379,6 +428,8 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``fonts`` list of PlatformFontUsage.
         """
+        if isinstance(node_id, bool) or not isinstance(node_id, int):
+            raise TypeError("node_id must be an int")
         return await self._call(
             "CSS.getPlatformFontsForNode",
             {"nodeId": node_id},
@@ -396,6 +447,8 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``text`` string.
         """
+        if not isinstance(style_sheet_id, str):
+            raise TypeError("style_sheet_id must be a string")
         return await self._call(
             "CSS.getStyleSheetText",
             {"styleSheetId": style_sheet_id},
@@ -419,6 +472,8 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``rootLayer`` LayerData.
         """
+        if isinstance(node_id, bool) or not isinstance(node_id, int):
+            raise TypeError("node_id must be an int")
         return await self._call(
             "CSS.getLayersForNode",
             {"nodeId": node_id},
@@ -439,6 +494,10 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``ranges`` list of SourceRange.
         """
+        if not isinstance(style_sheet_id, str):
+            raise TypeError("style_sheet_id must be a string")
+        if not isinstance(selector_text, str):
+            raise TypeError("selector_text must be a string")
         return await self._call(
             "CSS.getLocationForSelector",
             {
@@ -461,6 +520,8 @@ class CSSDomain(BaseDomain):
         Args:
             node_id: DOM node ID to track. Omit to disable tracking.
         """
+        if node_id is not None and (isinstance(node_id, bool) or not isinstance(node_id, int)):
+            raise TypeError("node_id must be an int or None")
         params: dict[str, Any] = {}
         if node_id:
             params["nodeId"] = node_id
@@ -487,6 +548,8 @@ class CSSDomain(BaseDomain):
             properties_to_track: List of ComputedStyleProperty configs to
                 track.
         """
+        if not isinstance(properties_to_track, list):
+            raise TypeError("properties_to_track must be a list")
         return await self._call(
             "CSS.trackComputedStyleUpdates",
             {"propertiesToTrack": properties_to_track},
@@ -514,6 +577,12 @@ class CSSDomain(BaseDomain):
             property_name: CSS property name.
             value: Property value.
         """
+        if isinstance(node_id, bool) or not isinstance(node_id, int):
+            raise TypeError("node_id must be an int")
+        if not isinstance(property_name, str):
+            raise TypeError("property_name must be a string")
+        if not isinstance(value, str):
+            raise TypeError("value must be a string")
         return await self._call(
             "CSS.setEffectivePropertyValueForNode",
             {
@@ -539,6 +608,12 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``propertyName`` Value.
         """
+        if not isinstance(style_sheet_id, str):
+            raise TypeError("style_sheet_id must be a string")
+        if not isinstance(range_, dict):
+            raise TypeError("range_ must be a dict")
+        if not isinstance(property_name, str):
+            raise TypeError("property_name must be a string")
         return await self._call(
             "CSS.setPropertyRulePropertyName",
             {
@@ -564,6 +639,12 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``keyText`` Value.
         """
+        if not isinstance(style_sheet_id, str):
+            raise TypeError("style_sheet_id must be a string")
+        if not isinstance(range_, dict):
+            raise TypeError("range_ must be a dict")
+        if not isinstance(key_text, str):
+            raise TypeError("key_text must be a string")
         return await self._call(
             "CSS.setKeyframeKey",
             {
@@ -589,6 +670,12 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``media`` Media.
         """
+        if not isinstance(style_sheet_id, str):
+            raise TypeError("style_sheet_id must be a string")
+        if not isinstance(range_, dict):
+            raise TypeError("range_ must be a dict")
+        if not isinstance(text, str):
+            raise TypeError("text must be a string")
         return await self._call(
             "CSS.setMediaText",
             {
@@ -614,6 +701,12 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``containerQuery`` ContainerQuery.
         """
+        if not isinstance(style_sheet_id, str):
+            raise TypeError("style_sheet_id must be a string")
+        if not isinstance(range_, dict):
+            raise TypeError("range_ must be a dict")
+        if not isinstance(text, str):
+            raise TypeError("text must be a string")
         return await self._call(
             "CSS.setContainerQueryConditionText",
             {
@@ -639,6 +732,12 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``supports`` Supports.
         """
+        if not isinstance(style_sheet_id, str):
+            raise TypeError("style_sheet_id must be a string")
+        if not isinstance(range_, dict):
+            raise TypeError("range_ must be a dict")
+        if not isinstance(text, str):
+            raise TypeError("text must be a string")
         return await self._call(
             "CSS.setSupportsText",
             {
@@ -664,6 +763,12 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``navigation`` Navigation.
         """
+        if not isinstance(style_sheet_id, str):
+            raise TypeError("style_sheet_id must be a string")
+        if not isinstance(range_, dict):
+            raise TypeError("range_ must be a dict")
+        if not isinstance(text, str):
+            raise TypeError("text must be a string")
         return await self._call(
             "CSS.setNavigationText",
             {
@@ -689,6 +794,12 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``scope`` Scope.
         """
+        if not isinstance(style_sheet_id, str):
+            raise TypeError("style_sheet_id must be a string")
+        if not isinstance(range_, dict):
+            raise TypeError("range_ must be a dict")
+        if not isinstance(text, str):
+            raise TypeError("text must be a string")
         return await self._call(
             "CSS.setScopeText",
             {
@@ -714,6 +825,12 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``selectorList`` SelectorList.
         """
+        if not isinstance(style_sheet_id, str):
+            raise TypeError("style_sheet_id must be a string")
+        if not isinstance(range_, dict):
+            raise TypeError("range_ must be a dict")
+        if not isinstance(selector, str):
+            raise TypeError("selector must be a string")
         return await self._call(
             "CSS.setRuleSelector",
             {
@@ -737,6 +854,10 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``sourceMapURL`` string.
         """
+        if not isinstance(style_sheet_id, str):
+            raise TypeError("style_sheet_id must be a string")
+        if not isinstance(text, str):
+            raise TypeError("text must be a string")
         return await self._call(
             "CSS.setStyleSheetText",
             {"styleSheetId": style_sheet_id, "text": text},
@@ -763,6 +884,13 @@ class CSSDomain(BaseDomain):
         Returns:
             Dict with ``styles`` list of Style.
         """
+        if not isinstance(edits, list):
+            raise TypeError("edits must be a list")
+        if node_for_property_syntax_validation is not None and (
+            isinstance(node_for_property_syntax_validation, bool)
+            or not isinstance(node_for_property_syntax_validation, int)
+        ):
+            raise TypeError("node_for_property_syntax_validation must be an int or None")
         params: dict[str, Any] = {"edits": edits}
         if node_for_property_syntax_validation:
             params["nodeForPropertySyntaxValidation"] = (
@@ -807,6 +935,8 @@ class CSSDomain(BaseDomain):
         Args:
             enabled: Whether rendering of local fonts is enabled.
         """
+        if not isinstance(enabled, bool):
+            raise TypeError("enabled must be a bool")
         return await self._call(
             "CSS.setLocalFontsEnabled",
             {"enabled": enabled},

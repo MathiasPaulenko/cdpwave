@@ -73,6 +73,16 @@ class AccessibilityDomain(BaseDomain):
             Dict with ``nodes`` — the AXNode for this DOM node, if it
             exists, plus its ancestors, siblings and children, if requested.
         """
+        if not isinstance(fetch_relatives, bool):
+            raise TypeError("fetch_relatives must be a bool")
+        if node_id is not None and (isinstance(node_id, bool) or not isinstance(node_id, int)):
+            raise TypeError("node_id must be an int or None")
+        if backend_node_id is not None and (
+            isinstance(backend_node_id, bool) or not isinstance(backend_node_id, int)
+        ):
+            raise TypeError("backend_node_id must be an int or None")
+        if object_id is not None and not isinstance(object_id, str):
+            raise TypeError("object_id must be a str or None")
         params: dict[str, Any] = {"fetchRelatives": fetch_relatives}
         if node_id:
             params["nodeId"] = node_id
@@ -98,6 +108,10 @@ class AccessibilityDomain(BaseDomain):
         Returns:
             Dict with ``nodes`` list of AX node objects.
         """
+        if depth is not None and (isinstance(depth, bool) or not isinstance(depth, int)):
+            raise TypeError("depth must be an int or None")
+        if frame_id is not None and not isinstance(frame_id, str):
+            raise TypeError("frame_id must be a str or None")
         params: dict[str, Any] = {}
         if depth:
             params["depth"] = depth
@@ -119,6 +133,8 @@ class AccessibilityDomain(BaseDomain):
         Returns:
             Dict with the root ``node`` object.
         """
+        if frame_id is not None and not isinstance(frame_id, str):
+            raise TypeError("frame_id must be a str or None")
         params: dict[str, Any] = {}
         if frame_id:
             params["frameId"] = frame_id
@@ -142,6 +158,16 @@ class AccessibilityDomain(BaseDomain):
             Dict with ``nodes`` list of AX node objects from the node
             up to the root.
         """
+        if node_id is not None and (
+            isinstance(node_id, bool) or not isinstance(node_id, int)
+        ):
+            raise TypeError("node_id must be an int or None")
+        if backend_node_id is not None and (
+            isinstance(backend_node_id, bool) or not isinstance(backend_node_id, int)
+        ):
+            raise TypeError("backend_node_id must be an int or None")
+        if object_id is not None and not isinstance(object_id, str):
+            raise TypeError("object_id must be a str or None")
         params: dict[str, Any] = {}
         if node_id:
             params["nodeId"] = node_id
@@ -169,6 +195,10 @@ class AccessibilityDomain(BaseDomain):
         Returns:
             Dict with ``nodes`` list of child AX node objects.
         """
+        if not isinstance(node_id, str):
+            raise TypeError("node_id must be a string")
+        if frame_id is not None and not isinstance(frame_id, str):
+            raise TypeError("frame_id must be a str or None")
         params: dict[str, Any] = {"id": node_id}
         if frame_id:
             params["frameId"] = frame_id
@@ -203,6 +233,20 @@ class AccessibilityDomain(BaseDomain):
             Dict with ``nodes`` — a list of AXNode matching the specified
             attributes, including nodes that are ignored for accessibility.
         """
+        if node_id is not None and (
+            isinstance(node_id, bool) or not isinstance(node_id, int)
+        ):
+            raise TypeError("node_id must be an int or None")
+        if backend_node_id is not None and (
+            isinstance(backend_node_id, bool) or not isinstance(backend_node_id, int)
+        ):
+            raise TypeError("backend_node_id must be an int or None")
+        if object_id is not None and not isinstance(object_id, str):
+            raise TypeError("object_id must be a str or None")
+        if accessible_name is not None and not isinstance(accessible_name, str):
+            raise TypeError("accessible_name must be a str or None")
+        if role is not None and not isinstance(role, str):
+            raise TypeError("role must be a str or None")
         params: dict[str, Any] = {}
         if node_id:
             params["nodeId"] = node_id

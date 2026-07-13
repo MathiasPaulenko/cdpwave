@@ -43,6 +43,16 @@ class IndexedDBDomain(BaseDomain):
         Returns:
             Response dict from the CDP.
         """
+        if database_name is not None and not isinstance(database_name, str):
+            raise TypeError("database_name must be a string")
+        if object_store_name is not None and not isinstance(object_store_name, str):
+            raise TypeError("object_store_name must be a string")
+        if security_origin is not None and not isinstance(security_origin, str):
+            raise TypeError("security_origin must be a str or None")
+        if storage_key is not None and not isinstance(storage_key, str):
+            raise TypeError("storage_key must be a str or None")
+        if storage_bucket is not None and not isinstance(storage_bucket, dict):
+            raise TypeError("storage_bucket must be a dict or None")
         params: dict[str, Any] = {
             "databaseName": database_name,
             "objectStoreName": object_store_name,
@@ -77,6 +87,14 @@ class IndexedDBDomain(BaseDomain):
         Returns:
             Response dict from the CDP.
         """
+        if database_name is not None and not isinstance(database_name, str):
+            raise TypeError("database_name must be a string")
+        if security_origin is not None and not isinstance(security_origin, str):
+            raise TypeError("security_origin must be a str or None")
+        if storage_key is not None and not isinstance(storage_key, str):
+            raise TypeError("storage_key must be a str or None")
+        if storage_bucket is not None and not isinstance(storage_bucket, dict):
+            raise TypeError("storage_bucket must be a dict or None")
         params: dict[str, Any] = {"databaseName": database_name}
         if security_origin:
             params["securityOrigin"] = security_origin
@@ -112,6 +130,18 @@ class IndexedDBDomain(BaseDomain):
         Returns:
             Response dict from the CDP.
         """
+        if not isinstance(database_name, str):
+            raise TypeError("database_name must be a string")
+        if not isinstance(object_store_name, str):
+            raise TypeError("object_store_name must be a string")
+        if not isinstance(key_range, dict):
+            raise TypeError("key_range must be a dict")
+        if security_origin is not None and not isinstance(security_origin, str):
+            raise TypeError("security_origin must be a str or None")
+        if storage_key is not None and not isinstance(storage_key, str):
+            raise TypeError("storage_key must be a str or None")
+        if storage_bucket is not None and not isinstance(storage_bucket, dict):
+            raise TypeError("storage_bucket must be a dict or None")
         params: dict[str, Any] = {
             "databaseName": database_name,
             "objectStoreName": object_store_name,
@@ -168,6 +198,16 @@ class IndexedDBDomain(BaseDomain):
             to become the next inserted key into the object store.
             Valid if objectStore.autoIncrement is true).
         """
+        if not isinstance(database_name, str):
+            raise TypeError("database_name must be a string")
+        if not isinstance(object_store_name, str):
+            raise TypeError("object_store_name must be a string")
+        if security_origin is not None and not isinstance(security_origin, str):
+            raise TypeError("security_origin must be a str or None")
+        if storage_key is not None and not isinstance(storage_key, str):
+            raise TypeError("storage_key must be a str or None")
+        if storage_bucket is not None and not isinstance(storage_bucket, dict):
+            raise TypeError("storage_bucket must be a dict or None")
         params: dict[str, Any] = {
             "databaseName": database_name,
             "objectStoreName": object_store_name,
@@ -215,6 +255,24 @@ class IndexedDBDomain(BaseDomain):
             data entries) and ``hasMore`` (if true, there are more
             entries to fetch in the given range).
         """
+        if database_name is not None and not isinstance(database_name, str):
+            raise TypeError("database_name must be a string")
+        if object_store_name is not None and not isinstance(object_store_name, str):
+            raise TypeError("object_store_name must be a string")
+        if index_name is not None and not isinstance(index_name, str):
+            raise TypeError("index_name must be a string")
+        if isinstance(skip_count, bool) or not isinstance(skip_count, int):
+            raise TypeError("skip_count must be an int")
+        if isinstance(page_size, bool) or not isinstance(page_size, int):
+            raise TypeError("page_size must be an int")
+        if key_range is not None and not isinstance(key_range, dict):
+            raise TypeError("key_range must be a dict or None")
+        if security_origin is not None and not isinstance(security_origin, str):
+            raise TypeError("security_origin must be a str or None")
+        if storage_key is not None and not isinstance(storage_key, str):
+            raise TypeError("storage_key must be a str or None")
+        if storage_bucket is not None and not isinstance(storage_bucket, dict):
+            raise TypeError("storage_bucket must be a dict or None")
         params: dict[str, Any] = {
             "databaseName": database_name,
             "objectStoreName": object_store_name,
@@ -255,6 +313,14 @@ class IndexedDBDomain(BaseDomain):
             Dict with ``databaseWithObjectStores`` (database with an
             array of object stores).
         """
+        if database_name is not None and not isinstance(database_name, str):
+            raise TypeError("database_name must be a string")
+        if security_origin is not None and not isinstance(security_origin, str):
+            raise TypeError("security_origin must be a str or None")
+        if storage_key is not None and not isinstance(storage_key, str):
+            raise TypeError("storage_key must be a str or None")
+        if storage_bucket is not None and not isinstance(storage_bucket, dict):
+            raise TypeError("storage_bucket must be a dict or None")
         params: dict[str, Any] = {"databaseName": database_name}
         if security_origin:
             params["securityOrigin"] = security_origin
@@ -284,6 +350,12 @@ class IndexedDBDomain(BaseDomain):
         Returns:
             Dict with ``databaseNames`` (database names for origin).
         """
+        if security_origin is not None and not isinstance(security_origin, str):
+            raise TypeError("security_origin must be a str or None")
+        if storage_key is not None and not isinstance(storage_key, str):
+            raise TypeError("storage_key must be a str or None")
+        if storage_bucket is not None and not isinstance(storage_bucket, dict):
+            raise TypeError("storage_bucket must be a dict or None")
         params: dict[str, Any] = {}
         if security_origin:
             params["securityOrigin"] = security_origin

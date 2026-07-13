@@ -47,6 +47,12 @@ class ServiceWorkerDomain(BaseDomain):
             registration_id: Registration ID of the service worker.
             data: Push message data (base64-encoded).
         """
+        if not isinstance(origin, str):
+            raise TypeError("origin must be a string")
+        if not isinstance(registration_id, str):
+            raise TypeError("registration_id must be a string")
+        if not isinstance(data, str):
+            raise TypeError("data must be a string")
         return await self._call(
             "ServiceWorker.deliverPushMessage",
             {"origin": origin, "registrationId": registration_id, "data": data},
@@ -69,6 +75,14 @@ class ServiceWorkerDomain(BaseDomain):
             last_chance: Whether this is the last retry.
             data: Sync event data (not a CDP parameter, kept for API compatibility).
         """
+        if not isinstance(origin, str):
+            raise TypeError("origin must be a string")
+        if not isinstance(registration_id, str):
+            raise TypeError("registration_id must be a string")
+        if not isinstance(tag, str):
+            raise TypeError("tag must be a string")
+        if not isinstance(last_chance, bool):
+            raise TypeError("last_chance must be a bool")
         return await self._call(
             "ServiceWorker.dispatchSyncEvent",
             {
@@ -88,6 +102,8 @@ class ServiceWorkerDomain(BaseDomain):
         Args:
             scope: URL scope of the service worker to start.
         """
+        if not isinstance(scope, str):
+            raise TypeError("scope must be a string")
         return await self._call("ServiceWorker.startWorker", {"scopeURL": scope})
 
     async def skip_waiting(self, scope: str) -> dict[str, Any]:
@@ -96,6 +112,8 @@ class ServiceWorkerDomain(BaseDomain):
         Args:
             scope: URL scope of the service worker.
         """
+        if not isinstance(scope, str):
+            raise TypeError("scope must be a string")
         return await self._call("ServiceWorker.skipWaiting", {"scopeURL": scope})
 
     async def stop_worker(self, version_id: str) -> dict[str, Any]:
@@ -104,6 +122,8 @@ class ServiceWorkerDomain(BaseDomain):
         Args:
             version_id: Version ID of the service worker to stop.
         """
+        if not isinstance(version_id, str):
+            raise TypeError("version_id must be a string")
         return await self._call(
             "ServiceWorker.stopWorker",
             {"versionId": version_id},
@@ -115,6 +135,8 @@ class ServiceWorkerDomain(BaseDomain):
         Args:
             version_id: Version ID of the service worker to inspect.
         """
+        if not isinstance(version_id, str):
+            raise TypeError("version_id must be a string")
         return await self._call(
             "ServiceWorker.inspectWorker",
             {"versionId": version_id},
@@ -126,6 +148,8 @@ class ServiceWorkerDomain(BaseDomain):
         Args:
             scope: URL scope of the service worker to update.
         """
+        if not isinstance(scope, str):
+            raise TypeError("scope must be a string")
         return await self._call("ServiceWorker.updateRegistration", {"scopeURL": scope})
 
     async def unregister(self, scope: str) -> dict[str, Any]:
@@ -134,6 +158,8 @@ class ServiceWorkerDomain(BaseDomain):
         Args:
             scope: URL scope of the service worker to unregister.
         """
+        if not isinstance(scope, str):
+            raise TypeError("scope must be a string")
         return await self._call("ServiceWorker.unregister", {"scopeURL": scope})
 
     async def get_messages(self) -> dict[str, Any]:

@@ -57,6 +57,14 @@ class AutofillDomain(BaseDomain):
             address: Address to fill out the form.
                 Not saved. Mutually exclusive with ``card``.
         """
+        if isinstance(field_id, bool) or not isinstance(field_id, int):
+            raise TypeError("field_id must be an int")
+        if frame_id is not None and not isinstance(frame_id, str):
+            raise TypeError("frame_id must be a str or None")
+        if card is not None and not isinstance(card, dict):
+            raise TypeError("card must be a dict or None")
+        if address is not None and not isinstance(address, dict):
+            raise TypeError("address must be a dict or None")
         params: dict[str, Any] = {"fieldId": field_id}
         if frame_id is not None:
             params["frameId"] = frame_id
@@ -105,6 +113,11 @@ class AutofillDomain(BaseDomain):
                 ``fields`` key with a list of ``{"name": ..., "value": ...}``
                 entries (e.g. ``{"name": "NAME_FULL", "value": "Jon"}``).
         """
+        if not isinstance(addresses, list):
+            raise TypeError("addresses must be a list")
+        for i, addr in enumerate(addresses):
+            if not isinstance(addr, dict):
+                raise TypeError(f"addresses[{i}] must be a dict")
         return await self._call(
             "Autofill.setAddresses",
             {"addresses": addresses},

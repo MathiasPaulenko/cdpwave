@@ -4,6 +4,8 @@ from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
+_VALID_ENCODINGS = frozenset({"webp", "jpeg", "png"})
+
 
 class AuditsDomain(BaseDomain):
     """Wrapper for the CDP Audits domain.
@@ -62,6 +64,20 @@ class AuditsDomain(BaseDomain):
             Dict with ``body`` (base64), ``originalSize``, and
             ``encodedSize``.
         """
+        if not isinstance(request_id, str):
+            raise TypeError("request_id must be a string")
+        if not isinstance(encoding, str):
+            raise TypeError("encoding must be a string")
+        if encoding not in _VALID_ENCODINGS:
+            raise ValueError(
+                f"encoding must be one of {sorted(_VALID_ENCODINGS)}"
+            )
+        if quality is not None and (
+            isinstance(quality, bool) or not isinstance(quality, (int, float))
+        ):
+            raise TypeError("quality must be a number or None")
+        if size_only is not None and not isinstance(size_only, bool):
+            raise TypeError("size_only must be a bool or None")
         params: dict[str, Any] = {
             "requestId": request_id,
             "encoding": encoding,

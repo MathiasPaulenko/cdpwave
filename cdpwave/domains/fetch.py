@@ -4,6 +4,29 @@ from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
+_VALID_ERROR_REASONS = frozenset({
+    "Failed",
+    "Aborted",
+    "TimedOut",
+    "AccessDenied",
+    "ConnectionClosed",
+    "ConnectionReset",
+    "ConnectionRefused",
+    "ConnectionAborted",
+    "ConnectionFailed",
+    "NameNotResolved",
+    "InternetDisconnected",
+    "AddressUnreachable",
+    "BlockedByClient",
+    "BlockedByResponse",
+})
+
+_VALID_AUTH_RESPONSES = frozenset({
+    "Default",
+    "CancelAuth",
+    "ProvideCredentials",
+})
+
 
 class FetchDomain(BaseDomain):
     """Wrapper for the CDP Fetch domain.
@@ -29,6 +52,10 @@ class FetchDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
+        if not isinstance(handle_auth_requests, bool):
+            raise TypeError("handle_auth_requests must be a bool")
+        if patterns is not None and not isinstance(patterns, list):
+            raise TypeError("patterns must be a list or None")
         params: dict[str, Any] = {"handleAuthRequests": handle_auth_requests}
         if patterns is not None:
             params["patterns"] = patterns
@@ -67,17 +94,29 @@ class FetchDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
+        if not isinstance(request_id, str):
+            raise TypeError("request_id must be a string")
+        if not isinstance(intercept_response, bool):
+            raise TypeError("intercept_response must be a bool")
         params: dict[str, Any] = {
             "requestId": request_id,
             "interceptResponse": intercept_response,
         }
         if url is not None:
+            if not isinstance(url, str):
+                raise TypeError("url must be a string or None")
             params["url"] = url
         if method is not None:
+            if not isinstance(method, str):
+                raise TypeError("method must be a string or None")
             params["method"] = method
         if post_data is not None:
+            if not isinstance(post_data, str):
+                raise TypeError("post_data must be a string or None")
             params["postData"] = post_data
         if headers is not None:
+            if not isinstance(headers, list):
+                raise TypeError("headers must be a list or None")
             params["headers"] = headers
         return await self._call("Fetch.continueRequest", params)
 
@@ -97,6 +136,20 @@ class FetchDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
+        if not isinstance(request_id, str):
+            raise TypeError("request_id must be a string")
+        if not isinstance(auth_challenge_response, dict):
+            raise TypeError("auth_challenge_response must be a dict")
+        if "response" not in auth_challenge_response:
+            raise ValueError("auth_challenge_response must contain 'response'")
+        resp = auth_challenge_response["response"]
+        if not isinstance(resp, str):
+            raise TypeError("auth_challenge_response['response'] must be a string")
+        if resp not in _VALID_AUTH_RESPONSES:
+            raise ValueError(
+                f"auth_challenge_response['response'] must be one of "
+                f"{sorted(_VALID_AUTH_RESPONSES)}"
+            )
         return await self._call(
             "Fetch.continueWithAuth",
             {
@@ -127,6 +180,18 @@ class FetchDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
+        if not isinstance(request_id, str):
+            raise TypeError("request_id must be a string")
+        if not isinstance(response, str):
+            raise TypeError("response must be a string")
+        if response not in _VALID_AUTH_RESPONSES:
+            raise ValueError(
+                f"response must be one of {sorted(_VALID_AUTH_RESPONSES)}"
+            )
+        if username is not None and not isinstance(username, str):
+            raise TypeError("username must be a string or None")
+        if password is not None and not isinstance(password, str):
+            raise TypeError("password must be a string or None")
         auth_challenge_response: dict[str, Any] = {"response": response}
         if username is not None:
             auth_challenge_response["username"] = username
@@ -161,6 +226,18 @@ class FetchDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
+        if not isinstance(request_id, str):
+            raise TypeError("request_id must be a string")
+        if response_code is not None and (
+            isinstance(response_code, bool) or not isinstance(response_code, int)
+        ):
+            raise TypeError("response_code must be an int or None")
+        if response_headers is not None and not isinstance(response_headers, list):
+            raise TypeError("response_headers must be a list or None")
+        if binary_response_headers is not None and not isinstance(binary_response_headers, str):
+            raise TypeError("binary_response_headers must be a string or None")
+        if response_phrase is not None and not isinstance(response_phrase, str):
+            raise TypeError("response_phrase must be a string or None")
         params: dict[str, Any] = {"requestId": request_id}
         if response_code is not None:
             params["responseCode"] = response_code
@@ -197,9 +274,21 @@ class FetchDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
+        if not isinstance(request_id, str):
+            raise TypeError("request_id must be a string")
         code = response_code if response_code is not None else status_code
         if code is None:
             raise ValueError("Either response_code or status_code must be provided")
+        if isinstance(code, bool) or not isinstance(code, int):
+            raise TypeError("response_code/status_code must be an int")
+        if response_headers is not None and not isinstance(response_headers, list):
+            raise TypeError("response_headers must be a list or None")
+        if body is not None and not isinstance(body, str):
+            raise TypeError("body must be a string or None")
+        if binary_response_headers is not None and not isinstance(binary_response_headers, str):
+            raise TypeError("binary_response_headers must be a string or None")
+        if response_phrase is not None and not isinstance(response_phrase, str):
+            raise TypeError("response_phrase must be a string or None")
         params: dict[str, Any] = {
             "requestId": request_id,
             "responseCode": code,
@@ -229,6 +318,14 @@ class FetchDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
+        if not isinstance(request_id, str):
+            raise TypeError("request_id must be a string")
+        if not isinstance(error_reason, str):
+            raise TypeError("error_reason must be a string")
+        if error_reason not in _VALID_ERROR_REASONS:
+            raise ValueError(
+                f"error_reason must be one of {sorted(_VALID_ERROR_REASONS)}"
+            )
         return await self._call(
             "Fetch.failRequest",
             {"requestId": request_id, "errorReason": error_reason},
@@ -275,6 +372,8 @@ class FetchDomain(BaseDomain):
         Returns:
             Dict with ``postData`` string.
         """
+        if not isinstance(request_id, str):
+            raise TypeError("request_id must be a string")
         return await self._call(
             "Fetch.getRequestPostData",
             {"requestId": request_id},

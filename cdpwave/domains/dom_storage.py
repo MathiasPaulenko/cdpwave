@@ -48,6 +48,10 @@ class DOMStorageDomain(BaseDomain):
             Dict with ``entries`` key: list of ``[key, value]`` pairs
             (each pair is a ``list[str]`` of length 2).
         """
+        if not isinstance(storage_id, dict):
+            raise TypeError("storage_id must be a dict")
+        if "isLocalStorage" not in storage_id:
+            raise ValueError("storage_id must contain 'isLocalStorage'")
         return await self._call(
             "DOMStorage.getDOMStorageItems",
             {"storageId": storage_id},
@@ -68,6 +72,14 @@ class DOMStorageDomain(BaseDomain):
             key: Item key.
             value: Item value.
         """
+        if not isinstance(storage_id, dict):
+            raise TypeError("storage_id must be a dict")
+        if "isLocalStorage" not in storage_id:
+            raise ValueError("storage_id must contain 'isLocalStorage'")
+        if not isinstance(key, str):
+            raise TypeError("key must be a string")
+        if not isinstance(value, str):
+            raise TypeError("value must be a string")
         return await self._call(
             "DOMStorage.setDOMStorageItem",
             {"storageId": storage_id, "key": key, "value": value},
@@ -86,6 +98,12 @@ class DOMStorageDomain(BaseDomain):
                 (bool, always sent).
             key: Item key to remove.
         """
+        if not isinstance(storage_id, dict):
+            raise TypeError("storage_id must be a dict")
+        if "isLocalStorage" not in storage_id:
+            raise ValueError("storage_id must contain 'isLocalStorage'")
+        if not isinstance(key, str):
+            raise TypeError("key must be a string")
         return await self._call(
             "DOMStorage.removeDOMStorageItem",
             {"storageId": storage_id, "key": key},
@@ -102,6 +120,10 @@ class DOMStorageDomain(BaseDomain):
                 ``storageKey`` (str, optional), and ``isLocalStorage``
                 (bool, always sent).
         """
+        if not isinstance(storage_id, dict):
+            raise TypeError("storage_id must be a dict")
+        if "isLocalStorage" not in storage_id:
+            raise ValueError("storage_id must contain 'isLocalStorage'")
         return await self._call(
             "DOMStorage.clear",
             {"storageId": storage_id},

@@ -31,6 +31,16 @@ from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
+_VALID_VIOLATION_NAMES = frozenset({
+    "longTask",
+    "longLayout",
+    "blockedEvent",
+    "blockedParser",
+    "discouragedAPIUse",
+    "handler",
+    "recurringHandler",
+})
+
 
 class LogDomain(BaseDomain):
     """Wrapper for the CDP Log domain.
@@ -83,6 +93,26 @@ class LogDomain(BaseDomain):
                 ``discouragedAPIUse``, ``handler``, ``recurringHandler``.
                 ``threshold`` (float): Time threshold to trigger upon.
         """
+        if not isinstance(config, list):
+            raise TypeError("config must be a list")
+        for i, entry in enumerate(config):
+            if not isinstance(entry, dict):
+                raise TypeError(f"config[{i}] must be a dict")
+            if "name" not in entry:
+                raise ValueError(f"config[{i}] must contain 'name'")
+            if "threshold" not in entry:
+                raise ValueError(f"config[{i}] must contain 'threshold'")
+            name = entry["name"]
+            if not isinstance(name, str):
+                raise TypeError(f"config[{i}]['name'] must be a string")
+            if name not in _VALID_VIOLATION_NAMES:
+                raise ValueError(
+                    f"config[{i}]['name'] must be one of "
+                    f"{sorted(_VALID_VIOLATION_NAMES)}"
+                )
+            threshold = entry["threshold"]
+            if isinstance(threshold, bool) or not isinstance(threshold, (int, float)):
+                raise TypeError(f"config[{i}]['threshold'] must be a number")
         return await self._call(
             "Log.startViolationsReport",
             {"config": config},
