@@ -1,8 +1,9 @@
 """Unit tests for sync API wrapper."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
-from cdpwave.sync import SyncCDPClient, SyncCDPSession, _run
+from cdpwave.sync import SyncCDPClient, SyncCDPSession, _run, _SyncRunner
 
 
 class TestRun:
@@ -14,8 +15,6 @@ class TestRun:
 
     def test_run_with_running_loop(self) -> None:
         """When a loop is running, _run uses a thread pool."""
-        import asyncio
-
         async def _inner() -> int:
             return 99
 
@@ -24,6 +23,72 @@ class TestRun:
             assert result == 99
 
         asyncio.run(_outer())
+
+
+class TestSyncRunner:
+    def test_run_no_running_loop(self) -> None:
+        runner = _SyncRunner()
+
+        async def _coro() -> int:
+            return 42
+
+        assert runner.run(_coro()) == 42
+        runner.shutdown()
+
+    def test_run_with_running_loop_creates_pool(self) -> None:
+        runner = _SyncRunner()
+
+        async def _inner() -> int:
+            return 99
+
+        async def _outer() -> None:
+            result = runner.run(_inner())
+            assert result == 99
+
+        asyncio.run(_outer())
+        assert runner._pool is not None
+        runner.shutdown()
+
+    def test_pool_reused_across_calls(self) -> None:
+        runner = _SyncRunner()
+
+        async def _coro(val: int) -> int:
+            return val
+
+        async def _outer() -> None:
+            assert runner.run(_coro(1)) == 1
+            pool_after_first = runner._pool
+            assert pool_after_first is not None
+            assert runner.run(_coro(2)) == 2
+            assert runner._pool is pool_after_first
+
+        asyncio.run(_outer())
+        runner.shutdown()
+
+    def test_shutdown_clears_pool(self) -> None:
+        runner = _SyncRunner()
+
+        async def _coro() -> int:
+            return 1
+
+        async def _outer() -> None:
+            runner.run(_coro())
+
+        asyncio.run(_outer())
+        assert runner._pool is not None
+        runner.shutdown()
+        assert runner._pool is None
+
+    def test_shutdown_idempotent(self) -> None:
+        runner = _SyncRunner()
+        runner.shutdown()
+        runner.shutdown()
+        assert runner._pool is None
+
+    def test_shutdown_without_pool(self) -> None:
+        runner = _SyncRunner()
+        runner.shutdown()
+        assert runner._pool is None
 
 
 class TestSyncCDPSession:
