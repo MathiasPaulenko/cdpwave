@@ -28,6 +28,7 @@ from cdpwave.domains.base import BaseDomain
 _AUTHENTICATOR_PROTOCOLS = ("u2f", "ctap2")
 _AUTHENTICATOR_TRANSPORTS = ("usb", "nfc", "ble", "cable", "hybrid", "internal")
 _CTAP2_VERSIONS = ("ctap2_0", "ctap2_1", "ctap2_2")
+_REQUIRED_CREDENTIAL_KEYS = frozenset({"credentialId", "isResidentCredential", "privateKey"})
 
 
 class WebAuthnDomain(BaseDomain):
@@ -83,6 +84,13 @@ class WebAuthnDomain(BaseDomain):
             raise TypeError("authenticator_id must be a string")
         if not isinstance(credential, dict):
             raise TypeError("credential must be a dict")
+        missing = _REQUIRED_CREDENTIAL_KEYS - credential.keys()
+        if missing:
+            raise ValueError(
+                f"credential must contain keys: "
+                f"{sorted(_REQUIRED_CREDENTIAL_KEYS)}; "
+                f"missing: {sorted(missing)}"
+            )
         return await self._call(
             "WebAuthn.addCredential",
             {"authenticatorId": authenticator_id, "credential": credential},

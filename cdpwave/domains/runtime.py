@@ -337,6 +337,12 @@ class RuntimeDomain(BaseDomain):
         Returns:
             Dict with ``scriptId``, ``exceptionDetails`` (if any).
         """
+        if not isinstance(expression, str):
+            raise TypeError("expression must be a string")
+        if not isinstance(source_url, str):
+            raise TypeError("source_url must be a string")
+        if not isinstance(persist_script, bool):
+            raise TypeError("persist_script must be a bool")
         params: dict[str, Any] = {
             "expression": expression,
             "sourceURL": source_url,
@@ -344,6 +350,8 @@ class RuntimeDomain(BaseDomain):
         if persist_script:
             params["persistScript"] = persist_script
         if execution_context_id is not None:
+            if isinstance(execution_context_id, bool) or not isinstance(execution_context_id, int):
+                raise TypeError("execution_context_id must be an int or None")
             params["executionContextId"] = execution_context_id
         return await self._call("Runtime.compileScript", params)
 

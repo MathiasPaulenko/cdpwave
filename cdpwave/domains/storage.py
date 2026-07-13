@@ -4,6 +4,17 @@ from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
+_VALID_STORAGE_TYPES = frozenset({
+    "all",
+    "cookies",
+    "local_storage",
+    "indexeddb",
+    "cache_storage",
+    "file_systems",
+    "service_workers",
+    "web_sql",
+})
+
 
 class StorageDomain(BaseDomain):
     """Wrapper for the CDP Storage domain.
@@ -110,7 +121,22 @@ class StorageDomain(BaseDomain):
             storage_types: Comma-separated storage types (e.g.
                 ``"cookies,local_storage,indexeddb"``,
                 or ``"all"``).
+
+        Raises:
+            TypeError: If ``origin`` or ``storage_types`` is not a string.
+            ValueError: If any storage type is not recognized.
         """
+        if not isinstance(origin, str):
+            raise TypeError("origin must be a string")
+        if not isinstance(storage_types, str):
+            raise TypeError("storage_types must be a string")
+        for st in storage_types.split(","):
+            st = st.strip()
+            if st not in _VALID_STORAGE_TYPES:
+                raise ValueError(
+                    f"invalid storage type {st!r}; "
+                    f"must be one of {sorted(_VALID_STORAGE_TYPES)}"
+                )
         return await self._call(
             "Storage.clearDataForOrigin",
             {"origin": origin, "storageTypes": storage_types},
@@ -242,7 +268,22 @@ class StorageDomain(BaseDomain):
             storage_types: Comma-separated storage types (e.g.
                 ``"cookies,local_storage,indexeddb"``,
                 or ``"all"``).
+
+        Raises:
+            TypeError: If ``storage_key`` or ``storage_types`` is not a string.
+            ValueError: If any storage type is not recognized.
         """
+        if not isinstance(storage_key, str):
+            raise TypeError("storage_key must be a string")
+        if not isinstance(storage_types, str):
+            raise TypeError("storage_types must be a string")
+        for st in storage_types.split(","):
+            st = st.strip()
+            if st not in _VALID_STORAGE_TYPES:
+                raise ValueError(
+                    f"invalid storage type {st!r}; "
+                    f"must be one of {sorted(_VALID_STORAGE_TYPES)}"
+                )
         return await self._call(
             "Storage.clearDataForStorageKey",
             {"storageKey": storage_key, "storageTypes": storage_types},

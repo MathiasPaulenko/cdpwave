@@ -46,6 +46,10 @@ class TargetDomain(BaseDomain):
         Returns:
             Response dict containing ``targetId``.
         """
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+        if not url:
+            raise ValueError("url must not be empty")
         params: dict[str, Any] = {
             "url": url,
             "enableBeginFrameControl": enable_begin_frame_control,
@@ -64,6 +68,13 @@ class TargetDomain(BaseDomain):
         if height is not None:
             params["height"] = height
         if window_state is not None:
+            if not isinstance(window_state, str):
+                raise TypeError("window_state must be a string or None")
+            valid_window_states = {"normal", "minimized", "maximized", "fullscreen"}
+            if window_state not in valid_window_states:
+                raise ValueError(
+                    f"window_state must be one of {sorted(valid_window_states)}"
+                )
             params["windowState"] = window_state
         if browser_context_id is not None:
             params["browserContextId"] = browser_context_id

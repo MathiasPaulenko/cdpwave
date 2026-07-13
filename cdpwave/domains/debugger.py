@@ -576,10 +576,16 @@ class DebuggerDomain(BaseDomain):
         """
         if not isinstance(location, dict):
             raise TypeError("location must be a dict")
+        if "scriptId" not in location:
+            raise ValueError("location must contain 'scriptId'")
+        if "lineNumber" not in location:
+            raise ValueError("location must contain 'lineNumber'")
         params: dict[str, Any] = {"location": location}
         if condition is not None:
             if not isinstance(condition, str):
                 raise TypeError("condition must be a string or None")
+            if not condition:
+                raise ValueError("condition must not be empty")
             params["condition"] = condition
         return await self._call("Debugger.setBreakpoint", params)
 

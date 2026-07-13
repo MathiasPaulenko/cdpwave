@@ -4,6 +4,13 @@ from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
+_VALID_INSTRUMENTATION_EVENTS = frozenset({
+    "setInterval",
+    "setTimeout",
+    "requestAnimationFrame",
+    "requestIdleCallback",
+})
+
 
 class DOMDebuggerDomain(BaseDomain):
     """Wrapper for the CDP DOMDebugger domain.
@@ -77,6 +84,8 @@ class DOMDebuggerDomain(BaseDomain):
         """
         if not isinstance(event_name, str):
             raise TypeError("event_name must be a string")
+        if not event_name:
+            raise ValueError("event_name must not be empty")
         params: dict[str, Any] = {"eventName": event_name}
         if target_name is not None:
             if not isinstance(target_name, str):
@@ -100,6 +109,8 @@ class DOMDebuggerDomain(BaseDomain):
         """
         if not isinstance(event_name, str):
             raise TypeError("event_name must be a string")
+        if not event_name:
+            raise ValueError("event_name must not be empty")
         params: dict[str, Any] = {"eventName": event_name}
         if target_name is not None:
             if not isinstance(target_name, str):
@@ -181,6 +192,10 @@ class DOMDebuggerDomain(BaseDomain):
         """
         if not isinstance(event_name, str):
             raise TypeError("event_name must be a string")
+        if event_name not in _VALID_INSTRUMENTATION_EVENTS:
+            raise ValueError(
+                f"event_name must be one of {sorted(_VALID_INSTRUMENTATION_EVENTS)}"
+            )
         return await self._call(
             "DOMDebugger.setInstrumentationBreakpoint",
             {"eventName": event_name},
@@ -201,6 +216,10 @@ class DOMDebuggerDomain(BaseDomain):
         """
         if not isinstance(event_name, str):
             raise TypeError("event_name must be a string")
+        if event_name not in _VALID_INSTRUMENTATION_EVENTS:
+            raise ValueError(
+                f"event_name must be one of {sorted(_VALID_INSTRUMENTATION_EVENTS)}"
+            )
         return await self._call(
             "DOMDebugger.removeInstrumentationBreakpoint",
             {"eventName": event_name},
