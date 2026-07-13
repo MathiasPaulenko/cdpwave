@@ -71,7 +71,12 @@ from cdpwave.domains.web_mcp import WebMCPDomain
 from cdpwave.domains.worker import WorkerDomain
 from cdpwave.events.dispatcher import EventDispatcher
 from cdpwave.events.handlers import EventHandler, Subscription
-from cdpwave.exceptions import SessionClosedError
+from cdpwave.exceptions import (
+    CommandError,
+    CommandTimeoutError,
+    ConnectionClosedError,
+    SessionClosedError,
+)
 from cdpwave.session.manager import SessionManager
 from cdpwave.transport.connection import Connection
 from cdpwave.types import CommandSender, EventErrorCallback
@@ -846,8 +851,8 @@ class BrowserContext:
             session_id = await self._client._session_manager.attach_to_target(
                 target_id,
             )
-        except Exception:
-            with contextlib.suppress(Exception):
+        except (ConnectionClosedError, CommandError, CommandTimeoutError):
+            with contextlib.suppress(ConnectionClosedError, CommandError, CommandTimeoutError):
                 await self._client._session_manager.close_target(target_id)
             raise
         self._client._managed_targets.add(target_id)
@@ -1162,8 +1167,8 @@ class CDPClient:
         target_id = await self._session_manager.create_target(url)
         try:
             session_id = await self._session_manager.attach_to_target(target_id)
-        except Exception:
-            with contextlib.suppress(Exception):
+        except (ConnectionClosedError, CommandError, CommandTimeoutError):
+            with contextlib.suppress(ConnectionClosedError, CommandError, CommandTimeoutError):
                 await self._session_manager.close_target(target_id)
             raise
         self._managed_targets.add(target_id)
