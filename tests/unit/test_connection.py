@@ -261,3 +261,175 @@ class TestConnection:
 
         assert result is True
         await conn.close()
+
+    async def test_reconnect_first_fails_second_succeeds(self) -> None:
+        callback = AsyncMock()
+        conn = Connection(
+            "ws://localhost:9222",
+            max_retries=3,
+            backoff_base=0.01,
+            on_reconnect=callback,
+        )
+        fake_ws = FakeWebSocket([])
+
+        with patch(_WS_CONNECT, new_callable=AsyncMock) as mock_connect:
+            mock_connect.side_effect = [
+                OSError("first attempt failed"),
+                fake_ws,
+            ]
+            result = await conn._reconnect()
+
+        assert result is True
+        callback.assert_awaited_once()
+        await conn.close()
+
+    async def test_reconnect_callback_exception_caught_by_retry(self) -> None:
+        callback = AsyncMock(side_effect=ValueError("callback boom"))
+        conn = Connection(
+            "ws://localhost:9222",
+            max_retries=1,
+            backoff_base=0.01,
+            on_reconnect=callback,
+        )
+        fake_ws = FakeWebSocket([])
+
+        with patch(_WS_CONNECT, new_callable=AsyncMock) as mock_connect:
+            mock_connect.return_value = fake_ws
+            await conn.connect()
+            result = await conn._reconnect()
+
+        assert result is False
+        callback.assert_awaited_once()
+        await conn.close()
+
+    async def test_reconnect_max_retries_zero_returns_false(self) -> None:
+        callback = AsyncMock()
+        conn = Connection(
+            "ws://localhost:9222",
+            max_retries=0,
+            on_reconnect=callback,
+        )
+
+        result = await conn._reconnect()
+
+        assert result is False
+        callback.assert_not_awaited()
+
+    async def test_reconnect_with_zero_backoff(self) -> None:
+        callback = AsyncMock()
+        conn = Connection(
+            "ws://localhost:9222",
+            max_retries=1,
+            backoff_base=0.0,
+            on_reconnect=callback,
+        )
+        fake_ws = FakeWebSocket([])
+
+        with patch(_WS_CONNECT, new_callable=AsyncMock) as mock_connect:
+            mock_connect.return_value = fake_ws
+            await conn.connect()
+            result = await conn._reconnect()
+
+        assert result is True
+        callback.assert_awaited_once()
+        await conn.close()
+
+    async def test_reconnect_concurrent_serialized_by_lock(self) -> None:
+        callback = AsyncMock()
+        conn = Connection(
+            "ws://localhost:9222",
+            max_retries=1,
+            backoff_base=0.05,
+            on_reconnect=callback,
+        )
+        fake_ws = FakeWebSocket([])
+
+        with patch(_WS_CONNECT, new_callable=AsyncMock) as mock_connect:
+            mock_connect.return_value = fake_ws
+            await conn.connect()
+            results = await asyncio.gather(
+                conn._reconnect(),
+                conn._reconnect(),
+            )
+
+        assert results == [True, True]
+        assert callback.await_count == 2
+        await conn.close()
+
+    async def test_reconnect_restores_receive_loop(self) -> None:
+        callback = AsyncMock()
+        conn = Connection(
+            "ws://localhost:9222",
+            max_retries=1,
+            backoff_base=0.01,
+            on_reconnect=callback,
+        )
+        fake_ws = FakeWebSocket([])
+
+        with patch(_WS_CONNECT, new_callable=AsyncMock) as mock_connect:
+            mock_connect.return_value = fake_ws
+            await conn.connect()
+            original_task = conn._receive_task
+            result = await conn._reconnect()
+
+        assert result is True
+        assert conn._receive_task is not None
+        assert conn._receive_task is not original_task
+        await conn.close()
+
+    async def test_receive_loop_triggers_reconnect_on_close(self) -> None:
+        callback = AsyncMock()
+        conn = Connection(
+            "ws://localhost:9222",
+            max_retries=1,
+            backoff_base=0.01,
+            on_reconnect=callback,
+        )
+
+        class ClosingWS:
+            async def close(self) -> None:
+                pass
+
+            def __aiter__(self) -> "ClosingWS":
+                return self
+
+            async def __anext__(self) -> str:
+                raise websockets.ConnectionClosed(None, None)
+
+        fake_ws = FakeWebSocket([])
+
+        with patch(_WS_CONNECT, new_callable=AsyncMock) as mock_connect:
+            mock_connect.side_effect = [ClosingWS(), fake_ws]
+            await conn.connect()
+            await asyncio.sleep(0.2)
+
+        assert conn.is_closed is False
+        callback.assert_awaited_once()
+        await conn.close()
+
+    async def test_receive_loop_reconnect_exhausted_marks_closed(self) -> None:
+        callback = AsyncMock()
+        conn = Connection(
+            "ws://localhost:9222",
+            max_retries=1,
+            backoff_base=0.01,
+            on_reconnect=callback,
+        )
+
+        class ClosingWS:
+            async def close(self) -> None:
+                pass
+
+            def __aiter__(self) -> "ClosingWS":
+                return self
+
+            async def __anext__(self) -> str:
+                raise websockets.ConnectionClosed(None, None)
+
+        with patch(_WS_CONNECT, new_callable=AsyncMock) as mock_connect:
+            mock_connect.side_effect = [ClosingWS(), OSError("refused")]
+            await conn.connect()
+            await asyncio.sleep(0.2)
+
+        assert conn.is_closed is True
+        callback.assert_not_awaited()

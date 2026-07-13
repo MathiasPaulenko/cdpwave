@@ -246,3 +246,58 @@ class TestCDPClient:
         assert len(client._sessions) == 0
         assert len(client._session_dispatchers) == 0
         assert session.is_closed is True
+
+    async def test_invalidate_sessions_with_no_sessions(self) -> None:
+        conn = AsyncMock()
+        client = CDPClient(conn)
+        assert len(client._sessions) == 0
+
+        await client._invalidate_sessions()
+
+        assert len(client._sessions) == 0
+        assert len(client._session_dispatchers) == 0
+
+    async def test_invalidate_sessions_clears_multiple(self) -> None:
+        conn = AsyncMock()
+        conn.send_command.side_effect = [
+            {"sessionId": "S-1"},
+            {"sessionId": "S-2"},
+            {"sessionId": "S-3"},
+        ]
+        client = CDPClient(conn)
+        s1 = await client.connect_to_page("T-1")
+        s2 = await client.connect_to_page("T-2")
+        s3 = await client.connect_to_page("T-3")
+        assert len(client._sessions) == 3
+
+        await client._invalidate_sessions()
+
+        assert len(client._sessions) == 0
+        assert len(client._session_dispatchers) == 0
+        assert s1.is_closed is True
+        assert s2.is_closed is True
+        assert s3.is_closed is True
+
+    async def test_invalidate_sessions_is_idempotent(self) -> None:
+        conn = AsyncMock()
+        conn.send_command.return_value = {"sessionId": "S-1"}
+        client = CDPClient(conn)
+        await client.connect_to_page("T-1")
+
+        await client._invalidate_sessions()
+        await client._invalidate_sessions()
+
+        assert len(client._sessions) == 0
+
+    async def test_invalidate_sessions_clears_dispatcher_handlers(self) -> None:
+        conn = AsyncMock()
+        conn.send_command.return_value = {"sessionId": "S-1"}
+        client = CDPClient(conn)
+        session = await client.connect_to_page("T-1")
+        handler = MagicMock()
+        session.on("Page.loadEventFired", handler)
+        assert len(session._dispatcher._handlers) > 0
+
+        await client._invalidate_sessions()
+
+        assert len(session._dispatcher._handlers) == 0
