@@ -54,6 +54,29 @@ class TestCDPSession:
         )
         assert session.is_closed is True
 
+    async def test_close_detaches_before_marking_closed(self) -> None:
+        conn = AsyncMock()
+        session = CDPSession(conn, "S-1", "T-1")
+
+        call_order: list[str] = []
+
+        async def _track_send_command(method: str, params: dict | None = None) -> dict:
+            if not session.is_closed:
+                call_order.append(f"send:{method}")
+            else:
+                call_order.append(f"send_after_closed:{method}")
+            return {}
+
+        conn.send_command.side_effect = _track_send_command
+
+        original_closed = session.is_closed
+        assert original_closed is False
+
+        await session.close()
+
+        assert call_order[0] == "send:Target.detachFromTarget"
+        assert session.is_closed is True
+
     async def test_close_is_idempotent(self) -> None:
         conn = AsyncMock()
         conn.send_command.return_value = {}

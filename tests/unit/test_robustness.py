@@ -8,6 +8,7 @@ from cdpwave.browser.launcher import BrowserLauncher
 from cdpwave.client import CDPClient, CDPSession
 from cdpwave.exceptions import (
     CommandTimeoutError,
+    ConnectionClosedError,
     LaunchTimeoutError,
     SessionClosedError,
 )
@@ -173,7 +174,7 @@ class TestCDPSessionClose:
 
     async def test_close_with_detach_failure_does_not_propagate(self) -> None:
         conn = AsyncMock()
-        conn.send_command.side_effect = Exception("detach failed")
+        conn.send_command.side_effect = ConnectionClosedError("detach failed")
         conn.is_closed = False
         client = CDPClient(conn)
         session = CDPSession(conn, "S-1", "T-1", client=client)
@@ -207,7 +208,7 @@ class TestCDPClientClose:
 
     async def test_close_with_session_detach_failure_does_not_propagate(self) -> None:
         conn = AsyncMock()
-        conn.send_command.side_effect = Exception("detach failed")
+        conn.send_command.side_effect = ConnectionClosedError("detach failed")
         conn.is_closed = False
         client = CDPClient(conn)
         session = CDPSession(conn, "S-1", "T-1", client=client)

@@ -602,12 +602,9 @@ class CDPSession:
         """
         if self._closed:
             return
-        self._closed = True
-        self._dispatcher.clear()
 
         for sub_id, sub in list(self._sub_sessions.items()):
-            sub._closed = True
-            sub._dispatcher.clear()
+            await sub.close()
             if self._client is not None:
                 self._client._session_dispatchers.pop(sub_id, None)
                 self._client._sessions.pop(sub_id, None)
@@ -615,18 +612,21 @@ class CDPSession:
 
         if self._client is not None:
             self._client._session_dispatchers.pop(self._session_id, None)
-        with contextlib.suppress(Exception):
+        with contextlib.suppress(ConnectionClosedError, CommandError, CommandTimeoutError):
             await self._connection.send_command(
                 "Target.detachFromTarget",
                 {"sessionId": self._session_id},
             )
         if self._client is not None and self._target_id in self._client._managed_targets:
-            with contextlib.suppress(Exception):
+            with contextlib.suppress(ConnectionClosedError, CommandError, CommandTimeoutError):
                 await self._connection.send_command(
                     "Target.closeTarget",
                     {"targetId": self._target_id},
                 )
             self._client._managed_targets.discard(self._target_id)
+
+        self._closed = True
+        self._dispatcher.clear()
         logger.info("Session %s closed", self._session_id)
 
     def on(self, event_name: str, handler: EventHandler) -> Subscription:
