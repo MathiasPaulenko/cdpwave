@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import concurrent.futures
+import inspect
 from typing import Any
 
 from cdpwave.client import CDPClient, CDPSession
@@ -66,6 +67,27 @@ class _SyncRunner:
         if self._pool is not None:
             self._pool.shutdown(wait=False)
             self._pool = None
+
+
+class _SyncDomainWrapper:
+    """Sync wrapper around an async CDP domain.
+
+    Wraps all async methods of a domain (e.g. ``FedCmDomain``,
+    ``StorageDomain``) so they execute synchronously via the
+    shared ``_SyncRunner``.
+    """
+
+    def __init__(self, domain: Any, runner: _SyncRunner) -> None:
+        self._domain = domain
+        self._runner = runner
+
+    def __getattr__(self, name: str) -> Any:
+        attr = getattr(self._domain, name)
+        if inspect.iscoroutinefunction(attr):
+            def _sync_method(*args: Any, **kwargs: Any) -> Any:
+                return self._runner.run(attr(*args, **kwargs))
+            return _sync_method
+        return attr
 
 
 class SyncCDPSession:
@@ -215,11 +237,14 @@ class SyncCDPSession:
     def __getattr__(self, name: str) -> Any:
         """Delegate unknown attribute access to the underlying session.
 
-        This makes all CDPSession domain properties (fed_cm, schema,
-        memory, storage, tracing, etc.) accessible from the sync wrapper
-        without explicitly defining each one.
+        Async domain objects are wrapped in ``_SyncDomainWrapper`` so
+        their methods run synchronously. Non-async attributes are
+        returned as-is.
         """
-        return getattr(self._session, name)
+        attr = getattr(self._session, name)
+        if hasattr(attr, "_send"):
+            return _SyncDomainWrapper(attr, self._runner)
+        return attr
 
 
 class SyncCDPClient:

@@ -3,7 +3,7 @@
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
-from cdpwave.sync import SyncCDPClient, SyncCDPSession, _run, _SyncRunner
+from cdpwave.sync import SyncCDPClient, SyncCDPSession, _run, _SyncDomainWrapper, _SyncRunner
 
 
 class TestRun:
@@ -173,3 +173,66 @@ class TestSyncCDPClient:
         sync_client = SyncCDPClient(mock_client)
         result = sync_client.send("Browser.getVersion")
         assert result == {"ok": True}
+
+
+class TestSyncDomainWrapper:
+    def test_async_method_runs_sync(self) -> None:
+        domain = MagicMock()
+        domain._send = MagicMock()
+        domain.click_dialog_button = AsyncMock(return_value={"ok": True})
+        runner = _SyncRunner()
+        wrapper = _SyncDomainWrapper(domain, runner)
+
+        result = wrapper.click_dialog_button("dialog-1", "ConfirmIdpLoginContinue")
+
+        assert result == {"ok": True}
+        domain.click_dialog_button.assert_called_once_with(
+            "dialog-1", "ConfirmIdpLoginContinue",
+        )
+        runner.shutdown()
+
+    def test_non_async_attribute_passthrough(self) -> None:
+        domain = MagicMock()
+        domain._send = MagicMock()
+        domain.some_property = "value"
+        runner = _SyncRunner()
+        wrapper = _SyncDomainWrapper(domain, runner)
+
+        assert wrapper.some_property == "value"
+        runner.shutdown()
+
+    def test_sync_method_passthrough(self) -> None:
+        domain = MagicMock()
+        domain._send = MagicMock()
+
+        def sync_method(x: int) -> int:
+            return x * 2
+
+        domain.calculate = sync_method
+        runner = _SyncRunner()
+        wrapper = _SyncDomainWrapper(domain, runner)
+
+        assert wrapper.calculate(21) == 42
+        runner.shutdown()
+
+    def test_getattr_wraps_domain_via_session(self) -> None:
+        mock_domain = MagicMock()
+        mock_domain._send = MagicMock()
+        mock_domain.click_dialog_button = AsyncMock(return_value={"done": True})
+        mock_session = MagicMock()
+        mock_session.fed_cm = mock_domain
+        sync_session = SyncCDPSession(mock_session)
+
+        wrapper = sync_session.fed_cm
+        assert isinstance(wrapper, _SyncDomainWrapper)
+        result = wrapper.click_dialog_button("d1", "ErrorGotIt")
+        assert result == {"done": True}
+        sync_session._runner.shutdown()
+
+    def test_non_domain_attribute_passthrough_via_session(self) -> None:
+        mock_session = MagicMock()
+        mock_session.is_closed = False
+        sync_session = SyncCDPSession(mock_session)
+
+        assert sync_session.is_closed is False
+        sync_session._runner.shutdown()
