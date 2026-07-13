@@ -50,6 +50,12 @@ class DOMSnapshotDomain(BaseDomain):
         """
         if not isinstance(computed_styles, list):
             raise TypeError("computed_styles must be a list")
+        for i, s in enumerate(computed_styles):
+            if not isinstance(s, str):
+                raise TypeError(
+                    f"computed_styles[{i}] must be a str, "
+                    f"got {type(s).__name__}"
+                )
         if not isinstance(include_paint_order, bool):
             raise TypeError("include_paint_order must be a bool")
         if not isinstance(include_dom_rects, bool):
@@ -109,6 +115,12 @@ class DOMSnapshotDomain(BaseDomain):
         """
         if not isinstance(computed_style_whitelist, list):
             raise TypeError("computed_style_whitelist must be a list")
+        for i, s in enumerate(computed_style_whitelist):
+            if not isinstance(s, str):
+                raise TypeError(
+                    f"computed_style_whitelist[{i}] must be a str, "
+                    f"got {type(s).__name__}"
+                )
         params: dict[str, Any] = {
             "computedStyleWhitelist": computed_style_whitelist,
         }

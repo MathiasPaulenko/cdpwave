@@ -63,6 +63,12 @@ _VALID_STREAM_FORMATS = frozenset({"json", "proto"})
 _VALID_STREAM_COMPRESSIONS = frozenset({"none", "gzip"})
 _VALID_LEVELS_OF_DETAIL = frozenset({"background", "light", "detailed"})
 _VALID_BACKENDS = frozenset({"auto", "chrome", "system"})
+_VALID_RECORD_MODES = frozenset({
+    "recordUntilFull",
+    "recordContinuously",
+    "recordAsMuchAsPossible",
+    "echoToConsole",
+})
 
 
 class TracingDomain(BaseDomain):
@@ -277,6 +283,15 @@ class TracingDomain(BaseDomain):
                 f"trace_config must be a dict, "
                 f"got {type(trace_config).__name__}"
             )
+        if trace_config is not None and "recordMode" in trace_config:
+            rm = trace_config["recordMode"]
+            if not isinstance(rm, str):
+                raise TypeError("trace_config['recordMode'] must be a str")
+            if rm not in _VALID_RECORD_MODES:
+                raise ValueError(
+                    f"trace_config['recordMode'] must be one of "
+                    f"{sorted(_VALID_RECORD_MODES)}, got {rm!r}"
+                )
         if perfetto_config is not None and not isinstance(perfetto_config, str):
             raise TypeError(
                 f"perfetto_config must be a str, "

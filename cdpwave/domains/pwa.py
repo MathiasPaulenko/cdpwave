@@ -21,6 +21,8 @@ from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
+_VALID_DISPLAY_MODES = frozenset({"standalone", "browser"})
+
 
 class PWADomain(BaseDomain):
     """Wrapper for the CDP PWA domain.
@@ -72,6 +74,11 @@ class PWADomain(BaseDomain):
             raise TypeError(
                 f"display_mode must be a str, "
                 f"got {type(display_mode).__name__}"
+            )
+        if display_mode and display_mode not in _VALID_DISPLAY_MODES:
+            raise ValueError(
+                f"display_mode must be one of "
+                f"{sorted(_VALID_DISPLAY_MODES)}, got {display_mode!r}"
             )
         params: dict[str, Any] = {
             "manifestId": manifest_id,
