@@ -26,7 +26,7 @@ from typing import Any
 from cdpwave.domains.base import BaseDomain
 
 _AUTHENTICATOR_PROTOCOLS = ("u2f", "ctap2")
-_AUTHENTICATOR_TRANSPORTS = ("usb", "nfc", "ble", "cable", "internal")
+_AUTHENTICATOR_TRANSPORTS = ("usb", "nfc", "ble", "cable", "hybrid", "internal")
 _CTAP2_VERSIONS = ("ctap2_0", "ctap2_1", "ctap2_2")
 
 
@@ -114,8 +114,8 @@ class WebAuthnDomain(BaseDomain):
             protocol: Authenticator protocol. Allowed values:
                 ``"u2f"`` and ``"ctap2"``.
             transport: Authenticator transport. Allowed values:
-                ``"usb"``, ``"nfc"``, ``"ble"``, ``"cable"``, and
-                ``"internal"``.
+                ``"usb"``, ``"nfc"``, ``"ble"``, ``"cable"``,
+                ``"hybrid"``, and ``"internal"``.
             has_resident_key: Whether the authenticator supports
                 resident keys. Defaults to false.
             has_user_verification: Whether the authenticator supports
@@ -163,7 +163,8 @@ class WebAuthnDomain(BaseDomain):
             raise ValueError("protocol must be 'u2f' or 'ctap2'")
         if transport not in _AUTHENTICATOR_TRANSPORTS:
             raise ValueError(
-                "transport must be 'usb', 'nfc', 'ble', 'cable', or 'internal'"
+                "transport must be 'usb', 'nfc', 'ble', 'cable', "
+                "'hybrid', or 'internal'"
             )
         if not isinstance(has_resident_key, bool):
             raise TypeError("has_resident_key must be a bool")

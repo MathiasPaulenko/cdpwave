@@ -7,6 +7,7 @@ tests for docstrings and experimental marking.
 """
 
 import asyncio
+import contextlib
 
 import pytest
 
@@ -232,10 +233,8 @@ class TestMemoryE2E:
             await CDPClient.launch(headless=True) as client,
             await client.new_page() as session,
         ):
-            try:
+            with contextlib.suppress(Exception):
                 await session.memory.stop_sampling()
-            except Exception:
-                pass
 
     async def test_get_sampling_profile_without_start(self) -> None:
         async with (

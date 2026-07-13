@@ -212,7 +212,9 @@ class TestEventBreakpointsEdgeCases:
             name for name in EventBreakpointsDomain.__dict__
             if not name.startswith("_") and callable(EventBreakpointsDomain.__dict__[name])
         ]
-        assert methods.index("set_instrumentation_breakpoint") < methods.index("remove_instrumentation_breakpoint")
+        assert methods.index("set_instrumentation_breakpoint") < (
+            methods.index("remove_instrumentation_breakpoint")
+        )
         assert methods.index("remove_instrumentation_breakpoint") < methods.index("disable")
 
     async def test_set_instrumentation_breakpoint_str_subclass_accepted(self) -> None:

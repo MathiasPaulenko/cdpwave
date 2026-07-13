@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 
 from cdpwave import CDPClient, CDPSession
+from cdpwave.exceptions import CommandError
 
 
 async def _wait_for_page(page: CDPSession) -> None:
@@ -581,7 +582,7 @@ class TestAuditsEdgeCases:
             await client.new_page() as session,
         ):
             await _wait_for_page(session)
-            with pytest.raises(Exception):
+            with pytest.raises(CommandError):
                 await session.audits.get_encoded_response(
                     "nonexistent-request-id", "webp"
                 )
@@ -592,7 +593,7 @@ class TestAuditsEdgeCases:
             await client.new_page() as session,
         ):
             await _wait_for_page(session)
-            with pytest.raises(Exception):
+            with pytest.raises(CommandError):
                 await session.audits.get_encoded_response(
                     "nonexistent-request-id", "jpeg", size_only=True
                 )
@@ -765,7 +766,7 @@ class TestAuditsFlow:
         ):
             await _wait_for_page(session)
             for encoding in ("webp", "jpeg", "png"):
-                with pytest.raises(Exception):
+                with pytest.raises(CommandError):
                     await session.audits.get_encoded_response(
                         "fake-req-id", encoding
                     )

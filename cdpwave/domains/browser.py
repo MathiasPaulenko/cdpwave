@@ -23,6 +23,14 @@ from typing import Any
 
 from cdpwave.types import CommandSender
 
+_VALID_DOWNLOAD_BEHAVIORS = frozenset({
+    "allow",
+    "allowAndName",
+    "deny",
+    "default",
+})
+_VALID_PERMISSION_SETTINGS = frozenset({"granted", "denied", "prompt"})
+
 
 class BrowserDomain:
     """Wrapper for the CDP Browser domain.
@@ -86,6 +94,12 @@ class BrowserDomain:
                 omitted, default browser context is used.
         """
         params: dict[str, Any] = {"permission": permission, "setting": setting}
+        if not isinstance(setting, str):
+            raise TypeError("setting must be a str")
+        if setting not in _VALID_PERMISSION_SETTINGS:
+            raise ValueError(
+                "setting must be 'granted', 'denied', or 'prompt'"
+            )
         if origin is not None:
             params["origin"] = origin
         if embedded_origin is not None:
@@ -129,6 +143,12 @@ class BrowserDomain:
             events_enabled: Whether to emit download events (defaults
                 to false). Always sent to CDP.
         """
+        if not isinstance(behavior, str):
+            raise TypeError("behavior must be a str")
+        if behavior not in _VALID_DOWNLOAD_BEHAVIORS:
+            raise ValueError(
+                "behavior must be 'allow', 'allowAndName', 'deny', or 'default'"
+            )
         params: dict[str, Any] = {"behavior": behavior, "eventsEnabled": events_enabled}
         if browser_context_id is not None:
             params["browserContextId"] = browser_context_id

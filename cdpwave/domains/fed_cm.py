@@ -41,6 +41,13 @@ from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
+_VALID_DIALOG_BUTTONS = frozenset({
+    "ConfirmIdpLoginContinue",
+    "ErrorGotIt",
+    "ErrorMoreDetails",
+})
+_VALID_ACCOUNT_URL_TYPES = frozenset({"TermsOfService", "PrivacyPolicy"})
+
 
 class FedCmDomain(BaseDomain):
     """Wrapper for the CDP FedCm domain.
@@ -86,6 +93,11 @@ class FedCmDomain(BaseDomain):
             raise TypeError(
                 f"dialog_button must be a str, "
                 f"got {type(dialog_button).__name__}"
+            )
+        if dialog_button not in _VALID_DIALOG_BUTTONS:
+            raise ValueError(
+                "dialog_button must be 'ConfirmIdpLoginContinue', "
+                "'ErrorGotIt', or 'ErrorMoreDetails'"
             )
         return await self._call(
             "FedCm.clickDialogButton",
@@ -198,6 +210,10 @@ class FedCmDomain(BaseDomain):
             raise TypeError(
                 f"account_url_type must be a str, "
                 f"got {type(account_url_type).__name__}"
+            )
+        if account_url_type not in _VALID_ACCOUNT_URL_TYPES:
+            raise ValueError(
+                "account_url_type must be 'TermsOfService' or 'PrivacyPolicy'"
             )
         return await self._call(
             "FedCm.openUrl",

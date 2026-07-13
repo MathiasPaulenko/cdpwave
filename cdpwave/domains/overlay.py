@@ -23,6 +23,14 @@ from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
+_VALID_COLOR_FORMATS = frozenset({"rgb", "hsl", "hwb", "hex"})
+_VALID_INSPECT_MODES = frozenset({
+    "searchForNode",
+    "searchForUAShadowDOM",
+    "captureAreaScreenshot",
+    "none",
+})
+
 
 class OverlayDomain(BaseDomain):
     """Wrapper for the CDP Overlay domain.
@@ -117,6 +125,10 @@ class OverlayDomain(BaseDomain):
         if color_format is not None:
             if not isinstance(color_format, str):
                 raise TypeError("color_format must be a str or None")
+            if color_format and color_format not in _VALID_COLOR_FORMATS:
+                raise ValueError(
+                    "color_format must be 'rgb', 'hsl', 'hwb', or 'hex'"
+                )
             if color_format:
                 params["colorFormat"] = color_format
         return await self._call("Overlay.getHighlightObjectForTest", params)
@@ -324,6 +336,11 @@ class OverlayDomain(BaseDomain):
         """
         if not isinstance(mode, str):
             raise TypeError("mode must be a str")
+        if mode not in _VALID_INSPECT_MODES:
+            raise ValueError(
+                "mode must be 'searchForNode', 'searchForUAShadowDOM', "
+                "'captureAreaScreenshot', or 'none'"
+            )
         params: dict[str, Any] = {"mode": mode}
         if highlight_config is not None:
             if not isinstance(highlight_config, dict):

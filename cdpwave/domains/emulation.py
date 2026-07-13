@@ -4,6 +4,42 @@ from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
+_VALID_SCROLLBAR_TYPES = frozenset({"default", "overlay"})
+_VALID_MEDIA_TYPES = frozenset({"print", "screen", ""})
+_VALID_VIRTUAL_TIME_POLICIES = frozenset({
+    "advance",
+    "pause",
+    "pauseIfNetworkFetchesPending",
+})
+_VALID_VISION_DEFICIENCIES = frozenset({
+    "none",
+    "blurredVision",
+    "reducedContrast",
+    "achromatopsia",
+    "deuteranopia",
+    "protanopia",
+    "tritanopia",
+})
+_VALID_DEVICE_POSTURES = frozenset({"continuous", "folded"})
+_VALID_PRESSURE_STATES = frozenset({
+    "nominal",
+    "fair",
+    "serious",
+    "critical",
+})
+_VALID_TOUCH_CONFIGURATIONS = frozenset({"mobile", "desktop"})
+_VALID_SENSOR_TYPES = frozenset({
+    "accelerometer",
+    "gyroscope",
+    "linear-acceleration",
+    "absolute-orientation",
+    "relative-orientation",
+    "ambient-light",
+    "gravity",
+    "magnetometer",
+})
+_VALID_PRESSURE_SOURCES = frozenset({"cpu"})
+
 
 class EmulationDomain(BaseDomain):
     """Wrapper for the CDP Emulation domain.
@@ -84,8 +120,15 @@ class EmulationDomain(BaseDomain):
             params["screenOrientation"] = screen_orientation
         if viewport is not None:
             params["viewport"] = viewport
-        if scrollbar_type:
-            params["scrollbarType"] = scrollbar_type
+        if scrollbar_type is not None:
+            if not isinstance(scrollbar_type, str):
+                raise TypeError("scrollbar_type must be a str or None")
+            if scrollbar_type and scrollbar_type not in _VALID_SCROLLBAR_TYPES:
+                raise ValueError(
+                    "scrollbar_type must be 'default' or 'overlay'"
+                )
+            if scrollbar_type:
+                params["scrollbarType"] = scrollbar_type
         return await self._call("Emulation.setDeviceMetricsOverride", params)
 
     async def clear_device_metrics_override(self) -> dict[str, Any]:
@@ -229,6 +272,10 @@ class EmulationDomain(BaseDomain):
                 to clear).
             features: List of media feature dicts with ``name`` and ``value``.
         """
+        if media and media not in _VALID_MEDIA_TYPES:
+            raise ValueError(
+                "media must be 'print', 'screen', or ''"
+            )
         params: dict[str, Any] = {}
         if media:
             params["media"] = media
@@ -393,6 +440,12 @@ class EmulationDomain(BaseDomain):
                 ``{"quaternion": {"x": 0, "y": 0, "z": 0, "w": 1}}``
                 for absolute/relative orientation.
         """
+        if not isinstance(type, str):
+            raise TypeError("type must be a str")
+        if type not in _VALID_SENSOR_TYPES:
+            raise ValueError(
+                f"type must be one of {sorted(_VALID_SENSOR_TYPES)}"
+            )
         return await self._call(
             "Emulation.setSensorOverrideReadings",
             {"type": type, "reading": reading},
@@ -464,8 +517,15 @@ class EmulationDomain(BaseDomain):
                 defaults to current platform.
         """
         params: dict[str, Any] = {"enabled": enabled}
-        if configuration:
-            params["configuration"] = configuration
+        if configuration is not None:
+            if not isinstance(configuration, str):
+                raise TypeError("configuration must be a str or None")
+            if configuration and configuration not in _VALID_TOUCH_CONFIGURATIONS:
+                raise ValueError(
+                    "configuration must be 'mobile' or 'desktop'"
+                )
+            if configuration:
+                params["configuration"] = configuration
         return await self._call("Emulation.setEmitTouchEventsForMouse", params)
 
     async def set_auto_dark_mode_override(
@@ -538,6 +598,13 @@ class EmulationDomain(BaseDomain):
         Returns:
             Dict with ``virtualTimeTicksBase``.
         """
+        if not isinstance(policy, str):
+            raise TypeError("policy must be a str")
+        if policy not in _VALID_VIRTUAL_TIME_POLICIES:
+            raise ValueError(
+                "policy must be 'advance', 'pause', or "
+                "'pauseIfNetworkFetchesPending'"
+            )
         params: dict[str, Any] = {"policy": policy}
         if budget:
             params["budget"] = budget
@@ -573,6 +640,13 @@ class EmulationDomain(BaseDomain):
                 ``"achromatopsia"``, ``"deuteranopia"``,
                 ``"protanopia"``, ``"tritanopia"``).
         """
+        if not isinstance(type, str):
+            raise TypeError("type must be a str")
+        if type not in _VALID_VISION_DEFICIENCIES:
+            raise ValueError(
+                "type must be 'none', 'blurredVision', 'reducedContrast', "
+                "'achromatopsia', 'deuteranopia', 'protanopia', or 'tritanopia'"
+            )
         return await self._call(
             "Emulation.setEmulatedVisionDeficiency",
             {"type": type},
@@ -663,6 +737,10 @@ class EmulationDomain(BaseDomain):
         Args:
             posture: Device posture (``"continuous"``, ``"folded"``).
         """
+        if not isinstance(posture, str):
+            raise TypeError("posture must be a str")
+        if posture not in _VALID_DEVICE_POSTURES:
+            raise ValueError("posture must be 'continuous' or 'folded'")
         return await self._call(
             "Emulation.setDevicePostureOverride",
             {"posture": {"type": posture}},
@@ -728,6 +806,12 @@ class EmulationDomain(BaseDomain):
                 ``"gravity"``, ``"magnetometer"``).
             metadata: Optional sensor metadata dict.
         """
+        if not isinstance(type, str):
+            raise TypeError("type must be a str")
+        if type not in _VALID_SENSOR_TYPES:
+            raise ValueError(
+                f"type must be one of {sorted(_VALID_SENSOR_TYPES)}"
+            )
         params: dict[str, Any] = {"enabled": enabled, "type": type}
         if metadata is not None:
             params["metadata"] = metadata
@@ -748,6 +832,12 @@ class EmulationDomain(BaseDomain):
         Returns:
             Dict with ``requestedSamplingFrequency``.
         """
+        if not isinstance(type, str):
+            raise TypeError("type must be a str")
+        if type not in _VALID_SENSOR_TYPES:
+            raise ValueError(
+                f"type must be one of {sorted(_VALID_SENSOR_TYPES)}"
+            )
         return await self._call(
             "Emulation.getOverriddenSensorInformation",
             {"type": type},
@@ -766,6 +856,10 @@ class EmulationDomain(BaseDomain):
             enabled: Whether to enable the override.
             metadata: Optional metadata dict.
         """
+        if not isinstance(source, str):
+            raise TypeError("source must be a str")
+        if source not in _VALID_PRESSURE_SOURCES:
+            raise ValueError("source must be 'cpu'")
         params: dict[str, Any] = {"source": source, "enabled": enabled}
         if metadata is not None:
             params["metadata"] = metadata
@@ -786,6 +880,14 @@ class EmulationDomain(BaseDomain):
             state: Pressure state (``"nominal"``, ``"fair"`,
                 ``"serious"``, ``"critical"``).
         """
+        if not isinstance(source, str):
+            raise TypeError("source must be a str")
+        if not isinstance(state, str):
+            raise TypeError("state must be a str")
+        if state not in _VALID_PRESSURE_STATES:
+            raise ValueError(
+                "state must be 'nominal', 'fair', 'serious', or 'critical'"
+            )
         return await self._call(
             "Emulation.setPressureStateOverride",
             {"source": source, "state": state},

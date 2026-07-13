@@ -579,16 +579,16 @@ class TestSmartCardEmulationEdgeCases:
     async def test_report_connect_result_active_protocol_empty_string(self) -> None:
         fake = FakeSender({})
         domain = SmartCardEmulationDomain(fake)
-        await domain.report_connect_result("req-1", 7, active_protocol="")
-        _, params = fake.last_call
-        assert params["activeProtocol"] == ""
+        with pytest.raises(ValueError, match="active_protocol must be"):
+            await domain.report_connect_result("req-1", 7, active_protocol="")
+        assert len(fake.calls) == 0
 
     async def test_report_connect_result_active_protocol_unicode(self) -> None:
         fake = FakeSender({})
         domain = SmartCardEmulationDomain(fake)
-        await domain.report_connect_result("req-1", 7, active_protocol="🎵")
-        _, params = fake.last_call
-        assert params["activeProtocol"] == "🎵"
+        with pytest.raises(ValueError, match="active_protocol must be"):
+            await domain.report_connect_result("req-1", 7, active_protocol="🎵")
+        assert len(fake.calls) == 0
 
     # ------------------------------------------------------------------
     # report_data_result: params, return, type validation.
@@ -740,9 +740,9 @@ class TestSmartCardEmulationEdgeCases:
     async def test_report_status_result_empty_strings(self) -> None:
         fake = FakeSender({})
         domain = SmartCardEmulationDomain(fake)
-        await domain.report_status_result("", "", "", "")
-        _, params = fake.last_call
-        assert params == {"requestId": "", "readerName": "", "state": "", "atr": ""}
+        with pytest.raises(ValueError, match="state must be"):
+            await domain.report_status_result("", "", "", "")
+        assert len(fake.calls) == 0
 
     async def test_report_status_result_unicode(self) -> None:
         fake = FakeSender({})

@@ -4,6 +4,34 @@ from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
+_VALID_KEY_TYPES = frozenset({
+    "keyDown",
+    "keyUp",
+    "rawKeyDown",
+    "char",
+})
+_VALID_MOUSE_TYPES = frozenset({
+    "mousePressed",
+    "mouseReleased",
+    "mouseMoved",
+    "mouseWheel",
+})
+_VALID_MOUSE_BUTTONS = frozenset({
+    "none",
+    "left",
+    "middle",
+    "right",
+    "back",
+    "forward",
+})
+_VALID_TOUCH_EVENT_TYPES = frozenset({
+    "mouseWheel",
+    "mouseMoved",
+    "mousePressed",
+    "mouseReleased",
+})
+_VALID_GESTURE_SOURCE_TYPES = frozenset({"default", "touch", "mouse"})
+
 
 class InputDomain(BaseDomain):
     """Wrapper for the CDP Input domain.
@@ -53,6 +81,12 @@ class InputDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
+        if not isinstance(type, str):
+            raise TypeError("type must be a str")
+        if type not in _VALID_KEY_TYPES:
+            raise ValueError(
+                "type must be 'keyDown', 'keyUp', 'rawKeyDown', or 'char'"
+            )
         params: dict[str, Any] = {"type": type}
         if key is not None:
             params["key"] = key
@@ -129,6 +163,20 @@ class InputDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
+        if not isinstance(type, str):
+            raise TypeError("type must be a str")
+        if type not in _VALID_MOUSE_TYPES:
+            raise ValueError(
+                "type must be 'mousePressed', 'mouseReleased', "
+                "'mouseMoved', or 'mouseWheel'"
+            )
+        if not isinstance(button, str):
+            raise TypeError("button must be a str")
+        if button not in _VALID_MOUSE_BUTTONS:
+            raise ValueError(
+                "button must be 'none', 'left', 'middle', 'right', "
+                "'back', or 'forward'"
+            )
         params: dict[str, Any] = {
             "type": type,
             "x": x,
@@ -320,6 +368,12 @@ class InputDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
+        if not isinstance(gesture_source_type, str):
+            raise TypeError("gesture_source_type must be a str")
+        if gesture_source_type not in _VALID_GESTURE_SOURCE_TYPES:
+            raise ValueError(
+                "gesture_source_type must be 'default', 'touch', or 'mouse'"
+            )
         return await self._call(
             "Input.synthesizePinchGesture",
             {
@@ -367,6 +421,12 @@ class InputDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
+        if not isinstance(gesture_source_type, str):
+            raise TypeError("gesture_source_type must be a str")
+        if gesture_source_type not in _VALID_GESTURE_SOURCE_TYPES:
+            raise ValueError(
+                "gesture_source_type must be 'default', 'touch', or 'mouse'"
+            )
         params: dict[str, Any] = {
             "x": x,
             "y": y,
@@ -417,6 +477,20 @@ class InputDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
+        if not isinstance(type, str):
+            raise TypeError("type must be a str")
+        if type not in _VALID_TOUCH_EVENT_TYPES:
+            raise ValueError(
+                "type must be 'mouseWheel', 'mouseMoved', "
+                "'mousePressed', or 'mouseReleased'"
+            )
+        if not isinstance(button, str):
+            raise TypeError("button must be a str")
+        if button not in _VALID_MOUSE_BUTTONS:
+            raise ValueError(
+                "button must be 'none', 'left', 'middle', 'right', "
+                "'back', or 'forward'"
+            )
         params: dict[str, Any] = {
             "type": type,
             "x": x,
@@ -470,6 +544,12 @@ class InputDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
+        if not isinstance(gesture_source_type, str):
+            raise TypeError("gesture_source_type must be a str")
+        if gesture_source_type not in _VALID_GESTURE_SOURCE_TYPES:
+            raise ValueError(
+                "gesture_source_type must be 'default', 'touch', or 'mouse'"
+            )
         return await self._call(
             "Input.synthesizeTapGesture",
             {

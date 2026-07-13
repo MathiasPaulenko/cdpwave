@@ -11,7 +11,6 @@ Full lifecycle tests covering:
 
 import asyncio
 import contextlib
-from typing import Any
 
 import pytest
 
@@ -537,7 +536,7 @@ class TestDOMDebuggerE2EGetEventListeners:
 
 @pytest.mark.e2e
 class TestDOMDebuggerE2EInstrumentationBreakpoints:
-    async def test_set_remove_instrumentation_setInterval(self) -> None:
+    async def test_set_remove_instrumentation_set_interval(self) -> None:
         async with (
             await CDPClient.launch(headless=True) as client,
             await client.new_page() as session,
@@ -550,7 +549,7 @@ class TestDOMDebuggerE2EInstrumentationBreakpoints:
                     "setInterval"
                 )
 
-    async def test_set_remove_instrumentation_setTimeout(self) -> None:
+    async def test_set_remove_instrumentation_set_timeout(self) -> None:
         async with (
             await CDPClient.launch(headless=True) as client,
             await client.new_page() as session,
@@ -684,7 +683,7 @@ class TestDOMDebuggerE2EFullFlow:
             )
             assert "listeners" in result
             click_listeners = [
-                l for l in result["listeners"] if l.get("type") == "click"
+                lst for lst in result["listeners"] if lst.get("type") == "click"
             ]
             assert len(click_listeners) > 0
 

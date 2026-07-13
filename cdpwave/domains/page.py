@@ -4,6 +4,8 @@ from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
+_VALID_DOWNLOAD_BEHAVIORS = frozenset({"allow", "deny", "default"})
+
 
 class PageDomain(BaseDomain):
     """Wrapper for the CDP Page domain."""
@@ -832,7 +834,9 @@ class PageDomain(BaseDomain):
             download_path: Path for downloads (when ``behavior`` is
                 ``"allow"``).
         """
-        if behavior not in ("allow", "deny", "default"):
+        if not isinstance(behavior, str):
+            raise TypeError("behavior must be a str")
+        if behavior not in _VALID_DOWNLOAD_BEHAVIORS:
             raise ValueError("behavior must be 'allow', 'deny', or 'default'")
         params: dict[str, Any] = {"behavior": behavior}
         if download_path is not None:

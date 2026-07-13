@@ -227,7 +227,7 @@ class TestAutofillEdgeCases:
         ):
             try:
                 await session.autofill.enable()
-                with pytest.raises(Exception):
+                with pytest.raises(CommandError):
                     await session.autofill.trigger(999999)
                 await session.autofill.disable()
             except CommandError as exc:
@@ -242,7 +242,7 @@ class TestAutofillEdgeCases:
         ):
             try:
                 await session.autofill.enable()
-                with pytest.raises(Exception):
+                with pytest.raises(CommandError):
                     await session.autofill.trigger(
                         999999,
                         card={
@@ -392,7 +392,7 @@ class TestAutofillFlow:
         ):
             try:
                 await session.autofill.enable()
-                with pytest.raises(Exception):
+                with pytest.raises(CommandError):
                     await session.autofill.trigger(
                         999999,
                         address={

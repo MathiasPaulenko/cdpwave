@@ -4,6 +4,16 @@ from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
+_VALID_WHITESPACE = frozenset({"none", "all"})
+_VALID_RELATIONS = frozenset({
+    "PopoverTarget",
+    "InterestTarget",
+    "CommandFor",
+    "controlledby",
+})
+_VALID_PHYSICAL_AXES = frozenset({"Horizontal", "Vertical", "Both"})
+_VALID_LOGICAL_AXES = frozenset({"Inline", "Block", "Both"})
+
 
 class DOMDomain(BaseDomain):
     """Wrapper for the CDP DOM domain."""
@@ -28,6 +38,12 @@ class DOMDomain(BaseDomain):
         """
         params: dict[str, Any] = {}
         if include_whitespace is not None:
+            if not isinstance(include_whitespace, str):
+                raise TypeError("include_whitespace must be a str or None")
+            if include_whitespace not in _VALID_WHITESPACE:
+                raise ValueError(
+                    "include_whitespace must be 'none' or 'all'"
+                )
             params["includeWhitespace"] = include_whitespace
         return await self._call("DOM.enable", params)
 
@@ -868,11 +884,20 @@ class DOMDomain(BaseDomain):
             node_id: Id of the node from which to query the relation.
             relation: Type of relation to get. One of
                 ``"PopoverTarget"``, ``"InterestTarget"``,
-                ``"CommandFor"``.
+                ``"CommandFor"``, ``"controlledby"``.
 
         Returns:
             Dict with ``nodeId`` of the matching element.
         """
+        if not isinstance(node_id, int):
+            raise TypeError("node_id must be an int")
+        if not isinstance(relation, str):
+            raise TypeError("relation must be a str")
+        if relation not in _VALID_RELATIONS:
+            raise ValueError(
+                "relation must be 'PopoverTarget', 'InterestTarget', "
+                "'CommandFor', or 'controlledby'"
+            )
         return await self._call(
             "DOM.getElementByRelation",
             {"nodeId": node_id, "relation": relation},
@@ -1000,8 +1025,20 @@ class DOMDomain(BaseDomain):
         if container_name is not None:
             params["containerName"] = container_name
         if physical_axes is not None:
+            if not isinstance(physical_axes, str):
+                raise TypeError("physical_axes must be a str or None")
+            if physical_axes not in _VALID_PHYSICAL_AXES:
+                raise ValueError(
+                    "physical_axes must be 'Horizontal', 'Vertical', or 'Both'"
+                )
             params["physicalAxes"] = physical_axes
         if logical_axes is not None:
+            if not isinstance(logical_axes, str):
+                raise TypeError("logical_axes must be a str or None")
+            if logical_axes not in _VALID_LOGICAL_AXES:
+                raise ValueError(
+                    "logical_axes must be 'Inline', 'Block', or 'Both'"
+                )
             params["logicalAxes"] = logical_axes
         if queries_scroll_state:
             params["queriesScrollState"] = True

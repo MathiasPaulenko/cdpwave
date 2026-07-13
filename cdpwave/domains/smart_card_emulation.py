@@ -51,6 +51,16 @@ from typing import Any
 
 from cdpwave.domains.base import BaseDomain
 
+_VALID_PROTOCOLS = frozenset({"t0", "t1", "raw"})
+_VALID_CONNECTION_STATES = frozenset({
+    "absent",
+    "present",
+    "swallowed",
+    "powered",
+    "negotiable",
+    "specific",
+})
+
 
 class SmartCardEmulationDomain(BaseDomain):
     """Wrapper for the CDP SmartCardEmulation domain (experimental).
@@ -322,6 +332,10 @@ class SmartCardEmulationDomain(BaseDomain):
                     f"active_protocol must be a str, "
                     f"got {type(active_protocol).__name__}"
                 )
+            if active_protocol not in _VALID_PROTOCOLS:
+                raise ValueError(
+                    "active_protocol must be 't0', 't1', or 'raw'"
+                )
             params["activeProtocol"] = active_protocol
         return await self._call(
             "SmartCardEmulation.reportConnectResult",
@@ -403,6 +417,11 @@ class SmartCardEmulationDomain(BaseDomain):
             raise TypeError(
                 f"state must be a str, got {type(state).__name__}"
             )
+        if state not in _VALID_CONNECTION_STATES:
+            raise ValueError(
+                "state must be 'absent', 'present', 'swallowed', "
+                "'powered', 'negotiable', or 'specific'"
+            )
         if not isinstance(atr, str):
             raise TypeError(
                 f"atr must be a str, got {type(atr).__name__}"
@@ -417,6 +436,10 @@ class SmartCardEmulationDomain(BaseDomain):
             if not isinstance(protocol, str):
                 raise TypeError(
                     f"protocol must be a str, got {type(protocol).__name__}"
+                )
+            if protocol not in _VALID_PROTOCOLS:
+                raise ValueError(
+                    "protocol must be 't0', 't1', or 'raw'"
                 )
             params["protocol"] = protocol
         return await self._call(

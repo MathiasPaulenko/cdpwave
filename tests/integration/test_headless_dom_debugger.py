@@ -2,7 +2,6 @@
 
 import asyncio
 import contextlib
-from typing import Any
 
 import pytest
 

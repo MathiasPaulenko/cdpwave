@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 
 from cdpwave import CDPClient, CDPSession
-from cdpwave.exceptions import CDPError
+from cdpwave.exceptions import CDPError, CommandError
 
 
 async def _wait_for_page(page: CDPSession) -> None:
@@ -1079,7 +1079,7 @@ class TestAnimationEdgeCases:
             await client.new_page() as session,
         ):
             await session.animation.enable()
-            with pytest.raises(Exception):
+            with pytest.raises(CommandError):
                 await session.animation.get_current_time("nonexistent-anim")
             await session.animation.disable()
 
@@ -1099,7 +1099,7 @@ class TestAnimationEdgeCases:
             await client.new_page() as session,
         ):
             await session.animation.enable()
-            with pytest.raises(Exception):
+            with pytest.raises(CommandError):
                 await session.animation.resolve_animation("nonexistent-anim")
             await session.animation.disable()
 

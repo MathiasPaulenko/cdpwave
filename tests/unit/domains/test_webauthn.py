@@ -1063,7 +1063,7 @@ class TestProtocolEnumValidation:
 @pytest.mark.unit
 class TestTransportEnumValidation:
     async def test_all_valid_transports(self) -> None:
-        for t in ("usb", "nfc", "ble", "cable", "internal"):
+        for t in ("usb", "nfc", "ble", "cable", "hybrid", "internal"):
             fake = FakeSender({})
             domain = WebAuthnDomain(fake)
             await domain.add_virtual_authenticator("ctap2", t)

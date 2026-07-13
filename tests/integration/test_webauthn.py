@@ -109,7 +109,7 @@ class TestWebAuthnVirtualAuthenticator:
             await client.new_page() as session,
         ):
             await session.web_authn.enable()
-            for transport in ("usb", "nfc", "ble", "cable", "internal"):
+            for transport in ("usb", "nfc", "ble", "cable", "hybrid", "internal"):
                 result = await session.web_authn.add_virtual_authenticator(
                     protocol="ctap2",
                     transport=transport,
