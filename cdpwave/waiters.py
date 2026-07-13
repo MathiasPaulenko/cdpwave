@@ -176,6 +176,8 @@ async def wait_for_network_idle(
     Raises:
         TimeoutError: If network doesn't settle within ``timeout``.
     """
+    await session.network.enable()
+
     loop = asyncio.get_running_loop()
     last_request_time = loop.time()
 
@@ -200,3 +202,4 @@ async def wait_for_network_idle(
                 await asyncio.sleep(wait)
     finally:
         sub.unsubscribe()
+        await session.network.disable()

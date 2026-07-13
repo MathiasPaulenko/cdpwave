@@ -2,7 +2,7 @@
 
 import asyncio
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -38,6 +38,11 @@ def make_session(
 
     dom.query_selector = _query
     session.dom = dom
+
+    network = MagicMock()
+    network.enable = AsyncMock(return_value={})
+    network.disable = AsyncMock(return_value={})
+    session.network = network
 
     dispatch = dispatch or {}
 
@@ -204,3 +209,28 @@ class TestWaitForNetworkIdle:
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
             await task
+
+    async def test_enable_called_before_wait(self) -> None:
+        session, dispatch = make_session()
+
+        async def _fire() -> None:
+            await asyncio.sleep(0.05)
+            for handler in dispatch.get("Network.requestWillBeSent", []):
+                await handler({"requestId": "r1"})
+
+        task = asyncio.create_task(_fire())
+        await wait_for_network_idle(
+            session, idle_time=0.2, timeout=2.0,
+        )
+        await task
+        session.network.enable.assert_awaited_once()
+        session.network.disable.assert_awaited_once()
+
+    async def test_disable_called_on_timeout(self) -> None:
+        session, _ = make_session()
+        with pytest.raises(TimeoutError):
+            await wait_for_network_idle(
+                session, idle_time=0.3, timeout=0.1,
+            )
+        session.network.enable.assert_awaited_once()
+        session.network.disable.assert_awaited_once()
