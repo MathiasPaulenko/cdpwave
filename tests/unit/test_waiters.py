@@ -124,6 +124,26 @@ class TestWaitForLoadState:
         with pytest.raises(TimeoutError):
             await wait_for_load_state(session, timeout=0.1)
 
+    async def test_invalid_state_raises_value_error(self) -> None:
+        session, _ = make_session()
+        with pytest.raises(ValueError, match="Invalid load state"):
+            await wait_for_load_state(session, state="invalid", timeout=1.0)
+
+    async def test_valid_states_accepted(self) -> None:
+        session, dispatch = make_session()
+
+        async def _fire() -> None:
+            await asyncio.sleep(0.05)
+            for handler in dispatch.get("Page.lifecycleEvent", []):
+                await handler({"name": "networkIdle"})
+
+        task = asyncio.create_task(_fire())
+        result = await wait_for_load_state(
+            session, state="networkIdle", timeout=2.0,
+        )
+        await task
+        assert result["name"] == "networkIdle"
+
 
 class TestWaitForSelector:
     async def test_finds_immediately(self) -> None:

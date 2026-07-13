@@ -20,6 +20,15 @@ DEFAULT_TIMEOUT = 30.0
 POLL_INTERVAL = 0.1
 NETWORK_IDLE_THRESHOLD = 500  # ms without requests
 
+_VALID_LOAD_STATES = frozenset({
+    "DOMContentLoaded",
+    "load",
+    "networkIdle",
+    "firstPaint",
+    "firstContentfulPaint",
+    "firstMeaningfulPaint",
+})
+
 
 async def wait_for_navigation(
     session: CDPSession,
@@ -83,8 +92,15 @@ async def wait_for_load_state(
         The ``Page.lifecycleEvent`` event params.
 
     Raises:
+        ValueError: If ``state`` is not a valid lifecycle state.
         TimeoutError: If the state isn't reached within ``timeout``.
     """
+    if state not in _VALID_LOAD_STATES:
+        raise ValueError(
+            f"Invalid load state {state!r}. "
+            f"Valid states: {sorted(_VALID_LOAD_STATES)}",
+        )
+
     event = asyncio.Event()
     captured: list[dict[str, Any]] = []
 
