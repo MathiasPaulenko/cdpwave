@@ -210,3 +210,54 @@ class TestConnection:
 
         assert result == {}
         await conn.close()
+
+    async def test_reconnect_calls_on_reconnect_callback(self) -> None:
+        callback = AsyncMock()
+        conn = Connection(
+            "ws://localhost:9222",
+            max_retries=1,
+            backoff_base=0.01,
+            on_reconnect=callback,
+        )
+        fake_ws = FakeWebSocket([])
+
+        with patch(_WS_CONNECT, new_callable=AsyncMock) as mock_connect:
+            mock_connect.return_value = fake_ws
+            await conn.connect()
+            result = await conn._reconnect()
+
+        assert result is True
+        callback.assert_awaited_once()
+        await conn.close()
+
+    async def test_reconnect_no_callback_when_all_fail(self) -> None:
+        callback = AsyncMock()
+        conn = Connection(
+            "ws://localhost:9222",
+            max_retries=2,
+            backoff_base=0.01,
+            on_reconnect=callback,
+        )
+
+        with patch(_WS_CONNECT, new_callable=AsyncMock) as mock_connect:
+            mock_connect.side_effect = OSError("connection refused")
+            result = await conn._reconnect()
+
+        assert result is False
+        callback.assert_not_awaited()
+
+    async def test_reconnect_no_callback_when_not_set(self) -> None:
+        conn = Connection(
+            "ws://localhost:9222",
+            max_retries=1,
+            backoff_base=0.01,
+        )
+        fake_ws = FakeWebSocket([])
+
+        with patch(_WS_CONNECT, new_callable=AsyncMock) as mock_connect:
+            mock_connect.return_value = fake_ws
+            await conn.connect()
+            result = await conn._reconnect()
+
+        assert result is True
+        await conn.close()

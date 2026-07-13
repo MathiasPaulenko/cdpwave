@@ -232,3 +232,17 @@ class TestCDPClient:
         session = CDPSession(conn, "S-1", "T-1")
         assert session._dispatcher._strict is False
         assert session._dispatcher._on_event_error is None
+
+    async def test_invalidate_sessions_clears_all(self) -> None:
+        conn = AsyncMock()
+        conn.send_command.return_value = {"sessionId": "S-1"}
+        client = CDPClient(conn)
+        session = await client.connect_to_page("T-1")
+        assert len(client._sessions) == 1
+        assert session.is_closed is False
+
+        await client._invalidate_sessions()
+
+        assert len(client._sessions) == 0
+        assert len(client._session_dispatchers) == 0
+        assert session.is_closed is True

@@ -918,6 +918,24 @@ class CDPClient:
         self._closed = False
         self._browser = BrowserDomain(self.send)
 
+    async def _invalidate_sessions(self) -> None:
+        """Invalidate all sessions after a reconnection.
+
+        Marks every CDPSession as closed, clears dispatchers, and empties
+        the session dicts.  The old sessionIds are no longer valid in the
+        browser after a WebSocket reconnect.
+        """
+        count = len(self._sessions)
+        for session in self._sessions.values():
+            session._closed = True
+            session._dispatcher.clear()
+        self._sessions.clear()
+        self._session_dispatchers.clear()
+        logger.warning(
+            "Invalidated %d stale sessions after reconnection",
+            count,
+        )
+
     async def _event_callback(
         self,
         event_name: str,
@@ -1069,6 +1087,7 @@ class CDPClient:
             await connection.connect()
             client = cls(connection, launcher=launcher, discovery=discovery)
             connection._event_callback = client._event_callback
+            connection._on_reconnect = client._invalidate_sessions
             return client
 
         return _LaunchContext(_do_launch())
@@ -1120,6 +1139,7 @@ class CDPClient:
             await connection.connect()
             client = cls(connection, launcher=None, discovery=discovery)
             connection._event_callback = client._event_callback
+            connection._on_reconnect = client._invalidate_sessions
             return client
 
         return _LaunchContext(_do_connect())

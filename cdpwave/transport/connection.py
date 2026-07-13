@@ -28,6 +28,9 @@ EventCallback = Callable[
 ]
 """Async callback for CDP events: (method, params, session_id)."""
 
+ReconnectCallback = Callable[[], Awaitable[None]]
+"""Async callback invoked after a successful reconnection."""
+
 
 def _log_task_exception(task: asyncio.Future[None]) -> None:
     """Log exceptions from completed event dispatch tasks."""
@@ -51,6 +54,7 @@ class Connection:
         max_retries: Maximum reconnection attempts (0 = no reconnect).
         backoff_base: Initial backoff delay in seconds.
         backoff_max: Maximum backoff delay in seconds.
+        on_reconnect: Async callback invoked after a successful reconnection.
     """
 
     def __init__(
@@ -61,6 +65,7 @@ class Connection:
         max_retries: int = 0,
         backoff_base: float = 1.0,
         backoff_max: float = 30.0,
+        on_reconnect: ReconnectCallback | None = None,
     ) -> None:
         self._url = url
         self._correlator = Correlator()
@@ -73,6 +78,7 @@ class Connection:
         self._backoff_base = backoff_base
         self._backoff_max = backoff_max
         self._reconnect_lock = asyncio.Lock()
+        self._on_reconnect = on_reconnect
 
     async def connect(self) -> None:
         """Open the WebSocket connection and start the receive loop."""
@@ -186,6 +192,8 @@ class Connection:
                     self._closed = False
                     self._receive_task = asyncio.create_task(self._receive_loop())
                     logger.info("Reconnected to %s", self._url)
+                    if self._on_reconnect is not None:
+                        await self._on_reconnect()
                     return True
                 except Exception as exc:
                     logger.warning(
