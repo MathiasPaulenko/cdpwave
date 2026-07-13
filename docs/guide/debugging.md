@@ -345,21 +345,29 @@ await session.dom_debugger.remove_xhr_breakpoint(url="*api.example.com*")
 ## Event breakpoints
 
 The `EventBreakpoints` domain provides instrumentation breakpoints
-for native DOM events. These are lower-level than `DOMDebugger` event
-listener breakpoints:
+for native operations and events occurring in native code invoked
+from JavaScript. These are lower-level than `DOMDebugger` event
+listener breakpoints. Breakpoint hits are reported through the
+`Debugger` domain:
 
 ```python
 await session.event_breakpoints.set_instrumentation_breakpoint(
-    event_name="DOMContentLoaded",
+    event_name="scriptFirstStatement",
 )
 ```
 
-Disable:
+Remove:
 
 ```python
 await session.event_breakpoints.remove_instrumentation_breakpoint(
-    event_name="DOMContentLoaded",
+    event_name="scriptFirstStatement",
 )
+```
+
+Remove all breakpoints:
+
+```python
+await session.event_breakpoints.disable()
 ```
 
 ## Full example

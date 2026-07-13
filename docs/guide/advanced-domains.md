@@ -422,7 +422,7 @@ await session.animation.release_animations(animations=["anim1"])
 The `LayerTree` domain exposes the browser's compositor layer tree.
 Layers are the intermediate rendering units between the DOM and the
 screen. The browser composites layers together to produce the final
-image.
+image. This domain is **experimental** in the Chrome DevTools Protocol.
 
 !!! tip "When to use"
     Use LayerTree to debug rendering performance issues, understand
@@ -435,14 +435,6 @@ image.
 await session.layer_tree.enable()
 ```
 
-### Get compositing layers
-
-```python
-result = await session.layer_tree.get_layers()
-for layer in result["layers"]:
-    print(f"Layer: {layer['layerId']} bounds={layer['bounds']}")
-```
-
 ### Compositing reasons
 
 Understand why a node was promoted to its own compositing layer:
@@ -453,11 +445,37 @@ for reason in result["compositingReasons"]:
     print(f"Reason: {reason}")
 ```
 
-### Capture layer snapshot
+### Make a layer snapshot
 
 ```python
-result = await session.layer_tree.capture_snapshot()
-print(f"Snapshot tiles: {len(result['timings'])}")
+result = await session.layer_tree.make_snapshot(layer_id="layer1")
+snapshot_id = result["snapshotId"]
+```
+
+### Profile a snapshot
+
+```python
+result = await session.layer_tree.profile_snapshot(
+    snapshot_id,
+    min_repeat_count=3,
+    min_duration=0.5,
+    clip_rect={"x": 0, "y": 0, "width": 100, "height": 100},
+)
+for timings in result["timings"]:
+    print(f"Timings: {timings}")
+```
+
+### Replay a snapshot
+
+```python
+result = await session.layer_tree.replay_snapshot(snapshot_id)
+print(f"Image: {result['dataURL']}")
+```
+
+### Release a snapshot
+
+```python
+await session.layer_tree.release_snapshot(snapshot_id)
 ```
 
 ## ServiceWorker

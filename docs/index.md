@@ -65,7 +65,7 @@ Python wrappers. Every domain is accessible as a property on `CDPSession`
 | **Input** | `session.input` | 14 | Keyboard, mouse, touch, drag, pinch, scroll, tap gestures |
 | **Sensor** | `session.sensor` | 4 | Accelerometer, gyroscope, magnetometer overrides |
 | **DeviceOrientation** | `session.device_orientation` | 2 | Device orientation override |
-| **DeviceAccess** | `session.device_access` | 4 | Bluetooth device selection prompts |
+| **DeviceAccess** | `session.device_access` | 4 | Bluetooth/USB device selection prompts |
 
 ### Network & fetch
 
@@ -84,7 +84,7 @@ Python wrappers. Every domain is accessible as a property on `CDPSession`
 | **Profiler** | `session.profiler` | 9 | CPU profiling, precise code coverage |
 | **HeapProfiler** | `session.heap_profiler` | 10 | Heap snapshots, allocation sampling, GC, object tracking |
 | **DOMDebugger** | `session.dom_debugger` | 10 | DOM breakpoints, event listener breakpoints, XHR breakpoints |
-| **EventBreakpoints** | `session.event_breakpoints` | 4 | Instrumentation breakpoints for native events |
+| **EventBreakpoints** | `session.event_breakpoints` | 4 | Instrumentation breakpoints for native operations and events |
 
 ### Performance & tracing
 
@@ -92,7 +92,7 @@ Python wrappers. Every domain is accessible as a property on `CDPSession`
 |---|---|---|---|
 | **Performance** | `session.performance` | 4 | Runtime metrics, timeline events |
 | **PerformanceTimeline** | `session.performance_timeline` | 1 | Timeline events (LCP, FID, CLS) |
-| **Tracing** | `session.tracing` | 5 | Chrome tracing, category discovery, clock sync |
+| **Tracing** | `session.tracing` | 6 | Chrome tracing, category discovery, clock sync, memory dumps |
 
 ### Rendering & CSS
 
@@ -101,7 +101,7 @@ Python wrappers. Every domain is accessible as a property on `CDPSession`
 | **CSS** | `session.css` | 42 | Styles, stylesheets, rules, pseudo states, media queries |
 | **Overlay** | `session.overlay` | 31 | Paint rects, debug borders, FPS, highlighting, inspect mode |
 | **Animation** | `session.animation` | 9 | Playback rate, pausing, seeking, replaying animations |
-| **LayerTree** | `session.layer_tree` | 10 | Compositing layers, snapshots, compositing reasons |
+| **LayerTree** | `session.layer_tree` | 9 | Compositing layers, snapshots, compositing reasons |
 
 ### Security & audits
 
@@ -117,7 +117,7 @@ Python wrappers. Every domain is accessible as a property on `CDPSession`
 |---|---|---|---|
 | **Browser** | `client.browser` | 17 | Version, window bounds, permissions, download behavior |
 | **SystemInfo** | `client.system_info` | 4 | GPU info, process info, feature state |
-| **Memory** | `session.memory` | 12 | DOM counters, leak detection, pressure notifications |
+| **Memory** | `session.memory` | 11 | DOM counters, leak detection, pressure notifications |
 | **IO** | `session.io` | 3 | Stream reading, blob resolution |
 | **Schema** | `session.schema` | 1 | Domain discovery |
 
@@ -129,15 +129,15 @@ Python wrappers. Every domain is accessible as a property on `CDPSession`
 | **Worker** | `session.worker` | 0 | Event-only: worker errors and messages |
 | **Extensions** | `session.extensions` | 8 | Load unpacked, storage items |
 | **PWA** | `session.pwa` | 7 | Install, uninstall, app state |
-| **Preload** | `session.preload` | 4 | Preload policy, speculation rules |
+| **Preload** | `session.preload` | 2 | Speculative loading, prefetch, prerender events |
 
 ### Mobile & cast
 
 | Domain | Property | Methods | Description |
 |---|---|---|---|
 | **WebAuthn** | `session.web_authn` | 11 | Virtual authenticators, credentials, presence simulation |
-| **Cast** | `session.cast` | 5 | Tab mirroring, sink selection |
-| **Tethering** | `session.tethering` | 2 | Reverse port forwarding |
+| **Cast** | `session.cast` | 6 | Tab/desktop mirroring, sink selection |
+| **Tethering** | `session.tethering` | 2 | Browser port binding |
 
 ### Experimental & other
 
@@ -146,7 +146,7 @@ Python wrappers. Every domain is accessible as a property on `CDPSession`
 | **HeadlessExperimental** | `session.headless_experimental` | 3 | Headless window bounds (deprecated) |
 | **Media** | `session.media` | 4 | Media player properties and events |
 | **BackgroundService** | `session.background_service` | 4 | Background service event recording |
-| **Inspector** | `session.inspector` | 2 | Inspector lifecycle events and detached |
+| **Inspector** | `session.inspector` | 2 | Inspector domain notifications and lifecycle events |
 | **Ads** | `session.ads` | 1 | Ad metrics inspection |
 | **Autofill** | `session.autofill` | 5 | Autofill address injection |
 | **BluetoothEmulation** | `session.bluetooth_emulation` | 15 | Virtual Bluetooth adapters and devices |
