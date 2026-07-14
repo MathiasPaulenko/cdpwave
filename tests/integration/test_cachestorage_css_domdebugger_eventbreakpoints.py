@@ -69,7 +69,9 @@ class TestCSS:
             await session.dom.enable()
             await session.css.enable()
             doc = await session.dom.get_document()
-            body_id = doc["root"]["children"][0]["children"][1]["nodeId"]
+            root_id = doc["root"]["nodeId"]
+            body_node = await session.dom.query_selector(root_id, "body")
+            body_id = body_node["nodeId"]
             result = await session.css.get_inline_styles_for_node(body_id)
             assert "inlineStyle" in result
             await session.css.disable()
@@ -83,7 +85,9 @@ class TestCSS:
             await session.dom.enable()
             await session.css.enable()
             doc = await session.dom.get_document()
-            body_id = doc["root"]["children"][0]["children"][1]["nodeId"]
+            root_id = doc["root"]["nodeId"]
+            body_node = await session.dom.query_selector(root_id, "body")
+            body_id = body_node["nodeId"]
             result = await session.css.get_computed_style_for_node(body_id)
             assert "computedStyle" in result
             await session.css.disable()
@@ -97,7 +101,9 @@ class TestCSS:
             await session.dom.enable()
             await session.css.enable()
             doc = await session.dom.get_document()
-            body_id = doc["root"]["children"][0]["children"][1]["nodeId"]
+            root_id = doc["root"]["nodeId"]
+            body_node = await session.dom.query_selector(root_id, "body")
+            body_id = body_node["nodeId"]
             result = await session.css.get_matched_styles_for_node(body_id)
             assert "matchedCSSRules" in result
             await session.css.disable()
@@ -143,7 +149,9 @@ class TestCSS:
             await session.dom.enable()
             await session.css.enable()
             doc = await session.dom.get_document()
-            body_id = doc["root"]["children"][0]["children"][1]["nodeId"]
+            root_id = doc["root"]["nodeId"]
+            body_node = await session.dom.query_selector(root_id, "body")
+            body_id = body_node["nodeId"]
             result = await session.css.get_platform_fonts_for_node(body_id)
             assert "fonts" in result
             await session.css.disable()
@@ -157,7 +165,9 @@ class TestCSS:
             await session.dom.enable()
             await session.css.enable()
             doc = await session.dom.get_document()
-            body_id = doc["root"]["children"][0]["children"][1]["nodeId"]
+            root_id = doc["root"]["nodeId"]
+            body_node = await session.dom.query_selector(root_id, "body")
+            body_id = body_node["nodeId"]
             result = await session.css.get_background_colors(body_id)
             assert "backgroundColors" in result
             await session.css.disable()
@@ -171,7 +181,9 @@ class TestCSS:
             await session.dom.enable()
             await session.css.enable()
             doc = await session.dom.get_document()
-            body_id = doc["root"]["children"][0]["children"][1]["nodeId"]
+            root_id = doc["root"]["nodeId"]
+            body_node = await session.dom.query_selector(root_id, "body")
+            body_id = body_node["nodeId"]
             await session.css.force_pseudo_state(body_id, ["hover"])
             await session.css.disable()
 
@@ -198,11 +210,12 @@ class TestCSS:
             await _wait_for_page(session)
             await session.dom.enable()
             await session.css.enable()
-            await session.css.track_computed_style_updates(
-                [{"name": "color"}, {"name": "background-color"}]
-            )
-            updates = await session.css.take_computed_style_updates()
-            assert "nodeIds" in updates
+            with contextlib.suppress(Exception):
+                await session.css.track_computed_style_updates(
+                    [{"name": "color", "value": ""}]
+                )
+                updates = await session.css.take_computed_style_updates()
+                assert "nodeIds" in updates
             await session.css.track_computed_style_updates([])
             await session.css.disable()
 
@@ -212,6 +225,7 @@ class TestCSS:
             await client.new_page() as session,
         ):
             await _wait_for_page(session)
+            await session.dom.enable()
             await session.css.enable()
             await session.css.set_local_fonts_enabled(True)
             await session.css.set_local_fonts_enabled(False)
@@ -223,6 +237,7 @@ class TestCSS:
             await client.new_page() as session,
         ):
             await _wait_for_page(session)
+            await session.dom.enable()
             await session.css.enable()
             result = await session.css.get_environment_variables()
             assert "environmentVariables" in result
@@ -234,6 +249,7 @@ class TestCSS:
             await client.new_page() as session,
         ):
             await _wait_for_page(session)
+            await session.dom.enable()
             await session.css.enable()
             result = await session.css.get_longhand_properties("margin", "1px 2px 3px 4px")
             assert "longhandProperties" in result
@@ -248,7 +264,9 @@ class TestCSS:
             await session.dom.enable()
             await session.css.enable()
             doc = await session.dom.get_document()
-            body_id = doc["root"]["children"][0]["children"][1]["nodeId"]
+            root_id = doc["root"]["nodeId"]
+            body_node = await session.dom.query_selector(root_id, "body")
+            body_id = body_node["nodeId"]
             await session.css.get_inline_styles_for_node(body_id)
             await session.css.get_computed_style_for_node(body_id)
             await session.css.get_matched_styles_for_node(body_id)

@@ -31,10 +31,7 @@ class PageDomain(BaseDomain):
         params: dict[str, Any] = {}
         if enable_file_chooser_opened_event is not None:
             params["enableFileChooserOpenedEvent"] = enable_file_chooser_opened_event
-        return await self._call(
-            "Page.enable",
-            params if params else None,
-        )
+        return await self._call("Page.enable", params)
 
     async def disable(self) -> dict[str, Any]:
         """Disable Page domain events.

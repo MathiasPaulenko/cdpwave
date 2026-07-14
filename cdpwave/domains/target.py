@@ -94,6 +94,8 @@ class TargetDomain(BaseDomain):
         Returns:
             Response dict containing ``sessionId``.
         """
+        if not isinstance(target_id, str):
+            raise TypeError("target_id must be a string")
         return await self._call(
             "Target.attachToTarget",
             {"targetId": target_id, "flatten": flatten},
@@ -105,6 +107,8 @@ class TargetDomain(BaseDomain):
         Args:
             session_id: The session ID to detach.
         """
+        if not isinstance(session_id, str):
+            raise TypeError("session_id must be a string")
         return await self._call(
             "Target.detachFromTarget",
             {"sessionId": session_id},
@@ -116,6 +120,8 @@ class TargetDomain(BaseDomain):
         Args:
             target_id: The target ID to close.
         """
+        if not isinstance(target_id, str):
+            raise TypeError("target_id must be a string")
         return await self._call("Target.closeTarget", {"targetId": target_id})
 
     async def get_targets(
@@ -133,6 +139,8 @@ class TargetDomain(BaseDomain):
         Returns:
             Response dict with ``targetInfos`` list.
         """
+        if filter is not None and not isinstance(filter, dict):
+            raise TypeError("filter must be a dict or None")
         params: dict[str, Any] = {}
         if filter is not None:
             params["filter"] = filter
@@ -154,6 +162,8 @@ class TargetDomain(BaseDomain):
             flatten: If True, use flatten mode for auto-attached sessions.
             filter: Optional filter dict to match targets.
         """
+        if filter is not None and not isinstance(filter, dict):
+            raise TypeError("filter must be a dict or None")
         params: dict[str, Any] = {
             "autoAttach": auto_attach,
             "waitForDebuggerOnStart": wait_for_debugger_on_start,
@@ -202,6 +212,8 @@ class TargetDomain(BaseDomain):
             discover: Whether to discover targets.
             filter: Optional filter dict to match targets.
         """
+        if filter is not None and not isinstance(filter, dict):
+            raise TypeError("filter must be a dict or None")
         params: dict[str, Any] = {"discover": discover}
         if filter is not None:
             params["filter"] = filter
@@ -324,6 +336,8 @@ class TargetDomain(BaseDomain):
             wait_for_debugger_on_start: Whether to wait for debugger on start.
             filter: Optional filter dict to match targets.
         """
+        if filter is not None and not isinstance(filter, dict):
+            raise TypeError("filter must be a dict or None")
         params: dict[str, Any] = {
             "targetId": target_id,
             "waitForDebuggerOnStart": wait_for_debugger_on_start,

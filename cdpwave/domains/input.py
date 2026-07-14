@@ -115,6 +115,8 @@ class InputDomain(BaseDomain):
         if unmodified_text is not None:
             params["unmodifiedText"] = unmodified_text
         if modifiers is not None:
+            if isinstance(modifiers, bool) or not isinstance(modifiers, int):
+                raise TypeError("modifiers must be an int or None")
             params["modifiers"] = modifiers
         if timestamp is not None:
             params["timestamp"] = timestamp
@@ -305,6 +307,8 @@ class InputDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
+        if not isinstance(text, str):
+            raise TypeError("text must be a string")
         return await self._call("Input.insertText", {"text": text})
 
     async def type_text(self, text: str) -> None:

@@ -59,7 +59,7 @@ class _SyncRunner:
             return asyncio.run(coro)
 
         if self._pool is None:
-            self._pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+            self._pool = concurrent.futures.ThreadPoolExecutor(max_workers=4)
         return self._pool.submit(asyncio.run, coro).result()
 
     def shutdown(self) -> None:
@@ -80,12 +80,16 @@ class _SyncDomainWrapper:
     def __init__(self, domain: Any, runner: _SyncRunner) -> None:
         self._domain = domain
         self._runner = runner
+        self._sync_cache: dict[str, Any] = {}
 
     def __getattr__(self, name: str) -> Any:
+        if name in self._sync_cache:
+            return self._sync_cache[name]
         attr = getattr(self._domain, name)
         if inspect.iscoroutinefunction(attr):
             def _sync_method(*args: Any, **kwargs: Any) -> Any:
                 return self._runner.run(attr(*args, **kwargs))
+            self._sync_cache[name] = _sync_method
             return _sync_method
         return attr
 
@@ -99,9 +103,9 @@ class SyncCDPSession:
     — use :meth:`run` to execute async domain methods.
     """
 
-    def __init__(self, session: CDPSession) -> None:
+    def __init__(self, session: CDPSession, runner: _SyncRunner | None = None) -> None:
         self._session = session
-        self._runner = _SyncRunner()
+        self._runner = runner or _SyncRunner()
 
     def run(self, coro: Any) -> Any:
         """Run an async coroutine synchronously.

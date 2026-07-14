@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from cdpwave.events.dispatcher import EventDispatcher
 
-EventHandler = Callable[[dict[str, Any]], Awaitable[None]]
-"""Async callable that receives CDP event params."""
+EventHandler = Callable[[dict[str, Any]], Awaitable[None] | None]
+"""Callable that receives CDP event params. May be async or sync."""
 
 
 class Subscription:

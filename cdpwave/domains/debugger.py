@@ -488,7 +488,7 @@ class DebuggerDomain(BaseDomain):
 
     async def set_blackbox_execution_contexts(
         self,
-        execution_context_ids: list[str],
+        execution_context_ids: list[int],
     ) -> dict[str, Any]:
         """Replace blackbox execution contexts.
 

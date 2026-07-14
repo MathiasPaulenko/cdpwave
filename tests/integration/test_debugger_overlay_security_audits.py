@@ -431,6 +431,11 @@ class TestOverlay:
 class TestOverlayEdgeCases:
     """Edge cases for Overlay domain on a real browser."""
 
+    async def _setup(self, session: CDPSession) -> None:
+        await session.dom.enable()
+        await session.page.enable()
+        await session.page.navigate("https://example.com")
+
     async def test_enable_twice(self) -> None:
         async with (
             await CDPClient.launch(headless=True) as client,

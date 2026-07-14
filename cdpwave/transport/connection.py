@@ -115,8 +115,16 @@ class Connection:
             CommandTimeoutError: If the command does not respond in time.
             CommandError: If the CDP response contains an error.
         """
-        if self._ws is None or self._closed:
+        if self._closed:
             raise ConnectionClosedError("Connection is closed")
+
+        if self._ws is None:
+            if self._max_retries > 0:
+                async with self._reconnect_lock:
+                    if self._ws is None or self._closed:
+                        raise ConnectionClosedError("Connection is closed")
+            else:
+                raise ConnectionClosedError("Connection is closed")
 
         effective_timeout = self._default_timeout if timeout is None else timeout
 
@@ -154,8 +162,10 @@ class Connection:
                 await self._receive_task
 
         if self._ws is not None:
-            with contextlib.suppress(Exception):
+            try:
                 await self._ws.close()
+            except Exception:
+                logger.warning("Error closing WebSocket", exc_info=True)
 
         self._correlator.reject_all(ConnectionClosedError("Connection closed"))
         logger.info("Connection closed")
@@ -258,6 +268,9 @@ class Connection:
             logger.info("WebSocket closed normally")
         except websockets.ConnectionClosed:
             logger.info("WebSocket closed by remote")
+        except asyncio.CancelledError:
+            logger.debug("Receive loop cancelled")
+            raise
         finally:
             if not self._closed:
                 self._correlator.reject_all(

@@ -98,6 +98,10 @@ class EmulationDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
+        if isinstance(width, bool) or not isinstance(width, int):
+            raise TypeError("width must be an int")
+        if isinstance(height, bool) or not isinstance(height, int):
+            raise TypeError("height must be an int")
         params: dict[str, Any] = {
             "width": width,
             "height": height,
@@ -176,6 +180,8 @@ class EmulationDomain(BaseDomain):
         Args:
             rate: Throttling rate (1.0 = no throttling, 2.0 = 2x slower).
         """
+        if not isinstance(rate, (int, float)) or isinstance(rate, bool):
+            raise TypeError("rate must be a number")
         return await self._call(
             "Emulation.setCPUThrottlingRate",
             {"rate": rate},
@@ -276,6 +282,12 @@ class EmulationDomain(BaseDomain):
             raise ValueError(
                 "media must be 'print', 'screen', or ''"
             )
+        if features is not None:
+            if not isinstance(features, list):
+                raise TypeError("features must be a list of dicts or None")
+            for feat in features:
+                if not isinstance(feat, dict):
+                    raise TypeError("each feature must be a dict")
         params: dict[str, Any] = {}
         if media:
             params["media"] = media
@@ -457,6 +469,8 @@ class EmulationDomain(BaseDomain):
         Args:
             page_scale_factor: Scale factor (1.0 = default).
         """
+        if not isinstance(page_scale_factor, (int, float)) or isinstance(page_scale_factor, bool):
+            raise TypeError("page_scale_factor must be a number")
         return await self._call(
             "Emulation.setPageScaleFactor",
             {"pageScaleFactor": page_scale_factor},

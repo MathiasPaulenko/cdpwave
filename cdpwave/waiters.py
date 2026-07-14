@@ -143,6 +143,7 @@ async def wait_for_selector(
         TimeoutError: If the selector doesn't match within ``timeout``.
     """
     deadline = asyncio.get_running_loop().time() + timeout
+    await session.dom.enable()
     while asyncio.get_running_loop().time() < deadline:
         result = await session.dom.query_selector(root_node_id, selector)
         node_id: int = result.get("nodeId", 0)

@@ -396,7 +396,7 @@ class TestPageCoverage:
         fake = FakeSender({})
         domain = PageDomain(fake)
         await domain.enable()
-        assert fake.last_call == ("Page.enable", None)
+        assert fake.last_call == ("Page.enable", {})
 
     async def test_reload_with_script_and_loader(self) -> None:
         fake = FakeSender({})

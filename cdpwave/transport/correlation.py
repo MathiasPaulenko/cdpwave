@@ -1,6 +1,7 @@
 """Command correlation via asyncio Futures for matching CDP request/response pairs."""
 
 import asyncio
+import threading
 from typing import Any
 
 
@@ -10,11 +11,13 @@ class Correlator:
     def __init__(self) -> None:
         self._next_id: int = 0
         self._pending: dict[int, asyncio.Future[dict[str, Any]]] = {}
+        self._id_lock = threading.Lock()
 
     def next_id(self) -> int:
         """Return the next monotonically increasing command ID."""
-        self._next_id += 1
-        return self._next_id
+        with self._id_lock:
+            self._next_id += 1
+            return self._next_id
 
     def register(self, cmd_id: int) -> asyncio.Future[dict[str, Any]]:
         """Register a pending command and return its response Future.

@@ -323,7 +323,7 @@ class TestDeleteObjectStoreEntries:
         assert params is not None
         assert params["storageBucket"] == bucket
 
-    async def test_key_range_always_sent(self) -> None:
+    async def test_key_range_omitted_when_all_none(self) -> None:
         fake = FakeSender({})
         domain = IndexedDBDomain(fake)
         key_range = {"lower": None, "upper": None}
@@ -333,7 +333,7 @@ class TestDeleteObjectStoreEntries:
         )
         _, params = fake.last_call
         assert params is not None
-        assert "keyRange" in params
+        assert "keyRange" not in params
 
     async def test_omitempty_empty_security_origin(self) -> None:
         fake = FakeSender({})
@@ -1465,8 +1465,7 @@ class TestIndexedDBEdgeCasesRound2:
         )
         _, params = fake.last_call
         assert params is not None
-        assert "keyRange" in params
-        assert params["keyRange"] == {}
+        assert "keyRange" not in params
 
     async def test_request_data_complex_key_range(self) -> None:
         fake = FakeSender({"objectStoreDataEntries": [], "hasMore": False})
@@ -1694,7 +1693,7 @@ class TestIndexedDBEdgeCasesRound2:
         )
         _, params = fake.last_call
         assert params is not None
-        assert params["keyRange"] == {}
+        assert "keyRange" not in params
 
     async def test_all_methods_with_storage_key_only(self) -> None:
         fake = FakeSender({})
@@ -2119,7 +2118,11 @@ class TestIndexedDBBoundary:
         )
         _, params = fake.last_call
         assert params is not None
-        assert params["keyRange"] == key_range
+        assert params["keyRange"] == {
+            "lower": key_range["lower"],
+            "lowerOpen": False,
+            "upperOpen": False,
+        }
 
     async def test_storage_bucket_extra_keys(self) -> None:
         fake = FakeSender({"databaseNames": []})
@@ -2248,7 +2251,7 @@ class TestIndexedDBBoundary:
         assert params is not None
         assert params["databaseName"] == "db1"
         assert params["objectStoreName"] == "s1"
-        assert params["keyRange"] == {"lower": None, "upper": None}
+        assert "keyRange" not in params
         assert params["securityOrigin"] == "https://example.com"
 
     async def test_security_origin_with_port(self) -> None:
@@ -2608,8 +2611,7 @@ class TestIndexedDBBoundary:
         )
         _, params2 = fake2.last_call
         assert params2 is not None
-        assert "keyRange" in params2
-        assert params2["keyRange"] == {}
+        assert "keyRange" not in params2
 
     async def test_storage_bucket_none_vs_empty_dict(self) -> None:
         fake1 = FakeSender({"databaseNames": []})

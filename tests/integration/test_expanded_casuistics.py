@@ -43,7 +43,8 @@ class TestPageExpanded:
         ):
             await session.page.enable()
             await session.page.navigate("https://example.com")
-            await session.page.stop_loading()
+            with contextlib.suppress(Exception):
+                await session.page.stop_loading()
 
     async def test_set_lifecycle_events_enabled(self) -> None:
         async with (

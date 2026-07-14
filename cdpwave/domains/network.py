@@ -42,14 +42,14 @@ class NetworkDomain(BaseDomain):
             enable_durable_messages: Enable storing response bodies outside
                 renderer. Deprecated in favor of configure_durable_messages.
         """
-        params: dict[str, Any] = {
-            "reportDirectSocketTraffic": report_direct_socket_traffic,
-            "enableDurableMessages": enable_durable_messages,
-        }
         if not isinstance(report_direct_socket_traffic, bool):
             raise TypeError("report_direct_socket_traffic must be a bool")
         if not isinstance(enable_durable_messages, bool):
             raise TypeError("enable_durable_messages must be a bool")
+        params: dict[str, Any] = {
+            "reportDirectSocketTraffic": report_direct_socket_traffic,
+            "enableDurableMessages": enable_durable_messages,
+        }
         if max_total_buffer_size is not None:
             if isinstance(max_total_buffer_size, bool) or not isinstance(
                 max_total_buffer_size, int

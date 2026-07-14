@@ -81,7 +81,7 @@ class TestPageDomain:
         fake = FakeSender({})
         domain = PageDomain(fake)
         await domain.enable()
-        assert fake.last_call == ("Page.enable", None)
+        assert fake.last_call == ("Page.enable", {})
 
     async def test_disable_no_params(self) -> None:
         fake = FakeSender({})

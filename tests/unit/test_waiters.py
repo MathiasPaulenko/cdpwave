@@ -25,6 +25,7 @@ def make_session(
     session.off = MagicMock()
 
     dom = MagicMock()
+    dom.enable = AsyncMock(return_value={})
     query_idx = 0
     query_results = query_results or []
 

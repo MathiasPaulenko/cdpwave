@@ -214,7 +214,7 @@ class BrowserLauncher:
                         await asyncio.wait_for(self._process.wait(), timeout=2.0)
                     except TimeoutError:
                         self._process.kill()
-                        await self._process.wait()
+                        await asyncio.wait_for(self._process.wait(), timeout=5.0)
             self._process = None
 
         if self._temp_dir is not None:
@@ -222,6 +222,15 @@ class BrowserLauncher:
             self._temp_dir = None
 
         self._info = None
+
+    def __del__(self) -> None:
+        if self._process is not None and self._process.returncode is None:
+            import warnings
+            warnings.warn(
+                "BrowserLauncher was not closed; browser process may still be running",
+                ResourceWarning,
+                stacklevel=2,
+            )
 
     @property
     def is_running(self) -> bool:

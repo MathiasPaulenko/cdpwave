@@ -13,6 +13,7 @@ _DISCOVERY = "cdpwave.client.TargetDiscovery"
 class TestCDPSession:
     async def test_send_escape_hatch(self) -> None:
         conn = AsyncMock()
+        conn.is_closed = False
         conn.send_command.return_value = {"value": 42}
         session = CDPSession(conn, "S-1", "T-1")
         result = await session.send("Emulation.setDeviceMetricsOverride", {"width": 800})
@@ -25,6 +26,7 @@ class TestCDPSession:
 
     async def test_send_escape_hatch_no_params(self) -> None:
         conn = AsyncMock()
+        conn.is_closed = False
         conn.send_command.return_value = {}
         session = CDPSession(conn, "S-1", "T-1")
         await session.send("Page.enable")

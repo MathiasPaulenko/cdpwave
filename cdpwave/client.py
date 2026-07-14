@@ -590,6 +590,11 @@ class CDPSession:
             raise SessionClosedError(
                 f"Session {self._session_id} is closed"
             )
+        if self._connection.is_closed:
+            self._closed = True
+            raise SessionClosedError(
+                f"Session {self._session_id} is closed"
+            )
         return await self._sender(method, params)
 
     async def close(self) -> None:
@@ -629,6 +634,15 @@ class CDPSession:
         self._closed = True
         self._dispatcher.clear()
         logger.info("Session %s closed", self._session_id)
+
+    def __del__(self) -> None:
+        if not self._closed:
+            import warnings
+            warnings.warn(
+                f"CDPSession {self._session_id} was not closed",
+                ResourceWarning,
+                stacklevel=2,
+            )
 
     def on(self, event_name: str, handler: EventHandler) -> Subscription:
         """Register an async handler for a CDP event.
@@ -1247,20 +1261,35 @@ class CDPClient:
         self._closed = True
 
         for session in list(self._sessions.values()):
-            with contextlib.suppress(Exception):
+            try:
                 await session.close()
+            except Exception:
+                logger.warning("Error closing session", exc_info=True)
             self._session_dispatchers.pop(session._session_id, None)
         self._sessions.clear()
         self._dispatcher.clear()
 
-        with contextlib.suppress(Exception):
+        try:
             await self._connection.close()
+        except Exception:
+            logger.warning("Error closing connection", exc_info=True)
 
         if self._launcher is not None:
-            with contextlib.suppress(Exception):
+            try:
                 await self._launcher.close()
+            except Exception:
+                logger.warning("Error closing launcher", exc_info=True)
 
         logger.info("CDPClient closed")
+
+    def __del__(self) -> None:
+        if not self._closed:
+            import warnings
+            warnings.warn(
+                "CDPClient was not closed",
+                ResourceWarning,
+                stacklevel=2,
+            )
 
     @property
     def is_closed(self) -> bool:

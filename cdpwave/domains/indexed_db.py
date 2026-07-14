@@ -142,11 +142,15 @@ class IndexedDBDomain(BaseDomain):
             raise TypeError("storage_key must be a str or None")
         if storage_bucket is not None and not isinstance(storage_bucket, dict):
             raise TypeError("storage_bucket must be a dict or None")
+        filtered_key_range = {
+            k: v for k, v in key_range.items() if v is not None
+        }
         params: dict[str, Any] = {
             "databaseName": database_name,
             "objectStoreName": object_store_name,
-            "keyRange": key_range,
         }
+        if filtered_key_range:
+            params["keyRange"] = filtered_key_range
         if security_origin:
             params["securityOrigin"] = security_origin
         if storage_key:
@@ -276,7 +280,7 @@ class IndexedDBDomain(BaseDomain):
         params: dict[str, Any] = {
             "databaseName": database_name,
             "objectStoreName": object_store_name,
-            "indexName": index_name,
+            "indexName": index_name or "",
             "skipCount": skip_count,
             "pageSize": page_size,
         }
@@ -285,7 +289,9 @@ class IndexedDBDomain(BaseDomain):
         if storage_key:
             params["storageKey"] = storage_key
         if key_range is not None:
-            params["keyRange"] = key_range
+            filtered = {k: v for k, v in key_range.items() if v is not None}
+            if filtered:
+                params["keyRange"] = filtered
         if storage_bucket is not None:
             params["storageBucket"] = storage_bucket
         return await self._call("IndexedDB.requestData", params)
