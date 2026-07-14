@@ -311,7 +311,9 @@ class TestSecurityE2EGetVisibleSecurityState:
 @_SKIP
 @pytest.mark.e2e
 class TestSecurityE2EEvents:
-    @pytest.mark.skip(reason="Security.visibleSecurityStateChanged event requires getVisibleSecurityState support")
+    @pytest.mark.skip(
+        reason="Security.visibleSecurityStateChanged requires getVisibleSecurityState",
+    )
     async def test_visible_security_state_changed_event(self) -> None:
         async with (
             await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
@@ -336,7 +338,9 @@ class TestSecurityE2EEvents:
 
             await session.security.disable()
 
-    @pytest.mark.skip(reason="Security.visibleSecurityStateChanged event requires getVisibleSecurityState support")
+    @pytest.mark.skip(
+        reason="Security.visibleSecurityStateChanged requires getVisibleSecurityState",
+    )
     async def test_no_events_after_disable(self) -> None:
         async with (
             await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
@@ -510,7 +514,7 @@ class TestSecurityE2EDistinctMethods:
         ):
             await session.security.enable()
             with contextlib.suppress(Exception):
-                r1 = await session.security.set_ignore_certificate_errors(True)
+                await session.security.set_ignore_certificate_errors(True)
             r2 = await session.security.set_override_certificate_errors(True)
             assert isinstance(r2, dict)
             with contextlib.suppress(Exception):
@@ -662,7 +666,9 @@ class TestSecurityE2EHttpNavigation:
 @_SKIP
 @pytest.mark.e2e
 class TestSecurityE2EEventDetails:
-    @pytest.mark.skip(reason="Security.visibleSecurityStateChanged event requires getVisibleSecurityState support")
+    @pytest.mark.skip(
+        reason="Security.visibleSecurityStateChanged requires getVisibleSecurityState",
+    )
     async def test_event_contains_security_state(self) -> None:
         async with (
             await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
@@ -692,7 +698,9 @@ class TestSecurityE2EEventDetails:
 
             await session.security.disable()
 
-    @pytest.mark.skip(reason="Security.visibleSecurityStateChanged event requires getVisibleSecurityState support")
+    @pytest.mark.skip(
+        reason="Security.visibleSecurityStateChanged requires getVisibleSecurityState",
+    )
     async def test_event_on_http_page(self) -> None:
         async with (
             await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
@@ -719,7 +727,9 @@ class TestSecurityE2EEventDetails:
 
             await session.security.disable()
 
-    @pytest.mark.skip(reason="Security.visibleSecurityStateChanged event requires getVisibleSecurityState support")
+    @pytest.mark.skip(
+        reason="Security.visibleSecurityStateChanged requires getVisibleSecurityState",
+    )
     async def test_event_on_about_blank(self) -> None:
         async with (
             await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
@@ -932,7 +942,7 @@ class TestSecurityE2EDistinctMethodsExtended:
         ):
             await session.security.enable()
             with contextlib.suppress(Exception):
-                r1 = await session.security.set_ignore_certificate_errors(True)
+                await session.security.set_ignore_certificate_errors(True)
             r2 = await session.security.set_override_certificate_errors(True)
             r3 = await session.security.set_ignore_certificate_errors(False)
             r4 = await session.security.set_override_certificate_errors(False)
