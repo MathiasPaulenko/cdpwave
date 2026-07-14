@@ -945,6 +945,7 @@ class TestIndexedDBIntegrationEdge:
                     "securityOrigin": "https://example.com",
                     "databaseName": info["db_name"],
                     "objectStoreName": info["store_name"],
+                    "keyRange": {"lowerOpen": False, "upperOpen": False},
                 },
             )
             result = await session.send(

@@ -145,12 +145,13 @@ class IndexedDBDomain(BaseDomain):
         filtered_key_range = {
             k: v for k, v in key_range.items() if v is not None
         }
+        if not filtered_key_range:
+            filtered_key_range = {"lowerOpen": False, "upperOpen": False}
         params: dict[str, Any] = {
             "databaseName": database_name,
             "objectStoreName": object_store_name,
+            "keyRange": filtered_key_range,
         }
-        if filtered_key_range:
-            params["keyRange"] = filtered_key_range
         if security_origin:
             params["securityOrigin"] = security_origin
         if storage_key:
@@ -280,10 +281,11 @@ class IndexedDBDomain(BaseDomain):
         params: dict[str, Any] = {
             "databaseName": database_name,
             "objectStoreName": object_store_name,
-            "indexName": index_name or "",
             "skipCount": skip_count,
             "pageSize": page_size,
         }
+        if index_name:
+            params["indexName"] = index_name
         if security_origin:
             params["securityOrigin"] = security_origin
         if storage_key:
