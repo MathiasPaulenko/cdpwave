@@ -496,7 +496,7 @@ class TestLayerTree:
         ):
             events: list[dict[str, Any]] = []
             await session.page.navigate("about:blank")
-            await session.on(
+            session.on(
                 "LayerTree.layerTreeDidChange",
                 lambda params: events.append(params),
             )
@@ -513,7 +513,7 @@ class TestLayerTree:
         ):
             events: list[dict[str, Any]] = []
             await session.page.navigate("about:blank")
-            await session.on(
+            session.on(
                 "LayerTree.layerPainted",
                 lambda params: events.append(params),
             )

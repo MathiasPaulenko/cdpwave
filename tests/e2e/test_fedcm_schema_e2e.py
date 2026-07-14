@@ -402,7 +402,7 @@ class TestFedCmE2E:
     async def test_module_docstring_documents_account_url_type(self) -> None:
         import cdpwave.domains.fed_cm as mod
         doc = mod.__doc__
-        assert "AccountURLType" in doc
+        assert "AccountUrlType" in doc
         assert "TermsOfService" in doc
         assert "PrivacyPolicy" in doc
 

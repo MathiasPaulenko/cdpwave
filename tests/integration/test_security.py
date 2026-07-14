@@ -7,10 +7,10 @@ from typing import Any
 import pytest
 
 from cdpwave import CDPClient, CDPSession
-from cdpwave.browser.finder import find_edge
+from cdpwave.browser.finder import find_chrome, find_edge
 
-_EDGE = find_edge()
-_SKIP = pytest.mark.skipif(_EDGE is None, reason="Edge not found")
+_BROWSER = find_chrome() or find_edge()
+_SKIP = pytest.mark.skipif(_BROWSER is None, reason="No browser found")
 
 
 async def _wait_for_page(page: CDPSession) -> None:
@@ -30,7 +30,7 @@ async def _wait_for_page(page: CDPSession) -> None:
 class TestSecurityEnableDisable:
     async def test_enable_returns_dict(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             result = await session.security.enable()
@@ -38,7 +38,7 @@ class TestSecurityEnableDisable:
 
     async def test_disable_returns_dict(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -47,7 +47,7 @@ class TestSecurityEnableDisable:
 
     async def test_enable_disable_cycle(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -55,7 +55,7 @@ class TestSecurityEnableDisable:
 
     async def test_disable_without_enable(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             with contextlib.suppress(Exception):
@@ -63,7 +63,7 @@ class TestSecurityEnableDisable:
 
     async def test_enable_twice(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -72,7 +72,7 @@ class TestSecurityEnableDisable:
 
     async def test_repeated_enable_disable_3x(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             for _ in range(3):
@@ -85,7 +85,7 @@ class TestSecurityEnableDisable:
 class TestSecuritySetIgnoreCertificateErrors:
     async def test_set_true(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -94,7 +94,7 @@ class TestSecuritySetIgnoreCertificateErrors:
 
     async def test_set_false(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -103,7 +103,7 @@ class TestSecuritySetIgnoreCertificateErrors:
 
     async def test_returns_dict(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -113,7 +113,7 @@ class TestSecuritySetIgnoreCertificateErrors:
 
     async def test_toggle_true_then_false(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -127,7 +127,7 @@ class TestSecuritySetIgnoreCertificateErrors:
 class TestSecuritySetOverrideCertificateErrors:
     async def test_set_true(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -136,7 +136,7 @@ class TestSecuritySetOverrideCertificateErrors:
 
     async def test_set_false(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -145,7 +145,7 @@ class TestSecuritySetOverrideCertificateErrors:
 
     async def test_returns_dict(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -155,7 +155,7 @@ class TestSecuritySetOverrideCertificateErrors:
 
     async def test_toggle_true_then_false(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -169,7 +169,7 @@ class TestSecuritySetOverrideCertificateErrors:
 class TestSecurityHandleCertificateError:
     async def test_continue(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -179,7 +179,7 @@ class TestSecurityHandleCertificateError:
 
     async def test_cancel(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -189,7 +189,7 @@ class TestSecurityHandleCertificateError:
 
     async def test_returns_dict_when_succeeds(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -208,7 +208,7 @@ class TestSecurityHandleCertificateError:
 class TestSecurityGetVisibleSecurityState:
     async def test_returns_dict_with_visible_security_state(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await _wait_for_page(session)
@@ -219,7 +219,7 @@ class TestSecurityGetVisibleSecurityState:
 
     async def test_security_state_is_valid_enum(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await _wait_for_page(session)
@@ -238,7 +238,7 @@ class TestSecurityGetVisibleSecurityState:
 
     async def test_has_security_state_issue_ids(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await _wait_for_page(session)
@@ -250,7 +250,7 @@ class TestSecurityGetVisibleSecurityState:
 
     async def test_without_enable(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await _wait_for_page(session)
@@ -264,7 +264,7 @@ class TestSecurityGetVisibleSecurityState:
 class TestSecurityEvents:
     async def test_visible_security_state_changed_event(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             events: list[dict[str, Any]] = []
@@ -286,7 +286,7 @@ class TestSecurityEvents:
 
     async def test_no_events_after_disable(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             events: list[dict[str, Any]] = []
@@ -310,7 +310,7 @@ class TestSecurityEvents:
 class TestSecurityRawSend:
     async def test_raw_enable(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.send("Security.enable")
@@ -318,7 +318,7 @@ class TestSecurityRawSend:
 
     async def test_raw_set_ignore_certificate_errors(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.send("Security.enable")
@@ -330,7 +330,7 @@ class TestSecurityRawSend:
     @pytest.mark.skip(reason="Security.getVisibleSecurityState was removed from Chrome")
     async def test_raw_get_visible_security_state(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await _wait_for_page(session)
@@ -345,7 +345,7 @@ class TestSecurityRawSend:
 class TestSecurityAllMethodsReturnDict:
     async def test_all_methods_return_dict(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await _wait_for_page(session)
@@ -380,7 +380,7 @@ class TestSecurityFullLifecycle:
     @pytest.mark.skip(reason="Security.getVisibleSecurityState was removed from Chrome")
     async def test_full_lifecycle(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await _wait_for_page(session)
@@ -397,7 +397,7 @@ class TestSecurityFullLifecycle:
     @pytest.mark.skip(reason="Security.getVisibleSecurityState was removed from Chrome")
     async def test_lifecycle_with_navigation(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -417,7 +417,7 @@ class TestSecurityFullLifecycle:
 class TestSecurityWithoutEnable:
     async def test_set_ignore_without_enable(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             with contextlib.suppress(Exception):
@@ -425,7 +425,7 @@ class TestSecurityWithoutEnable:
 
     async def test_set_override_without_enable(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             with contextlib.suppress(Exception):
@@ -433,7 +433,7 @@ class TestSecurityWithoutEnable:
 
     async def test_handle_certificate_error_without_enable(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             with contextlib.suppress(Exception):
@@ -441,7 +441,7 @@ class TestSecurityWithoutEnable:
 
     async def test_get_visible_security_state_without_enable(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await _wait_for_page(session)
@@ -456,7 +456,7 @@ class TestSecurityWithoutEnable:
 class TestSecurityGetVisibleSecurityStateExtended:
     async def test_about_blank(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.page.enable()
@@ -474,7 +474,7 @@ class TestSecurityGetVisibleSecurityStateExtended:
 
     async def test_http_page(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.page.enable()
@@ -491,7 +491,7 @@ class TestSecurityGetVisibleSecurityStateExtended:
 
     async def test_https_has_certificate_state(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await _wait_for_page(session)
@@ -510,7 +510,7 @@ class TestSecurityGetVisibleSecurityStateExtended:
 
     async def test_state_changes_between_navigations(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -541,7 +541,7 @@ class TestSecurityGetVisibleSecurityStateExtended:
 class TestSecurityCombinedOperations:
     async def test_set_ignore_and_override_together(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -553,7 +553,7 @@ class TestSecurityCombinedOperations:
 
     async def test_override_then_handle_certificate_error(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -565,7 +565,7 @@ class TestSecurityCombinedOperations:
 
     async def test_handle_certificate_error_large_event_id(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -575,7 +575,7 @@ class TestSecurityCombinedOperations:
 
     async def test_handle_certificate_error_negative_event_id(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.security.enable()
@@ -586,7 +586,7 @@ class TestSecurityCombinedOperations:
     @pytest.mark.skip(reason="Security.getVisibleSecurityState was removed from Chrome")
     async def test_multiple_enable_disable_with_state_check(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await _wait_for_page(session)
@@ -602,7 +602,7 @@ class TestSecurityCombinedOperations:
 class TestSecurityRawSendExtended:
     async def test_raw_handle_certificate_error(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.send("Security.enable")
@@ -615,7 +615,7 @@ class TestSecurityRawSendExtended:
 
     async def test_raw_set_override_certificate_errors(self) -> None:
         async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
+            await CDPClient.launch(headless=True, browser_path=_BROWSER) as client,
             await client.new_page() as session,
         ):
             await session.send("Security.enable")
