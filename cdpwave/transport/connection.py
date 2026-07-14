@@ -136,15 +136,17 @@ class Connection:
         if self._closed:
             raise ConnectionClosedError("Connection is closed")
 
-        if self._ws is None:
+        ws = self._ws
+        if ws is None:
             if self._max_retries > 0:
                 async with self._reconnect_lock:
-                    if self._ws is None or self._closed:
+                    ws = self._ws
+                    if ws is None or self._closed:
                         raise ConnectionClosedError("Connection is closed")
             else:
                 raise ConnectionClosedError("Connection is closed")
 
-        if self._ws is None or self._closed:
+        if ws is None or self._closed:
             raise ConnectionClosedError("Connection is closed")
 
         effective_timeout = self._default_timeout if timeout is None else timeout
@@ -153,7 +155,7 @@ class Connection:
         future = self._correlator.register(cmd_id)
 
         message = serialize_command(cmd_id, method, params, session_id)
-        await self._ws.send(message)
+        await ws.send(message)
         logger.debug("→ [%d] %s", cmd_id, method)
 
         if effective_timeout <= 0:

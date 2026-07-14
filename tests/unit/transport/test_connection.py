@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from cdpwave.exceptions import ConnectionClosedError
+from cdpwave.exceptions import CommandTimeoutError, ConnectionClosedError
 from cdpwave.transport.connection import Connection
 
 
@@ -29,7 +29,7 @@ class TestSendCommandRaceCondition:
         conn._reconnect_lock.__aenter__ = AsyncMock(side_effect=_lock_aenter)
         conn._reconnect_lock.__aexit__ = AsyncMock(side_effect=_lock_aexit)
 
-        with pytest.raises(ConnectionClosedError):
+        with pytest.raises(CommandTimeoutError):
             await conn.send_command("Page.enable")
 
     async def test_closed_set_after_reconnect_block_raises(self) -> None:

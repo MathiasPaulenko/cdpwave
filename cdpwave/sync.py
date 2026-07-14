@@ -232,6 +232,32 @@ class SyncCDPSession:
         """The CDP target ID."""
         return self._session.target_id
 
+    def on(self, event_name: str, handler: Any) -> Any:
+        """Register an event handler. Not supported in sync mode.
+
+        Event handlers require a persistent event loop, which the sync
+        wrapper does not provide. Use the async API (:class:`CDPSession`)
+        for event-driven workflows.
+
+        Raises:
+            NotImplementedError: Always.
+        """
+        raise NotImplementedError(
+            "Event handlers are not supported in sync mode. "
+            "Use the async CDPSession API instead."
+        )
+
+    def off(self, event_name: str, handler: Any) -> None:
+        """Remove an event handler. Not supported in sync mode.
+
+        Raises:
+            NotImplementedError: Always.
+        """
+        raise NotImplementedError(
+            "Event handlers are not supported in sync mode. "
+            "Use the async CDPSession API instead."
+        )
+
     def __enter__(self) -> SyncCDPSession:
         return self
 

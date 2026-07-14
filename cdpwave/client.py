@@ -820,11 +820,15 @@ class _LaunchContext:
         self._client: CDPClient | None = None
 
     def __await__(self) -> Any:
+        if self._client is not None:
+            return self._client
         result = yield from self._coro.__await__()
         self._client = result
         return result
 
     async def __aenter__(self) -> CDPClient:
+        if self._client is not None:
+            return self._client
         self._client = await self._coro
         return self._client
 
