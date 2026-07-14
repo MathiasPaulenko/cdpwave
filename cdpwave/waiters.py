@@ -126,15 +126,16 @@ async def wait_for_selector(
 ) -> int:
     """Wait for a CSS selector to appear in the DOM.
 
-    Polls ``DOM.querySelector`` until the selector matches a node
-    or the timeout expires.
+    Uses a ``MutationObserver`` via ``Runtime.evaluate`` to detect when
+    the selector appears without polling. Falls back to polling
+    ``DOM.querySelector`` if the observer approach fails.
 
     Args:
         session: The CDP session to use.
         selector: CSS selector to wait for.
         root_node_id: Root node ID to query from (default: document).
         timeout: Maximum seconds to wait.
-        poll_interval: Seconds between polls.
+        poll_interval: Seconds between polls (fallback only).
 
     Returns:
         The DOM node ID of the matched element.
@@ -142,11 +143,36 @@ async def wait_for_selector(
     Raises:
         TimeoutError: If the selector doesn't match within ``timeout``.
     """
-    deadline = asyncio.get_running_loop().time() + timeout
     await session.dom.enable()
+
+    js = (
+        "new Promise((resolve) => {"
+        f"const el = document.querySelector({selector!r});"
+        "if (el) { resolve(true); return; }"
+        "const obs = new MutationObserver(() => {"
+        f"if (document.querySelector({selector!r})) {{ obs.disconnect(); resolve(true); }}"
+        "});"
+        "obs.observe(document, {childList: true, subtree: true});"
+        "})"
+    )
+
+    try:
+        result = await asyncio.wait_for(
+            session.runtime.evaluate(js, await_promise=True, return_by_value=True),
+            timeout=timeout,
+        )
+        if result.get("result", {}).get("value") is True:
+            query = await session.dom.query_selector(root_node_id, selector)
+            node_id: int = query.get("nodeId", 0)
+            if node_id and node_id != 0:
+                return node_id
+    except (TimeoutError, Exception):
+        pass
+
+    deadline = asyncio.get_running_loop().time() + timeout
     while asyncio.get_running_loop().time() < deadline:
         result = await session.dom.query_selector(root_node_id, selector)
-        node_id: int = result.get("nodeId", 0)
+        node_id = result.get("nodeId", 0)
         if node_id and node_id != 0:
             return node_id
         remaining = deadline - asyncio.get_running_loop().time()
@@ -166,12 +192,12 @@ async def wait_for_network_idle(
     """Wait until network activity settles.
 
     Tracks ``Network.requestWillBeSent`` and ``Network.responseReceived``
-    events. Resolves when no new requests have been initiated for at
-    least ``idle_time`` seconds.
+    events. Resolves when there are no pending requests (requests without
+    a corresponding response) for at least ``idle_time`` seconds.
 
     Args:
         session: The CDP session to wait on.
-        idle_time: Seconds of no new requests before resolving.
+        idle_time: Seconds of no pending requests before resolving.
         timeout: Maximum seconds to wait overall.
 
     Raises:
@@ -180,13 +206,25 @@ async def wait_for_network_idle(
     await session.network.enable()
 
     loop = asyncio.get_running_loop()
-    last_request_time = loop.time()
+    pending: set[str] = set()
+    last_activity = loop.time()
 
     async def _on_request(params: dict[str, Any]) -> None:
-        nonlocal last_request_time
-        last_request_time = loop.time()
+        nonlocal last_activity
+        req_id = params.get("requestId")
+        if req_id:
+            pending.add(req_id)
+        last_activity = loop.time()
 
-    sub = session.on("Network.requestWillBeSent", _on_request)
+    async def _on_response(params: dict[str, Any]) -> None:
+        nonlocal last_activity
+        req_id = params.get("requestId")
+        if req_id:
+            pending.discard(req_id)
+        last_activity = loop.time()
+
+    sub_req = session.on("Network.requestWillBeSent", _on_request)
+    sub_resp = session.on("Network.responseReceived", _on_response)
     try:
         deadline = loop.time() + timeout
         while True:
@@ -195,11 +233,12 @@ async def wait_for_network_idle(
                 raise TimeoutError(
                     f"Network did not become idle within {timeout}s",
                 )
-            if now - last_request_time >= idle_time:
+            if not pending and now - last_activity >= idle_time:
                 return
             remaining = deadline - now
-            wait = min(idle_time - (now - last_request_time), remaining)
+            wait = min(idle_time, remaining)
             if wait > 0:
                 await asyncio.sleep(max(wait, 0.05))
     finally:
-        sub.unsubscribe()
+        sub_req.unsubscribe()
+        sub_resp.unsubscribe()

@@ -186,6 +186,9 @@ class TestWaitForNetworkIdle:
             await asyncio.sleep(0.05)
             for handler in dispatch.get("Network.requestWillBeSent", []):
                 await handler({"requestId": "r1"})
+            await asyncio.sleep(0.05)
+            for handler in dispatch.get("Network.responseReceived", []):
+                await handler({"requestId": "r1"})
 
         task = asyncio.create_task(_fire())
         await wait_for_network_idle(
@@ -217,6 +220,9 @@ class TestWaitForNetworkIdle:
         async def _fire() -> None:
             await asyncio.sleep(0.05)
             for handler in dispatch.get("Network.requestWillBeSent", []):
+                await handler({"requestId": "r1"})
+            await asyncio.sleep(0.05)
+            for handler in dispatch.get("Network.responseReceived", []):
                 await handler({"requestId": "r1"})
 
         task = asyncio.create_task(_fire())
