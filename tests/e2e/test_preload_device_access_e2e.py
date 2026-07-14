@@ -134,11 +134,13 @@ class TestPreloadE2E:
         ]
         assert "enable" in methods
         sig = inspect.signature(PreloadDomain.enable)
-        assert len(sig.parameters) == 0
+        params = [k for k in sig.parameters if k != "self"]
+        assert len(params) == 0
 
     async def test_disable_no_params_sent(self) -> None:
         sig = inspect.signature(PreloadDomain.disable)
-        assert len(sig.parameters) == 0
+        params = [k for k in sig.parameters if k != "self"]
+        assert len(params) == 0
 
     async def test_class_docstring_has_description(self) -> None:
         doc = PreloadDomain.__doc__
@@ -437,12 +439,12 @@ class TestDeviceAccessE2E:
 
     async def test_select_prompt_signature(self) -> None:
         sig = inspect.signature(DeviceAccessDomain.select_prompt)
-        params = list(sig.parameters.keys())
+        params = [k for k in sig.parameters if k != "self"]
         assert params == ["id", "device_id"]
 
     async def test_cancel_prompt_signature(self) -> None:
         sig = inspect.signature(DeviceAccessDomain.cancel_prompt)
-        params = list(sig.parameters.keys())
+        params = [k for k in sig.parameters if k != "self"]
         assert params == ["id"]
 
     async def test_class_docstring_has_description(self) -> None:

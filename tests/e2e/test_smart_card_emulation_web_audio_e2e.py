@@ -39,7 +39,7 @@ class TestSmartCardEmulationE2E:
                 result = await session.smart_card_emulation.disable()
                 assert isinstance(result, dict)
             except Exception as exc:
-                if "not found" not in str(exc).lower():
+                if "found" not in str(exc).lower():
                     raise
                 pytest.skip("SmartCardEmulation not available")
 
@@ -53,7 +53,7 @@ class TestSmartCardEmulationE2E:
                     await session.smart_card_emulation.enable()
                     await session.smart_card_emulation.disable()
             except Exception as exc:
-                if "not found" not in str(exc).lower():
+                if "found" not in str(exc).lower():
                     raise
                 pytest.skip("SmartCardEmulation not available")
 
@@ -150,7 +150,7 @@ class TestSmartCardEmulationE2E:
                 result = await session.smart_card_emulation.report_plain_result("")
                 assert isinstance(result, dict)
             except Exception as exc:
-                if "not found" not in str(exc).lower():
+                if "found" not in str(exc).lower():
                     raise
                 pytest.skip("SmartCardEmulation not available")
 

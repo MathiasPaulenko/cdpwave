@@ -477,22 +477,22 @@ class TestFedCmE2E:
 
     async def test_select_account_signature(self) -> None:
         sig = inspect.signature(FedCmDomain.select_account)
-        params = list(sig.parameters.keys())
+        params = [k for k in sig.parameters if k != "self"]
         assert params == ["dialog_id", "account_index"]
 
     async def test_click_dialog_button_signature(self) -> None:
         sig = inspect.signature(FedCmDomain.click_dialog_button)
-        params = list(sig.parameters.keys())
+        params = [k for k in sig.parameters if k != "self"]
         assert params == ["dialog_id", "dialog_button"]
 
     async def test_open_url_signature(self) -> None:
         sig = inspect.signature(FedCmDomain.open_url)
-        params = list(sig.parameters.keys())
+        params = [k for k in sig.parameters if k != "self"]
         assert params == ["dialog_id", "account_index", "account_url_type"]
 
     async def test_dismiss_dialog_signature(self) -> None:
         sig = inspect.signature(FedCmDomain.dismiss_dialog)
-        params = list(sig.parameters.keys())
+        params = [k for k in sig.parameters if k != "self"]
         assert params == ["dialog_id", "trigger_cooldown"]
 
     async def test_no_spurious_methods_exist(self) -> None:
@@ -638,7 +638,7 @@ class TestSchemaE2E:
 
     async def test_get_domains_signature(self) -> None:
         sig = inspect.signature(SchemaDomain.get_domains)
-        params = list(sig.parameters.keys())
+        params = [k for k in sig.parameters if k != "self"]
         assert params == []
 
     async def test_no_spurious_methods_exist(self) -> None:
