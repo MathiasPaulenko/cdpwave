@@ -506,6 +506,13 @@ class CDPSession:
         """Whether this session has been closed."""
         return self._closed
 
+    def __repr__(self) -> str:
+        state = "closed" if self._closed else "active"
+        return (
+            f"CDPSession(session_id={self._session_id!r}, "
+            f"target_id={self._target_id!r}, {state})"
+        )
+
     @property
     def sub_sessions(self) -> list[CDPSession]:
         """Sub-sessions for auto-attached iframes and workers."""
@@ -636,7 +643,7 @@ class CDPSession:
         logger.info("Session %s closed", self._session_id)
 
     def __del__(self) -> None:
-        if not self._closed:
+        if not getattr(self, "_closed", True):
             import warnings
             warnings.warn(
                 f"CDPSession {self._session_id} was not closed",
@@ -688,8 +695,13 @@ class CDPSession:
         """
         event = asyncio.Event()
         captured: list[dict[str, Any]] = []
+        done = False
 
         async def _handler(params: dict[str, Any]) -> None:
+            nonlocal done
+            if done:
+                return
+            done = True
             captured.append(params)
             event.set()
 
@@ -698,6 +710,7 @@ class CDPSession:
             await asyncio.wait_for(event.wait(), timeout=timeout)
             return captured[0]
         finally:
+            done = True
             sub.unsubscribe()
 
     async def wait_for_navigation(
@@ -890,10 +903,10 @@ class BrowserContext:
             return
         self._closed = True
         for session in self._sessions:
-            with contextlib.suppress(Exception):
+            with contextlib.suppress(CommandError, ConnectionClosedError):
                 await session.close()
         self._sessions.clear()
-        with contextlib.suppress(Exception):
+        with contextlib.suppress(CommandError, ConnectionClosedError):
             await self._client._connection.send_command(
                 "Target.disposeBrowserContext",
                 {"browserContextId": self._context_id},
@@ -952,6 +965,12 @@ class CDPClient:
         Marks every CDPSession as closed, clears dispatchers, and empties
         the session dicts.  The old sessionIds are no longer valid in the
         browser after a WebSocket reconnect.
+
+        Warning:
+            All sessions are permanently lost after a reconnection.
+            Users must re-create sessions via ``new_page()`` or
+            ``connect_to_page()`` after a reconnect. There is no
+            automatic re-attach mechanism.
         """
         count = len(self._sessions)
         for session in self._sessions.values():
@@ -1295,6 +1314,11 @@ class CDPClient:
     def is_closed(self) -> bool:
         """Whether the client has been closed or the connection dropped."""
         return self._closed or self._connection.is_closed
+
+    def __repr__(self) -> str:
+        state = "closed" if self.is_closed else "connected"
+        sessions = len(self._sessions)
+        return f"CDPClient({state}, sessions={sessions})"
 
     @property
     def is_connected(self) -> bool:

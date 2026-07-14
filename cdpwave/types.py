@@ -6,9 +6,6 @@ from typing import Any, Literal, TypedDict
 CommandSender = Callable[[str, dict[str, Any] | None], Awaitable[dict[str, Any]]]
 """Callable that sends a CDP command and awaits the response dict."""
 
-EventHandler = Callable[[dict[str, Any]], Awaitable[None]]
-"""Async callable that receives CDP event params."""
-
 EventErrorCallback = Callable[[str, dict[str, Any], BaseException], Awaitable[None] | None]
 """Callback invoked when an event handler raises an exception.
 

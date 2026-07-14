@@ -8,6 +8,14 @@ class ConnectionClosedError(CDPError):
     """Raised when the WebSocket connection is closed."""
 
 
+class ConnectionReconnectError(ConnectionClosedError):
+    """Raised when a pending command is lost during reconnection.
+
+    Inherits from ConnectionClosedError so existing ``except ConnectionClosedError``
+    handlers still catch it. Users can catch this specifically to retry commands.
+    """
+
+
 class CommandError(CDPError):
     """Raised when a CDP command returns an error response.
 

@@ -59,7 +59,7 @@ class _SyncRunner:
             return asyncio.run(coro)
 
         if self._pool is None:
-            self._pool = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+            self._pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         return self._pool.submit(asyncio.run, coro).result()
 
     def shutdown(self) -> None:
@@ -274,6 +274,8 @@ class SyncCDPClient:
         cls,
         headless: bool = True,
         browser_path: str | None = None,
+        port: int = 0,
+        user_data_dir: str | None = None,
         **kwargs: Any,
     ) -> SyncCDPClient:
         """Launch a browser and return a sync client.
@@ -281,12 +283,22 @@ class SyncCDPClient:
         Args:
             headless: Whether to run in headless mode.
             browser_path: Optional path to browser executable.
+            port: Optional debugging port (0 for auto-assigned).
+            user_data_dir: Optional user data directory.
             **kwargs: Additional arguments passed to ``CDPClient.launch()``.
 
         Returns:
             A :class:`SyncCDPClient` instance.
         """
-        client = _run(CDPClient.launch(headless=headless, browser_path=browser_path, **kwargs))
+        client = _run(
+            CDPClient.launch(
+                headless=headless,
+                browser_path=browser_path,
+                port=port,
+                user_data_dir=user_data_dir,
+                **kwargs,
+            )
+        )
         return cls(client)
 
     @classmethod

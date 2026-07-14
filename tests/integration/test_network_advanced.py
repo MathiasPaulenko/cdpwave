@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from cdpwave import CDPSession
-from cdpwave.exceptions import CommandError
+from cdpwave.exceptions import CommandError, CommandTimeoutError
 
 
 @pytest.mark.integration
@@ -179,12 +179,13 @@ class TestNetworkReplayXHR:
 
         page.on("Network.requestWillBeSent", on_request)
         await page.page.navigate("https://example.com")
-        await page.runtime.evaluate(
-            "var xhr = new XMLHttpRequest();"
-            "xhr.open('GET', 'https://httpbin.org/get', false);"
-            "try { xhr.send(); } catch(e) {}",
-            return_by_value=True,
-        )
+        try:
+            await page.runtime.evaluate(
+                "fetch('https://httpbin.org/get').catch(() => {})",
+                await_promise=True,
+            )
+        except CommandTimeoutError:
+            pytest.skip("Network timeout reaching httpbin.org")
         await asyncio.sleep(2)
         page.off("Network.requestWillBeSent", on_request)
 

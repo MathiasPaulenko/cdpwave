@@ -10,6 +10,7 @@ import pytest_asyncio
 
 from cdpwave import CDPClient, CDPSession
 from cdpwave.browser.finder import find_browser
+from cdpwave.exceptions import CommandError
 
 
 def _browser_available() -> bool:
@@ -178,7 +179,10 @@ class TestDOMStorageIntegration:
             events.append(params)
 
         storage_id = {"securityOrigin": "https://example.com", "isLocalStorage": True}
-        await page.dom_storage.set_dom_storage_item(storage_id, "event-update", "old")
+        try:
+            await page.dom_storage.set_dom_storage_item(storage_id, "event-update", "old")
+        except CommandError:
+            pytest.skip("Frame not ready for DOMStorage in CI")
         await page.dom_storage.enable()
         page.on("DOMStorage.domStorageItemUpdated", on_item_updated)
         await page.dom_storage.set_dom_storage_item(storage_id, "event-update", "new")

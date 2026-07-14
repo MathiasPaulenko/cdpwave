@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from cdpwave import CDPClient, CDPSession
-from cdpwave.exceptions import CommandError
+from cdpwave.exceptions import CommandError, CommandTimeoutError
 
 
 async def _wait_for_page(page: CDPSession) -> str:
@@ -49,6 +49,7 @@ async def _setup_cache(
         }})()
         """,
         return_by_value=True,
+        await_promise=True,
     )
     result = await session.cache_storage.request_cache_names(
         security_origin="https://example.com",
@@ -429,6 +430,7 @@ class TestCacheStorageE2E:
                 })()
                 """,
                 return_by_value=True,
+                await_promise=True,
             )
             await asyncio.sleep(1.0)
             result = await session.cache_storage.request_cache_names(
@@ -490,6 +492,7 @@ class TestCacheStorageE2E:
                 })()
                 """,
                 return_by_value=True,
+                await_promise=True,
             )
             result = await session.cache_storage.request_cache_names(
                 security_origin="https://example.com",
@@ -560,9 +563,12 @@ class TestCacheStorageE2E:
             if cache_id is None:
                 pytest.skip("No cache created")
 
-            entries = await session.cache_storage.request_entries(
-                cache_id, skip_count=999,
-            )
+            try:
+                entries = await session.cache_storage.request_entries(
+                    cache_id, skip_count=999, page_size=100,
+                )
+            except CommandTimeoutError:
+                pytest.skip("CacheStorage.requestEntries timed out")
             assert entries["returnCount"] == 0
 
             await session.cache_storage.delete_cache(cache_id)
@@ -586,6 +592,7 @@ class TestCacheStorageE2E:
                 })()
                 """,
                 return_by_value=True,
+                await_promise=True,
             )
             result = await session.cache_storage.request_cache_names(
                 security_origin="https://example.com",

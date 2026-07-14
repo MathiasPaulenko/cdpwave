@@ -1489,6 +1489,44 @@ class TestClientDomainProperties:
         with pytest.raises(TimeoutError):
             await session.wait_for_event("Page.loadEventFired", timeout=0.1)
 
+    async def test_wait_for_event_handler_idempotent_after_timeout(self) -> None:
+
+        from unittest.mock import AsyncMock
+
+        from cdpwave.client import CDPSession
+
+        conn = AsyncMock()
+        session = CDPSession(conn, "S-1", "T-1")
+
+        with pytest.raises(TimeoutError):
+            await session.wait_for_event("Page.loadEventFired", timeout=0.05)
+
+        assert session._dispatcher.handler_count == 0
+
+        await session._dispatcher.dispatch("Page.loadEventFired", {"frameId": "F1"})
+
+        assert session._dispatcher.handler_count == 0
+
+    async def test_wait_for_event_handler_does_not_capture_after_timeout(self) -> None:
+
+        from unittest.mock import AsyncMock
+
+        from cdpwave.client import CDPSession
+
+        conn = AsyncMock()
+        session = CDPSession(conn, "S-1", "T-1")
+
+        async def fire_late() -> None:
+            await asyncio.sleep(0.15)
+            await session._dispatcher.dispatch("Page.loadEventFired", {"frameId": "LATE"})
+
+        task = asyncio.create_task(fire_late())
+        with pytest.raises(TimeoutError):
+            await session.wait_for_event("Page.loadEventFired", timeout=0.05)
+        await task
+
+        assert session._dispatcher.handler_count == 0
+
     async def test_send_on_closed_session_raises(self) -> None:
         from unittest.mock import AsyncMock
 

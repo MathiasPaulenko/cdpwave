@@ -3,7 +3,9 @@
 Public API exports for the cdpwave package.
 """
 
-__version__ = "3.1.3"
+from importlib.metadata import version as _version
+
+__version__ = _version("cdpwave")
 
 from cdpwave.client import BrowserContext, CDPClient, CDPSession
 from cdpwave.events.dispatcher import EventDispatcher
@@ -14,6 +16,7 @@ from cdpwave.exceptions import (
     CommandError,
     CommandTimeoutError,
     ConnectionClosedError,
+    ConnectionReconnectError,
     DiscoveryError,
     LaunchError,
     LaunchTimeoutError,
@@ -41,6 +44,7 @@ __all__ = [
     "CommandError",
     "CommandTimeoutError",
     "ConnectionClosedError",
+    "ConnectionReconnectError",
     "DOMGetDocumentResult",
     "DOMNode",
     "DiscoveryError",

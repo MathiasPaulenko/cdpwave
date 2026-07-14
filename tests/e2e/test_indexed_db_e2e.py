@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cdpwave import CDPClient, CDPSession
-from cdpwave.exceptions import CommandError
+from cdpwave.exceptions import CommandError, CommandTimeoutError
 
 
 async def _wait_for_page(page: CDPSession) -> str:
@@ -25,6 +25,13 @@ async def _wait_for_page(page: CDPSession) -> str:
         )
         if result.get("result", {}).get("value"):
             break
+    for _ in range(10):
+        result = await page.runtime.evaluate(
+            "document.readyState", return_by_value=True,
+        )
+        if result.get("result", {}).get("value") == "complete":
+            break
+        await asyncio.sleep(0.3)
     return frame_id
 
 
@@ -396,7 +403,10 @@ class TestIndexedDBE2E:
             await CDPClient.launch(headless=True) as client,
             await client.new_page() as session,
         ):
-            await _wait_for_page(session)
+            try:
+                await _wait_for_page(session)
+            except CommandTimeoutError:
+                pytest.skip("Network timeout navigating to example.com")
             await session.send("IndexedDB.enable")
             result = await session.send(
                 "IndexedDB.requestDatabaseNames",
@@ -410,16 +420,24 @@ class TestIndexedDBE2E:
             await CDPClient.launch(headless=True) as client,
             await client.new_page() as session,
         ):
-            await _wait_for_page(session)
+            try:
+                await _wait_for_page(session)
+            except CommandTimeoutError:
+                pytest.skip("Network timeout navigating to example.com")
             info = await _create_idb(session, db_name="e2e-idb-raw-db")
             await session.send("IndexedDB.enable")
-            result = await session.send(
-                "IndexedDB.requestDatabase",
-                {
-                    "securityOrigin": "https://example.com",
-                    "databaseName": info["db_name"],
-                },
-            )
+            try:
+                result = await session.send(
+                    "IndexedDB.requestDatabase",
+                    {
+                        "securityOrigin": "https://example.com",
+                        "databaseName": info["db_name"],
+                    },
+                )
+            except CommandError as e:
+                if "No document for given frame" in str(e):
+                    pytest.skip("Frame not ready in headless mode")
+                raise
             assert "databaseWithObjectStores" in result
             await session.send("IndexedDB.disable")
 

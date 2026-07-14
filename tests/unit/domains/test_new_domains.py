@@ -15,9 +15,20 @@ class TestNetworkDomain:
         await domain.enable()
         method, params = fake.last_call
         assert method == "Network.enable"
+        assert params == {}
+
+    async def test_enable_with_bool_params(self) -> None:
+        fake = FakeSender({})
+        domain = NetworkDomain(fake)
+        await domain.enable(
+            report_direct_socket_traffic=True,
+            enable_durable_messages=True,
+        )
+        method, params = fake.last_call
+        assert method == "Network.enable"
         assert params is not None
-        assert params["reportDirectSocketTraffic"] is False
-        assert params["enableDurableMessages"] is False
+        assert params["reportDirectSocketTraffic"] is True
+        assert params["enableDurableMessages"] is True
 
     async def test_enable_with_all_params(self) -> None:
         fake = FakeSender({})

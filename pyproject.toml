@@ -64,6 +64,8 @@ exclude = ["tests/manual/"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+# Only unit tests run by default. Use `pytest tests/integration -m integration`
+# or `pytest tests/e2e -m e2e` to run integration and e2e suites.
 testpaths = ["tests/unit"]
 markers = [
     "unit: fast isolated tests with mocks",

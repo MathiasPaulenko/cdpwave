@@ -210,7 +210,8 @@ class BrowserLauncher:
                 )
 
             try:
-                data = await asyncio.to_thread(_fetch_version, url)
+                fetch_timeout = min(5.0, timeout - elapsed)
+                data = await asyncio.to_thread(_fetch_version, url, fetch_timeout)
                 return BrowserInfo(
                     web_socket_debugger_url=str(data.get("webSocketDebuggerUrl", "")),
                     browser_version=str(data.get("Browser", "")),
@@ -247,13 +248,14 @@ class BrowserLauncher:
         self._info = None
 
     def __del__(self) -> None:
-        if self._process is not None and self._process.returncode is None:
-            import warnings
-            warnings.warn(
-                "BrowserLauncher was not closed; browser process may still be running",
-                ResourceWarning,
-                stacklevel=2,
-            )
+        with contextlib.suppress(Exception):
+            if self._process is not None and self._process.returncode is None:
+                import warnings
+                warnings.warn(
+                    "BrowserLauncher was not closed; browser process may still be running",
+                    ResourceWarning,
+                    stacklevel=2,
+                )
 
     @property
     def is_running(self) -> bool:
@@ -265,9 +267,19 @@ class BrowserLauncher:
         """BrowserInfo if the browser has been launched, else None."""
         return self._info
 
+    def __repr__(self) -> str:
+        state = "running" if self.is_running else "stopped"
+        path = self._browser_path or "auto-detected"
+        return f"BrowserLauncher({path!r}, {state})"
 
-def _fetch_version(url: str) -> dict[str, object]:
-    """Fetch and parse JSON from the ``/json/version`` endpoint."""
-    with urllib.request.urlopen(url, timeout=5) as resp:
+
+def _fetch_version(url: str, timeout: float = 5.0) -> dict[str, object]:
+    """Fetch and parse JSON from the ``/json/version`` endpoint.
+
+    Args:
+        url: The ``/json/version`` URL to fetch.
+        timeout: Per-request timeout in seconds.
+    """
+    with urllib.request.urlopen(url, timeout=timeout) as resp:
         data = json.loads(resp.read().decode("utf-8"))
         return data  # type: ignore[no-any-return]

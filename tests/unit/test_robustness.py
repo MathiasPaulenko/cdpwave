@@ -9,6 +9,7 @@ from cdpwave.client import CDPClient, CDPSession
 from cdpwave.exceptions import (
     CommandTimeoutError,
     ConnectionClosedError,
+    ConnectionReconnectError,
     LaunchTimeoutError,
     SessionClosedError,
 )
@@ -147,6 +148,74 @@ class TestConnectionClose:
 
         await asyncio.sleep(0.1)
         assert conn.is_closed is True
+
+    async def test_receive_loop_rejects_with_reconnect_error_when_retries_enabled(self) -> None:
+        import websockets
+
+        conn = Connection("ws://localhost:9222", max_retries=1, backoff_base=0.01)
+
+        cmd_id = conn._correlator.next_id()
+        fut = conn._correlator.register(cmd_id)
+
+        class ClosedOKWS:
+            async def send(self, message: str) -> None:
+                pass
+
+            async def close(self) -> None:
+                pass
+
+            def __aiter__(self) -> "ClosedOKWS":
+                return self
+
+            async def __anext__(self) -> str:
+                raise websockets.ConnectionClosedOK(None, None)
+
+        mock_ws = ClosedOKWS()
+
+        with (
+            patch(_WS_CONNECT, new_callable=AsyncMock) as mock_connect,
+            patch.object(conn, "_reconnect", new_callable=AsyncMock, return_value=False),
+        ):
+            mock_connect.return_value = mock_ws
+            await conn.connect()
+
+            await asyncio.sleep(0.15)
+
+        assert fut.done()
+        assert isinstance(fut.exception(), ConnectionReconnectError)
+
+    async def test_receive_loop_rejects_with_closed_error_when_no_retries(self) -> None:
+        import websockets
+
+        conn = Connection("ws://localhost:9222", max_retries=0)
+
+        cmd_id = conn._correlator.next_id()
+        fut = conn._correlator.register(cmd_id)
+
+        class ClosedOKWS:
+            async def send(self, message: str) -> None:
+                pass
+
+            async def close(self) -> None:
+                pass
+
+            def __aiter__(self) -> "ClosedOKWS":
+                return self
+
+            async def __anext__(self) -> str:
+                raise websockets.ConnectionClosedOK(None, None)
+
+        mock_ws = ClosedOKWS()
+
+        with patch(_WS_CONNECT, new_callable=AsyncMock) as mock_connect:
+            mock_connect.return_value = mock_ws
+            await conn.connect()
+
+            await asyncio.sleep(0.1)
+
+        assert fut.done()
+        assert isinstance(fut.exception(), ConnectionClosedError)
+        assert not isinstance(fut.exception(), ConnectionReconnectError)
 
 
 class TestCDPSessionClose:
@@ -362,3 +431,72 @@ class TestLauncherRobustness:
         await launcher.close()
         assert launcher._process is None
         assert launcher._info is None
+
+    def test_del_with_running_process_warns(self) -> None:
+        launcher = BrowserLauncher(browser_path="fake-browser")
+        mock_proc = MagicMock()
+        mock_proc.returncode = None
+        launcher._process = mock_proc
+
+        with pytest.warns(ResourceWarning):
+            launcher.__del__()
+
+    def test_del_with_finished_process_no_warn(self) -> None:
+        launcher = BrowserLauncher(browser_path="fake-browser")
+        mock_proc = MagicMock()
+        mock_proc.returncode = 0
+        launcher._process = mock_proc
+
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            launcher.__del__()
+
+    def test_del_without_process_no_warn(self) -> None:
+        launcher = BrowserLauncher(browser_path="fake-browser")
+
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            launcher.__del__()
+
+    def test_del_process_lookup_error_suppressed(self) -> None:
+        launcher = BrowserLauncher(browser_path="fake-browser")
+        mock_proc = MagicMock()
+        mock_proc.returncode = MagicMock(side_effect=ProcessLookupError("no process"))
+        launcher._process = mock_proc
+
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            launcher.__del__()
+
+
+class TestCDPSessionDelRobustness:
+    def test_del_unclosed_session_warns(self) -> None:
+        conn = AsyncMock()
+        session = CDPSession(conn, "S-1", "T-1")
+        session._closed = False
+
+        with pytest.warns(ResourceWarning):
+            session.__del__()
+
+    def test_del_closed_session_no_warn(self) -> None:
+        conn = AsyncMock()
+        session = CDPSession(conn, "S-1", "T-1")
+        session._closed = True
+
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            session.__del__()
+
+    def test_del_without_closed_attr_no_error(self) -> None:
+        conn = AsyncMock()
+        session = CDPSession(conn, "S-1", "T-1")
+        del session._closed
+
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            session.__del__()

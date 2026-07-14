@@ -200,6 +200,6 @@ async def wait_for_network_idle(
             remaining = deadline - now
             wait = min(idle_time - (now - last_request_time), remaining)
             if wait > 0:
-                await asyncio.sleep(wait)
+                await asyncio.sleep(max(wait, 0.05))
     finally:
         sub.unsubscribe()

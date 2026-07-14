@@ -95,8 +95,9 @@ class TargetDiscovery:
 
     async def new_tab(self, url: str = "about:blank") -> TargetInfo:
         """Create a new tab and return its target info."""
+        encoded = urllib.parse.quote_plus(url)
         data: dict[str, Any] = await asyncio.to_thread(
-            _http_put, f"{self._base_url}/json/new?{urllib.parse.quote(url, safe='')}"
+            _http_put, f"{self._base_url}/json/new?{encoded}"
         )
         return TargetInfo(
             target_id=str(data.get("id", "")),

@@ -6,6 +6,7 @@ from cdpwave.exceptions import (
     CommandError,
     CommandTimeoutError,
     ConnectionClosedError,
+    ConnectionReconnectError,
     DiscoveryError,
     SessionClosedError,
 )
@@ -15,6 +16,7 @@ class TestExceptionHierarchy:
     def test_all_inherit_from_cdp_error(self) -> None:
         for exc_class in [
             ConnectionClosedError,
+            ConnectionReconnectError,
             CommandError,
             CommandTimeoutError,
             BrowserNotFoundError,
@@ -52,3 +54,14 @@ class TestExceptionHierarchy:
     def test_can_raise_and_catch_specific(self) -> None:
         with pytest.raises(CommandTimeoutError):
             raise CommandTimeoutError("timeout")
+
+    def test_reconnect_error_inherits_from_closed(self) -> None:
+        assert issubclass(ConnectionReconnectError, ConnectionClosedError)
+
+    def test_reconnect_error_catchable_as_closed(self) -> None:
+        with pytest.raises(ConnectionClosedError):
+            raise ConnectionReconnectError("lost during reconnect")
+
+    def test_reconnect_error_catchable_as_cdp_error(self) -> None:
+        with pytest.raises(CDPError):
+            raise ConnectionReconnectError("lost during reconnect")

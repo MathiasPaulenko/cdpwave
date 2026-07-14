@@ -46,10 +46,11 @@ class NetworkDomain(BaseDomain):
             raise TypeError("report_direct_socket_traffic must be a bool")
         if not isinstance(enable_durable_messages, bool):
             raise TypeError("enable_durable_messages must be a bool")
-        params: dict[str, Any] = {
-            "reportDirectSocketTraffic": report_direct_socket_traffic,
-            "enableDurableMessages": enable_durable_messages,
-        }
+        params: dict[str, Any] = {}
+        if report_direct_socket_traffic:
+            params["reportDirectSocketTraffic"] = report_direct_socket_traffic
+        if enable_durable_messages:
+            params["enableDurableMessages"] = enable_durable_messages
         if max_total_buffer_size is not None:
             if isinstance(max_total_buffer_size, bool) or not isinstance(
                 max_total_buffer_size, int

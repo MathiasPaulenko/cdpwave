@@ -10,7 +10,12 @@ from typing import Any
 import websockets
 from websockets.asyncio.client import ClientConnection
 
-from cdpwave.exceptions import CommandError, CommandTimeoutError, ConnectionClosedError
+from cdpwave.exceptions import (
+    CommandError,
+    CommandTimeoutError,
+    ConnectionClosedError,
+    ConnectionReconnectError,
+)
 from cdpwave.transport.correlation import Correlator
 from cdpwave.transport.serializer import (
     deserialize_message,
@@ -66,6 +71,7 @@ class Connection:
         backoff_base: float = 1.0,
         backoff_max: float = 30.0,
         on_reconnect: ReconnectCallback | None = None,
+        max_event_tasks: int = 100,
     ) -> None:
         self._url = url
         self._correlator = Correlator()
@@ -79,6 +85,7 @@ class Connection:
         self._backoff_max = backoff_max
         self._reconnect_lock = asyncio.Lock()
         self._on_reconnect = on_reconnect
+        self._event_semaphore = asyncio.Semaphore(max_event_tasks)
 
     async def connect(self) -> None:
         """Open the WebSocket connection and start the receive loop."""
@@ -90,6 +97,17 @@ class Connection:
         )
         self._receive_task = asyncio.create_task(self._receive_loop())
         logger.info("Connected to %s", self._url)
+
+    async def _dispatch_event(
+        self,
+        method: str,
+        params: dict[str, Any],
+        session: str | None,
+    ) -> None:
+        """Dispatch an event with backpressure via semaphore."""
+        async with self._event_semaphore:
+            if self._event_callback is not None:
+                await self._event_callback(method, params, session)
 
     async def send_command(
         self,
@@ -125,6 +143,9 @@ class Connection:
                         raise ConnectionClosedError("Connection is closed")
             else:
                 raise ConnectionClosedError("Connection is closed")
+
+        if self._ws is None or self._closed:
+            raise ConnectionClosedError("Connection is closed")
 
         effective_timeout = self._default_timeout if timeout is None else timeout
 
@@ -259,7 +280,7 @@ class Connection:
                     session = data.get("sessionId")
                     if self._event_callback is not None:
                         task = asyncio.ensure_future(
-                            self._event_callback(method, params, session)
+                            self._dispatch_event(method, params, session)
                         )
                         task.add_done_callback(_log_task_exception)
                     else:
@@ -273,14 +294,19 @@ class Connection:
             raise
         finally:
             if not self._closed:
-                self._correlator.reject_all(
-                    ConnectionClosedError("WebSocket closed"),
-                )
                 if self._max_retries > 0:
+                    self._correlator.reject_all(
+                        ConnectionReconnectError(
+                            "Connection lost, pending commands rejected during reconnection",
+                        ),
+                    )
                     reconnected = await self._reconnect()
                     if not reconnected:
                         self._closed = True
                 else:
+                    self._correlator.reject_all(
+                        ConnectionClosedError("WebSocket closed"),
+                    )
                     self._closed = True
             else:
                 self._correlator.reject_all(
