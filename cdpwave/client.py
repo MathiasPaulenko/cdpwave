@@ -625,6 +625,8 @@ class CDPSession:
 
         if self._client is not None:
             self._client._session_dispatchers.pop(self._session_id, None)
+            self._client._sessions.pop(self._session_id, None)
+            self._client._session_targets.pop(self._session_id, None)
         with contextlib.suppress(ConnectionClosedError, CommandError, CommandTimeoutError):
             await self._connection.send_command(
                 "Target.detachFromTarget",
@@ -960,6 +962,7 @@ class CDPClient:
         self._session_dispatchers: dict[str, EventDispatcher] = {}
         self._sessions: dict[str, CDPSession] = {}
         self._managed_targets: set[str] = set()
+        self._session_targets: dict[str, str] = {}
         self._closed = False
         self._browser = BrowserDomain(self.send)
 
@@ -970,11 +973,8 @@ class CDPClient:
         the session dicts.  The old sessionIds are no longer valid in the
         browser after a WebSocket reconnect.
 
-        Warning:
-            All sessions are permanently lost after a reconnection.
-            Users must re-create sessions via ``new_page()`` or
-            ``connect_to_page()`` after a reconnect. There is no
-            automatic re-attach mechanism.
+        After invalidating, attempts to re-attach to targets that still
+        exist in the browser. Targets that have been closed are skipped.
         """
         count = len(self._sessions)
         for session in self._sessions.values():
@@ -986,6 +986,49 @@ class CDPClient:
             "Invalidated %d stale sessions after reconnection",
             count,
         )
+        await self._reattach_targets()
+
+    async def _reattach_targets(self) -> None:
+        """Re-attach to targets that survived a reconnection."""
+        if not self._session_targets:
+            return
+        try:
+            result = await self._connection.send_command("Target.getTargets")
+        except Exception:
+            logger.warning("Failed to query targets after reconnection")
+            return
+        alive_targets = {
+            t["targetId"]
+            for t in result.get("targetInfos", [])
+            if t.get("targetId")
+        }
+        reattached = 0
+        for _old_session_id, target_id in list(self._session_targets.items()):
+            if target_id not in alive_targets:
+                logger.info("Target %s no longer exists, skipping", target_id)
+                continue
+            try:
+                new_session_id = await self._session_manager.attach_to_target(
+                    target_id
+                )
+                session = CDPSession(
+                    connection=self._connection,
+                    session_id=new_session_id,
+                    target_id=target_id,
+                    client=self,
+                )
+                self._sessions[new_session_id] = session
+                reattached += 1
+            except Exception:
+                logger.warning(
+                    "Failed to re-attach to target %s", target_id, exc_info=True
+                )
+        self._session_targets = {
+            sid: session._target_id
+            for sid, session in self._sessions.items()
+        }
+        if reattached:
+            logger.info("Re-attached to %d targets after reconnection", reattached)
 
     async def _event_callback(
         self,
@@ -1017,6 +1060,7 @@ class CDPClient:
                     session._dispatcher.clear()
                     self._session_dispatchers.pop(detached_session_id, None)
                     self._sessions.pop(detached_session_id, None)
+                    self._session_targets.pop(detached_session_id, None)
                     logger.info(
                         "Session %s detached by browser",
                         detached_session_id,
@@ -1225,6 +1269,7 @@ class CDPClient:
             client=self,
         )
         self._sessions[session_id] = session
+        self._session_targets[session_id] = target_id
 
         if auto_attach:
             await session._enable_auto_attach()
@@ -1255,6 +1300,7 @@ class CDPClient:
             client=self,
         )
         self._sessions[session_id] = session
+        self._session_targets[session_id] = target_id
         return session
 
     async def new_context(self) -> BrowserContext:
