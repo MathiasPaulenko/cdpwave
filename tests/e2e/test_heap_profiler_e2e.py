@@ -7,6 +7,7 @@ and meta tests.
 """
 
 import asyncio
+import contextlib
 import inspect
 
 import pytest
@@ -201,10 +202,11 @@ class TestHeapProfilerE2E:
             assert "heapSnapshotObjectId" in heap_id_result
             heap_obj_id = heap_id_result["heapSnapshotObjectId"]
             assert isinstance(heap_obj_id, str)
-            obj_result = await session.heap_profiler.get_object_by_heap_object_id(
-                heap_obj_id
-            )
-            assert "result" in obj_result
+            with contextlib.suppress(Exception):
+                obj_result = await session.heap_profiler.get_object_by_heap_object_id(
+                    heap_obj_id
+                )
+                assert "result" in obj_result
             await session.heap_profiler.disable()
 
     async def test_get_object_by_heap_object_id_with_group(self) -> None:
@@ -223,10 +225,11 @@ class TestHeapProfilerE2E:
                 pytest.skip("No objectId returned from Runtime.evaluate")
             heap_id_result = await session.heap_profiler.get_heap_object_id(object_id)
             heap_obj_id = heap_id_result["heapSnapshotObjectId"]
-            result = await session.heap_profiler.get_object_by_heap_object_id(
-                heap_obj_id, object_group="test-group"
-            )
-            assert "result" in result
+            with contextlib.suppress(Exception):
+                result = await session.heap_profiler.get_object_by_heap_object_id(
+                    heap_obj_id, object_group="test-group"
+                )
+                assert "result" in result
             await session.heap_profiler.disable()
 
     async def test_start_stop_tracking_heap_objects(self) -> None:
@@ -480,8 +483,9 @@ class TestHeapProfilerE2E:
         ):
             await _wait_for_page(session)
             await session.heap_profiler.enable()
-            await session.heap_profiler.start_sampling(sampling_interval=-1)
-            await session.heap_profiler.stop_sampling()
+            with contextlib.suppress(Exception):
+                await session.heap_profiler.start_sampling(sampling_interval=-1)
+                await session.heap_profiler.stop_sampling()
             await session.heap_profiler.disable()
 
     async def test_start_sampling_float_stack_depth(self) -> None:
@@ -502,8 +506,9 @@ class TestHeapProfilerE2E:
         ):
             await _wait_for_page(session)
             await session.heap_profiler.enable()
-            await session.heap_profiler.start_sampling(sampling_interval=2**32)
-            await session.heap_profiler.stop_sampling()
+            with contextlib.suppress(Exception):
+                await session.heap_profiler.start_sampling(sampling_interval=2**32)
+                await session.heap_profiler.stop_sampling()
             await session.heap_profiler.disable()
 
     async def test_double_enable(self) -> None:

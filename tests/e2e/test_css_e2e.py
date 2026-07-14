@@ -34,7 +34,8 @@ class TestCSSE2E:
             await session.css.enable()
 
             doc = await session.dom.get_document()
-            body_id = doc["root"]["children"][0]["children"][1]["nodeId"]
+            body_id = await session.dom.query_selector(doc["root"]["nodeId"], "body")
+            body_id = body_id["nodeId"]
 
             inline = await session.css.get_inline_styles_for_node(body_id)
             assert "inlineStyle" in inline
@@ -142,7 +143,8 @@ class TestCSSE2E:
             await session.css.enable()
 
             doc = await session.dom.get_document()
-            body_id = doc["root"]["children"][0]["children"][1]["nodeId"]
+            body_id = await session.dom.query_selector(doc["root"]["nodeId"], "body")
+            body_id = body_id["nodeId"]
 
             await session.css.track_computed_style_updates_for_node(body_id)
             await session.css.track_computed_style_updates_for_node()
