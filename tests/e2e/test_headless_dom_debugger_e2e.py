@@ -40,12 +40,8 @@ async def _get_root_node_id(session: CDPSession) -> int:
 async def _get_body_node_id(session: CDPSession) -> int:
     await session.dom.enable()
     doc = await session.dom.get_document()
-    root = doc["root"]
-    if "children" in root and root["children"]:
-        html = root["children"][0]
-        if "children" in html and len(html["children"]) > 1:
-            return html["children"][1]["nodeId"]
-    return root["nodeId"]
+    body = await session.dom.query_selector(doc["root"]["nodeId"], "body")
+    return body["nodeId"]
 
 
 async def _resolve_to_object_id(session: CDPSession, node_id: int) -> str:

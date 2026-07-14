@@ -16,6 +16,7 @@ from cdpwave.exceptions import CDPError
 
 async def _wait_for_page(page: CDPSession) -> None:
     await page.page.enable()
+    await page.dom.enable()
     await page.page.navigate("https://example.com")
     for _ in range(20):
         await asyncio.sleep(0.5)
