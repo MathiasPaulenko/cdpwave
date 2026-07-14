@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from cdpwave.client import BrowserContext, CDPClient, CDPSession
+from cdpwave.exceptions import ProtocolError
 from cdpwave.transport.connection import Connection
 
 _LAUNCH = "cdpwave.client.BrowserLauncher"
@@ -162,7 +163,7 @@ class TestBrowserContext:
         conn = AsyncMock()
         conn.send_command.return_value = {}
         client = CDPClient(conn)
-        with pytest.raises(KeyError):
+        with pytest.raises(ProtocolError):
             await client.new_context()
 
     async def test_context_new_page(self) -> None:

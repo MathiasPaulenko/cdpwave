@@ -224,7 +224,7 @@ class TestWaitForNetworkIdle:
         )
         await task
         session.network.enable.assert_awaited_once()
-        session.network.disable.assert_awaited_once()
+        session.network.disable.assert_not_awaited()
 
     async def test_disable_called_on_timeout(self) -> None:
         session, _ = make_session()
@@ -233,4 +233,4 @@ class TestWaitForNetworkIdle:
                 session, idle_time=0.3, timeout=0.1,
             )
         session.network.enable.assert_awaited_once()
-        session.network.disable.assert_awaited_once()
+        session.network.disable.assert_not_awaited()

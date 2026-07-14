@@ -503,7 +503,7 @@ class PageDomain(BaseDomain):
         if world_name is not None:
             params["worldName"] = world_name
         if grant_universal_access:
-            params["grantUniveralAccess"] = True
+            params["grantUniversalAccess"] = True
         if content_security_policy is not None:
             params["contentSecurityPolicy"] = content_security_policy
         return await self._call("Page.createIsolatedWorld", params)

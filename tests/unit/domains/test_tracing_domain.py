@@ -183,33 +183,37 @@ class TestTracingDomain:
 class TestTracingOmitempty:
     """omitempty,omitzero semantics for start and request_memory_dump."""
 
-    async def test_start_buffer_usage_zero_omitted(self) -> None:
+    async def test_start_buffer_usage_zero_sent(self) -> None:
         fake = FakeSender({})
         domain = TracingDomain(fake)
         await domain.start(buffer_usage_reporting_interval=0)
         _, params = fake.last_call
-        assert params is None
+        assert params is not None
+        assert params["bufferUsageReportingInterval"] == 0
 
-    async def test_start_buffer_usage_zero_float_omitted(self) -> None:
+    async def test_start_buffer_usage_zero_float_sent(self) -> None:
         fake = FakeSender({})
         domain = TracingDomain(fake)
         await domain.start(buffer_usage_reporting_interval=0.0)
         _, params = fake.last_call
-        assert params is None
+        assert params is not None
+        assert params["bufferUsageReportingInterval"] == 0.0
 
-    async def test_start_screenshot_max_size_zero_omitted(self) -> None:
+    async def test_start_screenshot_max_size_zero_sent(self) -> None:
         fake = FakeSender({})
         domain = TracingDomain(fake)
         await domain.start(screenshot_max_size=0)
         _, params = fake.last_call
-        assert params is None
+        assert params is not None
+        assert params["screenshotMaxSize"] == 0
 
-    async def test_start_screenshot_max_count_zero_omitted(self) -> None:
+    async def test_start_screenshot_max_count_zero_sent(self) -> None:
         fake = FakeSender({})
         domain = TracingDomain(fake)
         await domain.start(screenshot_max_count=0)
         _, params = fake.last_call
-        assert params is None
+        assert params is not None
+        assert params["screenshotMaxCount"] == 0
 
     async def test_start_empty_string_omitted(self) -> None:
         fake = FakeSender({})

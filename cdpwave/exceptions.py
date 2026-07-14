@@ -46,3 +46,7 @@ class LaunchTimeoutError(CDPError):
 
 class LaunchError(CDPError):
     """Raised when the browser crashes or fails during startup."""
+
+
+class ProtocolError(CDPError):
+    """Raised when a CDP response is missing expected fields."""

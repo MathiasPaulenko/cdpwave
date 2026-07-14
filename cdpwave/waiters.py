@@ -202,4 +202,3 @@ async def wait_for_network_idle(
                 await asyncio.sleep(wait)
     finally:
         sub.unsubscribe()
-        await session.network.disable()

@@ -106,15 +106,15 @@ class EmulationDomain(BaseDomain):
             "dontSetVisibleSize": dont_set_visible_size,
             "screenOrientationLockEmulation": screen_orientation_lock_emulation,
         }
-        if scale:
+        if scale is not None:
             params["scale"] = scale
-        if screen_width:
+        if screen_width is not None:
             params["screenWidth"] = screen_width
-        if screen_height:
+        if screen_height is not None:
             params["screenHeight"] = screen_height
-        if position_x:
+        if position_x is not None:
             params["positionX"] = position_x
-        if position_y:
+        if position_y is not None:
             params["positionY"] = position_y
         if screen_orientation is not None:
             params["screenOrientation"] = screen_orientation
@@ -216,19 +216,19 @@ class EmulationDomain(BaseDomain):
             speed: Mock speed.
         """
         params: dict[str, Any] = {}
-        if latitude:
+        if latitude is not None:
             params["latitude"] = latitude
-        if longitude:
+        if longitude is not None:
             params["longitude"] = longitude
-        if accuracy:
+        if accuracy is not None:
             params["accuracy"] = accuracy
-        if altitude:
+        if altitude is not None:
             params["altitude"] = altitude
-        if altitude_accuracy:
+        if altitude_accuracy is not None:
             params["altitudeAccuracy"] = altitude_accuracy
-        if heading:
+        if heading is not None:
             params["heading"] = heading
-        if speed:
+        if speed is not None:
             params["speed"] = speed
         return await self._call("Emulation.setGeolocationOverride", params)
 
@@ -256,7 +256,7 @@ class EmulationDomain(BaseDomain):
             max_touch_points: Maximum number of touch points supported.
         """
         params: dict[str, Any] = {"enabled": enabled}
-        if max_touch_points:
+        if max_touch_points is not None:
             params["maxTouchPoints"] = max_touch_points
         return await self._call("Emulation.setTouchEmulationEnabled", params)
 
@@ -606,11 +606,11 @@ class EmulationDomain(BaseDomain):
                 "'pauseIfNetworkFetchesPending'"
             )
         params: dict[str, Any] = {"policy": policy}
-        if budget:
+        if budget is not None:
             params["budget"] = budget
-        if max_virtual_time_task_starvation_count:
+        if max_virtual_time_task_starvation_count is not None:
             params["maxVirtualTimeTaskStarvationCount"] = max_virtual_time_task_starvation_count
-        if initial_virtual_time:
+        if initial_virtual_time is not None:
             params["initialVirtualTime"] = initial_virtual_time
         return await self._call("Emulation.setVirtualTimePolicy", params)
 
@@ -707,21 +707,21 @@ class EmulationDomain(BaseDomain):
             right_max: Max right safe area inset in CSS pixels.
         """
         insets: dict[str, Any] = {}
-        if top:
+        if top is not None:
             insets["top"] = top
-        if left:
+        if left is not None:
             insets["left"] = left
-        if bottom:
+        if bottom is not None:
             insets["bottom"] = bottom
-        if right:
+        if right is not None:
             insets["right"] = right
-        if top_max:
+        if top_max is not None:
             insets["topMax"] = top_max
-        if left_max:
+        if left_max is not None:
             insets["leftMax"] = left_max
-        if bottom_max:
+        if bottom_max is not None:
             insets["bottomMax"] = bottom_max
-        if right_max:
+        if right_max is not None:
             insets["rightMax"] = right_max
         return await self._call(
             "Emulation.setSafeAreaInsetsOverride",
@@ -780,7 +780,7 @@ class EmulationDomain(BaseDomain):
                 the override.
         """
         params: dict[str, Any] = {}
-        if scale:
+        if scale is not None:
             params["scale"] = scale
         return await self._call(
             "Emulation.setEmulatedOSTextScale",
@@ -882,6 +882,8 @@ class EmulationDomain(BaseDomain):
         """
         if not isinstance(source, str):
             raise TypeError("source must be a str")
+        if source not in _VALID_PRESSURE_SOURCES:
+            raise ValueError("source must be 'cpu'")
         if not isinstance(state, str):
             raise TypeError("state must be a str")
         if state not in _VALID_PRESSURE_STATES:
@@ -1005,13 +1007,13 @@ class EmulationDomain(BaseDomain):
         }
         if work_area_insets is not None:
             params["workAreaInsets"] = work_area_insets
-        if device_pixel_ratio:
+        if device_pixel_ratio is not None:
             params["devicePixelRatio"] = device_pixel_ratio
-        if rotation:
+        if rotation is not None:
             params["rotation"] = rotation
-        if color_depth:
+        if color_depth is not None:
             params["colorDepth"] = color_depth
-        if label:
+        if label is not None:
             params["label"] = label
         return await self._call("Emulation.addScreen", params)
 
@@ -1051,23 +1053,23 @@ class EmulationDomain(BaseDomain):
             "screenId": screen_id,
             "isInternal": is_internal,
         }
-        if left:
+        if left is not None:
             params["left"] = left
-        if top:
+        if top is not None:
             params["top"] = top
-        if width:
+        if width is not None:
             params["width"] = width
-        if height:
+        if height is not None:
             params["height"] = height
         if work_area_insets is not None:
             params["workAreaInsets"] = work_area_insets
-        if device_pixel_ratio:
+        if device_pixel_ratio is not None:
             params["devicePixelRatio"] = device_pixel_ratio
-        if rotation:
+        if rotation is not None:
             params["rotation"] = rotation
-        if color_depth:
+        if color_depth is not None:
             params["colorDepth"] = color_depth
-        if label:
+        if label is not None:
             params["label"] = label
         return await self._call("Emulation.updateScreen", params)
 

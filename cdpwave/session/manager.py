@@ -1,5 +1,6 @@
 """Session manager for CDP flatten sessions."""
 
+from cdpwave.exceptions import ProtocolError
 from cdpwave.transport.connection import Connection
 
 
@@ -33,7 +34,7 @@ class SessionManager:
         )
         target_id = result.get("targetId")
         if target_id is None:
-            raise KeyError(
+            raise ProtocolError(
                 "Target.createTarget response missing 'targetId' field"
             )
         return str(target_id)
@@ -46,7 +47,7 @@ class SessionManager:
         )
         session_id = result.get("sessionId")
         if session_id is None:
-            raise KeyError(
+            raise ProtocolError(
                 "Target.attachToTarget response missing 'sessionId' field"
             )
         return str(session_id)

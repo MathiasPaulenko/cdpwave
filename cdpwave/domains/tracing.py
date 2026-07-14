@@ -325,7 +325,7 @@ class TracingDomain(BaseDomain):
                 f"got {type(screenshot_max_count).__name__}"
             )
         params: dict[str, Any] = {}
-        if buffer_usage_reporting_interval:
+        if buffer_usage_reporting_interval is not None:
             params["bufferUsageReportingInterval"] = (
                 buffer_usage_reporting_interval
             )
@@ -341,8 +341,8 @@ class TracingDomain(BaseDomain):
             params["perfettoConfig"] = perfetto_config
         if tracing_backend:
             params["tracingBackend"] = tracing_backend
-        if screenshot_max_size:
+        if screenshot_max_size is not None:
             params["screenshotMaxSize"] = screenshot_max_size
-        if screenshot_max_count:
+        if screenshot_max_count is not None:
             params["screenshotMaxCount"] = screenshot_max_count
         return await self._call("Tracing.start", params or None)

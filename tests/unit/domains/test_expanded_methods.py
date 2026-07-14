@@ -98,7 +98,7 @@ class TestPageExpanded:
         method, params = fake.last_call
         assert params is not None
         assert params["frameId"] == "frame1"
-        assert params["grantUniveralAccess"] is True
+        assert params["grantUniversalAccess"] is True
 
     async def test_set_document_content(self) -> None:
         fake = FakeSender({})

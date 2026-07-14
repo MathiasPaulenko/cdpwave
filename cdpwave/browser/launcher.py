@@ -171,7 +171,7 @@ class BrowserLauncher:
 
     async def _wait_for_endpoint(self, timeout: float = 10.0) -> BrowserInfo:
         """Poll the HTTP discovery endpoint until the browser is ready."""
-        url = f"http://localhost:{self._port}/json/version"
+        url = f"http://127.0.0.1:{self._port}/json/version"
         delay = 0.1
         elapsed = 0.0
 

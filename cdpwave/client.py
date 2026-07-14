@@ -75,6 +75,7 @@ from cdpwave.exceptions import (
     CommandError,
     CommandTimeoutError,
     ConnectionClosedError,
+    ProtocolError,
     SessionClosedError,
 )
 from cdpwave.session.manager import SessionManager
@@ -792,7 +793,9 @@ class _LaunchContext:
         self._client: CDPClient | None = None
 
     def __await__(self) -> Any:
-        return self._coro.__await__()
+        result = yield from self._coro.__await__()
+        self._client = result
+        return result
 
     async def __aenter__(self) -> CDPClient:
         self._client = await self._coro
@@ -823,6 +826,7 @@ class BrowserContext:
         self._client = client
         self._context_id = context_id
         self._closed = False
+        self._sessions: list[CDPSession] = []
 
     @property
     def context_id(self) -> str:
@@ -863,6 +867,7 @@ class BrowserContext:
             client=self._client,
         )
         self._client._sessions[session_id] = session
+        self._sessions.append(session)
         return session
 
     async def close(self) -> None:
@@ -870,6 +875,10 @@ class BrowserContext:
         if self._closed:
             return
         self._closed = True
+        for session in self._sessions:
+            with contextlib.suppress(Exception):
+                await session.close()
+        self._sessions.clear()
         with contextlib.suppress(Exception):
             await self._client._connection.send_command(
                 "Target.disposeBrowserContext",
@@ -1224,7 +1233,7 @@ class CDPClient:
         )
         context_id = result.get("browserContextId")
         if context_id is None:
-            raise KeyError(
+            raise ProtocolError(
                 "Target.createBrowserContext response missing 'browserContextId'"
             )
         context = BrowserContext(self, str(context_id))
@@ -1239,8 +1248,7 @@ class CDPClient:
 
         for session in list(self._sessions.values()):
             with contextlib.suppress(Exception):
-                session._closed = True
-                session._dispatcher.clear()
+                await session.close()
             self._session_dispatchers.pop(session._session_id, None)
         self._sessions.clear()
         self._dispatcher.clear()

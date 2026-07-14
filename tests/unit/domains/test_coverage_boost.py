@@ -1493,7 +1493,7 @@ class TestEmulationCoverage:
         await domain.set_emulated_os_text_scale()
         method, params = fake.last_call
         assert method == "Emulation.setEmulatedOSTextScale"
-        assert params == {}
+        assert params == {"scale": 0.0}
 
     async def test_set_sensor_override_enabled(self) -> None:
         fake = FakeSender({})
@@ -1623,18 +1623,18 @@ class TestEmulationCoverage:
         await domain.set_primary_screen("s1")
         assert fake.last_call == ("Emulation.setPrimaryScreen", {"screenId": "s1"})
 
-    # --- Edge cases for omitzero/omitempty (bugs #27-35) ---
+    # --- Edge cases for zero values (previously omitted due to falsy-zero bug) ---
 
-    async def test_set_device_metrics_scale_zero_omitted(self) -> None:
+    async def test_set_device_metrics_scale_zero_sent(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
         await domain.set_device_metrics_override(
             375, 667, device_scale_factor=2.0, mobile=True, scale=0.0,
         )
         method, params = fake.last_call
-        assert "scale" not in params
+        assert params["scale"] == 0.0
 
-    async def test_set_device_metrics_screen_dims_zero_omitted(self) -> None:
+    async def test_set_device_metrics_screen_dims_zero_sent(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
         await domain.set_device_metrics_override(
@@ -1642,10 +1642,10 @@ class TestEmulationCoverage:
             screen_width=0, screen_height=0, position_x=0, position_y=0,
         )
         method, params = fake.last_call
-        assert "screenWidth" not in params
-        assert "screenHeight" not in params
-        assert "positionX" not in params
-        assert "positionY" not in params
+        assert params["screenWidth"] == 0
+        assert params["screenHeight"] == 0
+        assert params["positionX"] == 0
+        assert params["positionY"] == 0
 
     async def test_set_user_agent_override_empty_strings_omitted(self) -> None:
         fake = FakeSender({})
@@ -1657,7 +1657,7 @@ class TestEmulationCoverage:
         assert "acceptLanguage" not in params
         assert "platform" not in params
 
-    async def test_set_geolocation_zero_values_omitted(self) -> None:
+    async def test_set_geolocation_zero_values_sent(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
         await domain.set_geolocation_override(
@@ -1665,24 +1665,30 @@ class TestEmulationCoverage:
             altitude=0.0, altitude_accuracy=0.0, heading=0.0, speed=0.0,
         )
         method, params = fake.last_call
-        assert params == {}
+        assert params["latitude"] == 0.0
+        assert params["longitude"] == 0.0
+        assert params["accuracy"] == 0.0
+        assert params["altitude"] == 0.0
+        assert params["altitudeAccuracy"] == 0.0
+        assert params["heading"] == 0.0
+        assert params["speed"] == 0.0
 
-    async def test_set_touch_emulation_max_touch_points_zero_omitted(self) -> None:
+    async def test_set_touch_emulation_max_touch_points_zero_sent(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
         await domain.set_touch_emulation_enabled(True, max_touch_points=0)
         method, params = fake.last_call
-        assert "maxTouchPoints" not in params
+        assert params["maxTouchPoints"] == 0
 
-    async def test_set_virtual_time_budget_zero_omitted(self) -> None:
+    async def test_set_virtual_time_budget_zero_sent(self) -> None:
         fake = FakeSender({"virtualTimeTicksBase": 0.0})
         domain = EmulationDomain(fake)
         await domain.set_virtual_time_policy(
             "advance", budget=0.0, max_virtual_time_task_starvation_count=0,
         )
         method, params = fake.last_call
-        assert "budget" not in params
-        assert "maxVirtualTimeTaskStarvationCount" not in params
+        assert params["budget"] == 0.0
+        assert params["maxVirtualTimeTaskStarvationCount"] == 0
 
     async def test_set_emit_touch_events_empty_config_omitted(self) -> None:
         fake = FakeSender({})
@@ -1691,7 +1697,7 @@ class TestEmulationCoverage:
         method, params = fake.last_call
         assert "configuration" not in params
 
-    async def test_add_screen_zero_optionals_omitted(self) -> None:
+    async def test_add_screen_zero_optionals_sent(self) -> None:
         fake = FakeSender({"screenInfo": {"screenId": "s1"}})
         domain = EmulationDomain(fake)
         await domain.add_screen(
@@ -1699,12 +1705,12 @@ class TestEmulationCoverage:
             device_pixel_ratio=0.0, rotation=0, color_depth=0, label="",
         )
         method, params = fake.last_call
-        assert "devicePixelRatio" not in params
-        assert "rotation" not in params
-        assert "colorDepth" not in params
-        assert "label" not in params
+        assert params["devicePixelRatio"] == 0.0
+        assert params["rotation"] == 0
+        assert params["colorDepth"] == 0
+        assert params["label"] == ""
 
-    async def test_update_screen_zero_optionals_omitted(self) -> None:
+    async def test_update_screen_zero_optionals_sent(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
         await domain.update_screen(
@@ -1712,14 +1718,14 @@ class TestEmulationCoverage:
             device_pixel_ratio=0.0, rotation=0, color_depth=0, label="",
         )
         method, params = fake.last_call
-        assert "left" not in params
-        assert "top" not in params
-        assert "width" not in params
-        assert "height" not in params
-        assert "devicePixelRatio" not in params
-        assert "rotation" not in params
-        assert "colorDepth" not in params
-        assert "label" not in params
+        assert params["left"] == 0
+        assert params["top"] == 0
+        assert params["width"] == 0
+        assert params["height"] == 0
+        assert params["devicePixelRatio"] == 0.0
+        assert params["rotation"] == 0
+        assert params["colorDepth"] == 0
+        assert params["label"] == ""
 
     async def test_set_device_metrics_no_display_feature_param(self) -> None:
         fake = FakeSender({})
@@ -1796,9 +1802,9 @@ class TestEmulationCoverage:
         method, params = fake.last_call
         assert params is not None
         assert params["insets"]["top"] == 10
-        assert "left" not in params["insets"]
+        assert params["insets"]["left"] == 0
 
-    async def test_set_virtual_time_policy_omits_zero_initial_virtual_time(self) -> None:
+    async def test_set_virtual_time_policy_zero_initial_virtual_time_sent(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
         await domain.set_virtual_time_policy(
@@ -1809,7 +1815,7 @@ class TestEmulationCoverage:
         method, params = fake.last_call
         assert method == "Emulation.setVirtualTimePolicy"
         assert params is not None
-        assert "initialVirtualTime" not in params
+        assert params["initialVirtualTime"] == 0.0
         assert params["budget"] == 500
 
     async def test_set_emulated_media_empty_features_omitted(self) -> None:
@@ -1858,7 +1864,7 @@ class TestEmulationCoverage:
         assert params is not None
         assert params["color"]["a"] == 0.0
 
-    async def test_set_geolocation_override_all_zero_omitted(self) -> None:
+    async def test_set_geolocation_override_all_zero_sent(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
         await domain.set_geolocation_override(
@@ -1866,9 +1872,11 @@ class TestEmulationCoverage:
         )
         method, params = fake.last_call
         assert method == "Emulation.setGeolocationOverride"
-        assert params == {}
+        assert params["latitude"] == 0.0
+        assert params["longitude"] == 0.0
+        assert params["accuracy"] == 0.0
 
-    async def test_set_device_metrics_override_all_optional_zero_omitted(self) -> None:
+    async def test_set_device_metrics_override_all_optional_zero_sent(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
         await domain.set_device_metrics_override(
@@ -1878,11 +1886,11 @@ class TestEmulationCoverage:
         )
         method, params = fake.last_call
         assert params is not None
-        assert "scale" not in params
-        assert "screenWidth" not in params
-        assert "screenHeight" not in params
-        assert "positionX" not in params
-        assert "positionY" not in params
+        assert params["scale"] == 0.0
+        assert params["screenWidth"] == 0
+        assert params["screenHeight"] == 0
+        assert params["positionX"] == 0
+        assert params["positionY"] == 0
 
     async def test_set_virtual_time_policy_all_optional_omitted(self) -> None:
         fake = FakeSender({"virtualTimeTicksBase": 0.0})
@@ -1892,15 +1900,15 @@ class TestEmulationCoverage:
         assert method == "Emulation.setVirtualTimePolicy"
         assert params == {"policy": "pause"}
 
-    async def test_set_touch_emulation_max_touch_points_zero_omitted_verbose(self) -> None:
+    async def test_set_touch_emulation_max_touch_points_zero_sent_verbose(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
         await domain.set_touch_emulation_enabled(True, max_touch_points=0)
         method, params = fake.last_call
         assert params is not None
-        assert "maxTouchPoints" not in params
+        assert params["maxTouchPoints"] == 0
 
-    async def test_set_safe_area_insets_zero_values_omitted(self) -> None:
+    async def test_set_safe_area_insets_zero_values_sent(self) -> None:
         fake = FakeSender({})
         domain = EmulationDomain(fake)
         await domain.set_safe_area_insets_override(
@@ -1909,7 +1917,10 @@ class TestEmulationCoverage:
         )
         method, params = fake.last_call
         assert method == "Emulation.setSafeAreaInsetsOverride"
-        assert params == {"insets": {}}
+        assert params["insets"] == {
+            "top": 0, "left": 0, "bottom": 0, "right": 0,
+            "topMax": 0, "leftMax": 0, "bottomMax": 0, "rightMax": 0,
+        }
 
     async def test_set_safe_area_insets_nonzero_sent(self) -> None:
         fake = FakeSender({})
@@ -2288,12 +2299,12 @@ class TestStorageCoverage:
         assert method == "Storage.overrideQuotaForOrigin"
         assert params == {"origin": "https://example.com"}
 
-    async def test_override_quota_for_origin_zero_size_omitted(self) -> None:
+    async def test_override_quota_for_origin_zero_size_sent(self) -> None:
         fake = FakeSender({})
         domain = StorageDomain(fake)
         await domain.override_quota_for_origin("https://example.com", quota_size=0.0)
         method, params = fake.last_call
-        assert params == {"origin": "https://example.com"}
+        assert params == {"origin": "https://example.com", "quotaSize": 0.0}
 
     async def test_track_indexed_db_for_storage_key(self) -> None:
         fake = FakeSender({})

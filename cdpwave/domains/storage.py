@@ -302,7 +302,7 @@ class StorageDomain(BaseDomain):
                 is reset to the default value for the specified origin.
         """
         params: dict[str, Any] = {"origin": origin}
-        if quota_size:
+        if quota_size is not None:
             params["quotaSize"] = quota_size
         return await self._call("Storage.overrideQuotaForOrigin", params)
 

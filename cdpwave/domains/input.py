@@ -24,11 +24,23 @@ _VALID_MOUSE_BUTTONS = frozenset({
     "back",
     "forward",
 })
-_VALID_TOUCH_EVENT_TYPES = frozenset({
+_VALID_EMULATE_TOUCH_TYPES = frozenset({
     "mouseWheel",
     "mouseMoved",
     "mousePressed",
     "mouseReleased",
+})
+_VALID_TOUCH_EVENT_TYPES = frozenset({
+    "touchStart",
+    "touchEnd",
+    "touchMove",
+    "touchCancel",
+})
+_VALID_DRAG_EVENT_TYPES = frozenset({
+    "dragEnter",
+    "dragOver",
+    "drop",
+    "dragCancel",
 })
 _VALID_GESTURE_SOURCE_TYPES = frozenset({"default", "touch", "mouse"})
 
@@ -228,6 +240,14 @@ class InputDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
+        if not isinstance(type, str):
+            raise TypeError("type must be a str")
+        if type not in _VALID_TOUCH_EVENT_TYPES:
+            raise ValueError(
+                "type must be 'touchStart', 'touchEnd', 'touchMove', or 'touchCancel'"
+            )
+        if not isinstance(touch_points, list):
+            raise TypeError("touch_points must be a list")
         params: dict[str, Any] = {
             "type": type,
             "touchPoints": touch_points,
@@ -260,6 +280,12 @@ class InputDomain(BaseDomain):
         Returns:
             Response dict from the CDP command.
         """
+        if not isinstance(type, str):
+            raise TypeError("type must be a str")
+        if type not in _VALID_DRAG_EVENT_TYPES:
+            raise ValueError(
+                "type must be 'dragEnter', 'dragOver', 'drop', or 'dragCancel'"
+            )
         params: dict[str, Any] = {
             "type": type,
             "x": x,
@@ -479,7 +505,7 @@ class InputDomain(BaseDomain):
         """
         if not isinstance(type, str):
             raise TypeError("type must be a str")
-        if type not in _VALID_TOUCH_EVENT_TYPES:
+        if type not in _VALID_EMULATE_TOUCH_TYPES:
             raise ValueError(
                 "type must be 'mouseWheel', 'mouseMoved', "
                 "'mousePressed', or 'mouseReleased'"
