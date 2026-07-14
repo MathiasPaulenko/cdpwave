@@ -250,11 +250,8 @@ class BrowserLauncher:
     def __del__(self) -> None:
         with contextlib.suppress(Exception):
             if self._process is not None and self._process.returncode is None:
-                import warnings
-                warnings.warn(
-                    "BrowserLauncher was not closed; browser process may still be running",
-                    ResourceWarning,
-                    stacklevel=2,
+                logger.warning(
+                    "BrowserLauncher was not closed; browser process may still be running"
                 )
 
     @property

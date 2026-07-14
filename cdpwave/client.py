@@ -646,12 +646,7 @@ class CDPSession:
 
     def __del__(self) -> None:
         if not getattr(self, "_closed", True):
-            import warnings
-            warnings.warn(
-                f"CDPSession {self._session_id} was not closed",
-                ResourceWarning,
-                stacklevel=2,
-            )
+            logger.warning("CDPSession %s was not closed", self._session_id)
 
     def on(self, event_name: str, handler: EventHandler) -> Subscription:
         """Register an async handler for a CDP event.
@@ -871,11 +866,17 @@ class BrowserContext:
         """Whether this context has been closed."""
         return self._closed
 
-    async def new_page(self, url: str = "about:blank") -> CDPSession:
+    async def new_page(
+        self,
+        url: str = "about:blank",
+        auto_attach: bool = False,
+    ) -> CDPSession:
         """Create a new page target within this browser context.
 
         Args:
             url: Initial URL for the new page.
+            auto_attach: If True, auto-attach to child targets (iframes,
+                workers) and expose them via ``session.sub_sessions``.
 
         Returns:
             A CDPSession connected to the new page.
@@ -900,7 +901,12 @@ class BrowserContext:
             client=self._client,
         )
         self._client._sessions[session_id] = session
+        self._client._session_targets[session_id] = target_id
         self._sessions.append(session)
+
+        if auto_attach:
+            await session._enable_auto_attach()
+
         return session
 
     async def close(self) -> None:
@@ -1353,12 +1359,7 @@ class CDPClient:
 
     def __del__(self) -> None:
         if not self._closed:
-            import warnings
-            warnings.warn(
-                "CDPClient was not closed",
-                ResourceWarning,
-                stacklevel=2,
-            )
+            logger.warning("CDPClient was not closed")
 
     @property
     def is_closed(self) -> bool:

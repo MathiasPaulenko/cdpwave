@@ -432,14 +432,15 @@ class TestLauncherRobustness:
         assert launcher._process is None
         assert launcher._info is None
 
-    def test_del_with_running_process_warns(self) -> None:
+    def test_del_with_running_process_warns(self, caplog) -> None:
         launcher = BrowserLauncher(browser_path="fake-browser")
         mock_proc = MagicMock()
         mock_proc.returncode = None
         launcher._process = mock_proc
 
-        with pytest.warns(ResourceWarning):
+        with caplog.at_level("WARNING", logger="cdpwave.browser"):
             launcher.__del__()
+        assert any("was not closed" in r.message for r in caplog.records)
 
     def test_del_with_finished_process_no_warn(self) -> None:
         launcher = BrowserLauncher(browser_path="fake-browser")
@@ -447,10 +448,7 @@ class TestLauncherRobustness:
         mock_proc.returncode = 0
         launcher._process = mock_proc
 
-        import warnings
-        with warnings.catch_warnings():
-            warnings.simplefilter("error")
-            launcher.__del__()
+        launcher.__del__()
 
     def test_del_without_process_no_warn(self) -> None:
         launcher = BrowserLauncher(browser_path="fake-browser")
@@ -473,23 +471,21 @@ class TestLauncherRobustness:
 
 
 class TestCDPSessionDelRobustness:
-    def test_del_unclosed_session_warns(self) -> None:
+    def test_del_unclosed_session_warns(self, caplog) -> None:
         conn = AsyncMock()
         session = CDPSession(conn, "S-1", "T-1")
         session._closed = False
 
-        with pytest.warns(ResourceWarning):
+        with caplog.at_level("WARNING", logger="cdpwave.client"):
             session.__del__()
+        assert any("was not closed" in r.message for r in caplog.records)
 
     def test_del_closed_session_no_warn(self) -> None:
         conn = AsyncMock()
         session = CDPSession(conn, "S-1", "T-1")
         session._closed = True
 
-        import warnings
-        with warnings.catch_warnings():
-            warnings.simplefilter("error")
-            session.__del__()
+        session.__del__()
 
     def test_del_without_closed_attr_no_error(self) -> None:
         conn = AsyncMock()
