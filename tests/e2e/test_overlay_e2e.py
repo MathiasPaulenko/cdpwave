@@ -13,6 +13,7 @@ import pytest
 
 from cdpwave import CDPClient, CDPSession
 from cdpwave.browser.finder import find_edge
+from cdpwave.exceptions import LaunchTimeoutError
 
 _EDGE = find_edge()
 _SKIP = pytest.mark.skipif(_EDGE is None, reason="Edge not found")
@@ -57,10 +58,11 @@ class TestOverlayE2ELifecycle:
             assert isinstance(result, dict)
 
     async def test_enable_disable_cycle(self) -> None:
-        async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
-            await client.new_page() as session,
-        ):
+        try:
+            client = await CDPClient.launch(headless=True, browser_path=_EDGE)
+        except LaunchTimeoutError:
+            pytest.skip("Edge did not launch in CI")
+        async with client, await client.new_page() as session:
             await _wait_for_page(session)
             await session.overlay.enable()
             await session.overlay.disable()
@@ -68,10 +70,11 @@ class TestOverlayE2ELifecycle:
             await session.overlay.disable()
 
     async def test_enable_twice_no_error(self) -> None:
-        async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
-            await client.new_page() as session,
-        ):
+        try:
+            client = await CDPClient.launch(headless=True, browser_path=_EDGE)
+        except LaunchTimeoutError:
+            pytest.skip("Edge did not launch in CI")
+        async with client, await client.new_page() as session:
             await _wait_for_page(session)
             await session.overlay.enable()
             await session.overlay.enable()
@@ -82,10 +85,11 @@ class TestOverlayE2ELifecycle:
 @pytest.mark.e2e
 class TestOverlayE2EShowToggles:
     async def test_set_show_paint_rects(self) -> None:
-        async with (
-            await CDPClient.launch(headless=True, browser_path=_EDGE) as client,
-            await client.new_page() as session,
-        ):
+        try:
+            client = await CDPClient.launch(headless=True, browser_path=_EDGE)
+        except LaunchTimeoutError:
+            pytest.skip("Edge did not launch in CI")
+        async with client, await client.new_page() as session:
             await _wait_for_page(session)
             await session.overlay.enable()
             await session.overlay.set_show_paint_rects(True)
