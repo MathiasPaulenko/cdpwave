@@ -11,7 +11,7 @@ class TestBrowserLauncherArgs:
             headless=True,
             user_data_dir="/tmp/profile",
         )
-        args = launcher._build_args()
+        args, port_socket = launcher._build_args()
         assert "/fake/chrome" in args
         assert "--remote-debugging-port=9222" in args
         assert "--user-data-dir=/tmp/profile" in args
@@ -20,6 +20,7 @@ class TestBrowserLauncherArgs:
         assert "--disable-features=Translate" in args
         assert "--headless=new" in args
         assert "about:blank" in args
+        assert port_socket is None
 
     def test_build_args_headless_false(self) -> None:
         launcher = BrowserLauncher(
@@ -28,7 +29,7 @@ class TestBrowserLauncherArgs:
             headless=False,
             user_data_dir="/tmp/profile",
         )
-        args = launcher._build_args()
+        args, _ = launcher._build_args()
         assert not any(a.startswith("--headless") for a in args)
 
     def test_build_args_extra_args(self) -> None:
@@ -39,7 +40,7 @@ class TestBrowserLauncherArgs:
             user_data_dir="/tmp/profile",
             extra_args=["--window-size=1920,1080", "--disable-gpu"],
         )
-        args = launcher._build_args()
+        args, _ = launcher._build_args()
         assert "--window-size=1920,1080" in args
         assert "--disable-gpu" in args
 
@@ -50,11 +51,13 @@ class TestBrowserLauncherArgs:
             headless=True,
             user_data_dir="/tmp/profile",
         )
-        args = launcher._build_args()
+        args, port_socket = launcher._build_args()
         port_flag = [a for a in args if a.startswith("--remote-debugging-port=")]
         assert len(port_flag) == 1
         port = int(port_flag[0].split("=")[1])
         assert port > 0
+        assert port_socket is not None
+        port_socket.close()
 
     def test_build_args_creates_temp_dir(self) -> None:
         launcher = BrowserLauncher(
@@ -62,7 +65,7 @@ class TestBrowserLauncherArgs:
             port=9222,
             headless=True,
         )
-        args = launcher._build_args()
+        args, _ = launcher._build_args()
         user_data_flag = [a for a in args if a.startswith("--user-data-dir=")]
         assert len(user_data_flag) == 1
         import os

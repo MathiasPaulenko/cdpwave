@@ -1255,9 +1255,11 @@ class TestLauncherCoverage:
     def test_find_free_port(self) -> None:
         from cdpwave.browser.launcher import _find_free_port
 
-        port = _find_free_port()
+        port, sock = _find_free_port()
         assert isinstance(port, int)
         assert port > 0
+        assert sock is not None
+        sock.close()
 
     def test_build_args_with_headless_and_ci(
         self, monkeypatch: pytest.MonkeyPatch
@@ -1267,7 +1269,7 @@ class TestLauncherCoverage:
         monkeypatch.setenv("CI", "true")
         monkeypatch.setattr("cdpwave.browser.launcher.find_browser", lambda: "/fake/chrome")
         launcher = BrowserLauncher(browser_path=None, port=1234, headless=True)
-        args = launcher._build_args()
+        args, _ = launcher._build_args()
         assert "--headless=new" in args
         assert "--no-sandbox" in args
         assert "--remote-debugging-port=1234" in args
@@ -1282,9 +1284,11 @@ class TestLauncherCoverage:
         launcher = BrowserLauncher(
             browser_path="/fake/chrome", port=0, headless=False, extra_args=["--disable-gpu"]
         )
-        args = launcher._build_args()
+        args, port_socket = launcher._build_args()
         assert "--disable-gpu" in args
         assert "--headless=new" not in args
+        if port_socket is not None:
+            port_socket.close()
 
     def test_build_args_with_user_data_dir(
         self, monkeypatch: pytest.MonkeyPatch
@@ -1295,8 +1299,10 @@ class TestLauncherCoverage:
         launcher = BrowserLauncher(
             browser_path="/fake/chrome", port=0, headless=False, user_data_dir="/tmp/profile"
         )
-        args = launcher._build_args()
+        args, port_socket = launcher._build_args()
         assert "--user-data-dir=/tmp/profile" in args
+        if port_socket is not None:
+            port_socket.close()
 
     async def test_launch_already_running_raises(self) -> None:
         from cdpwave.browser.launcher import BrowserLauncher

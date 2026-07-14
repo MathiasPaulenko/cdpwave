@@ -29,11 +29,22 @@ def _is_ci() -> bool:
     return any(os.environ.get(var) for var in _CI_ENV_VARS)
 
 
-def _find_free_port() -> int:
-    with socket.socket() as s:
-        s.bind(("127.0.0.1", 0))
-        port: int = s.getsockname()[1]
-        return port
+def _find_free_port() -> tuple[int, socket.socket | None]:
+    """Bind a ephemeral socket to find a free port.
+
+    Returns the port and the bound socket. The caller must keep the socket
+    open until the port is in use by the browser, then close it. This
+    eliminates the TOCTOU race where another process could grab the port
+    between finding it and using it.
+
+    Returns:
+        A tuple of (port, socket) where socket is the bound socket to
+        hold the port, or None if a specific port was requested.
+    """
+    s = socket.socket()
+    s.bind(("127.0.0.1", 0))
+    port: int = s.getsockname()[1]
+    return port, s
 
 
 @dataclass(frozen=True)
@@ -79,13 +90,22 @@ class BrowserLauncher:
         self._temp_dir: str | None = None
         self._info: BrowserInfo | None = None
 
-    def _build_args(self) -> list[str]:
-        """Build the command-line arguments for the browser process."""
+    def _build_args(self) -> tuple[list[str], socket.socket | None]:
+        """Build the command-line arguments for the browser process.
+
+        Returns:
+            A tuple of (args, port_socket) where port_socket is a bound
+            socket holding the port until the browser starts, or None.
+        """
         if self._browser_path is None:
             self._browser_path = find_browser()
 
-        port = self._port if self._port != 0 else _find_free_port()
-        self._port = port
+        port_socket: socket.socket | None = None
+        if self._port != 0:
+            port = self._port
+        else:
+            port, port_socket = _find_free_port()
+            self._port = port
 
         user_data_dir = self._user_data_dir
         if user_data_dir is None:
@@ -110,7 +130,7 @@ class BrowserLauncher:
             args.extend(self._extra_args)
 
         args.append("about:blank")
-        return args
+        return args, port_socket
 
     def _create_temp_user_dir(self) -> str:
         """Create a temporary user data directory and return its path."""
@@ -139,7 +159,10 @@ class BrowserLauncher:
             if attempt > 0:
                 self._port = 0
                 self._user_data_dir = None
-            args = self._build_args()
+            args, port_socket = self._build_args()
+
+            if port_socket is not None:
+                port_socket.close()
 
             self._process = await asyncio.create_subprocess_exec(
                 *args,
