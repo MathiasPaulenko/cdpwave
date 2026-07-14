@@ -29,13 +29,25 @@ class TestCSSEdgeValidation:
 
     async def test_add_rule_node_validation_not_int(self) -> None:
         d = CSSDomain(FakeSender({}))
-        with pytest.raises(TypeError, match="node_for_property_syntax_validation must be an int"):
-            await d.add_rule("sheet", "rule", {"startLine": 0}, node_for_property_syntax_validation="x")  # type: ignore[arg-type]
+        with pytest.raises(
+            TypeError,
+            match="node_for_property_syntax_validation must be an int",
+        ):
+            await d.add_rule(
+                "sheet", "rule", {"startLine": 0},
+                node_for_property_syntax_validation="x",  # type: ignore[arg-type]
+            )
 
     async def test_add_rule_node_validation_bool(self) -> None:
         d = CSSDomain(FakeSender({}))
-        with pytest.raises(TypeError, match="node_for_property_syntax_validation must be an int"):
-            await d.add_rule("sheet", "rule", {"startLine": 0}, node_for_property_syntax_validation=True)  # type: ignore[arg-type]
+        with pytest.raises(
+            TypeError,
+            match="node_for_property_syntax_validation must be an int",
+        ):
+            await d.add_rule(
+                "sheet", "rule", {"startLine": 0},
+                node_for_property_syntax_validation=True,  # type: ignore[arg-type]
+            )
 
     async def test_collect_class_names_style_sheet_id_not_str(self) -> None:
         d = CSSDomain(FakeSender({}))
@@ -379,13 +391,23 @@ class TestCSSEdgeValidation:
 
     async def test_set_style_texts_node_validation_not_int(self) -> None:
         d = CSSDomain(FakeSender({}))
-        with pytest.raises(TypeError, match="node_for_property_syntax_validation must be an int or None"):
-            await d.set_style_texts([], node_for_property_syntax_validation="x")  # type: ignore[arg-type]
+        with pytest.raises(
+            TypeError,
+            match="node_for_property_syntax_validation must be an int or None",
+        ):
+            await d.set_style_texts(
+                [], node_for_property_syntax_validation="x",  # type: ignore[arg-type]
+            )
 
     async def test_set_style_texts_node_validation_bool(self) -> None:
         d = CSSDomain(FakeSender({}))
-        with pytest.raises(TypeError, match="node_for_property_syntax_validation must be an int or None"):
-            await d.set_style_texts([], node_for_property_syntax_validation=True)  # type: ignore[arg-type]
+        with pytest.raises(
+            TypeError,
+            match="node_for_property_syntax_validation must be an int or None",
+        ):
+            await d.set_style_texts(
+                [], node_for_property_syntax_validation=True,  # type: ignore[arg-type]
+            )
 
     async def test_set_local_fonts_enabled_not_bool(self) -> None:
         d = CSSDomain(FakeSender({}))

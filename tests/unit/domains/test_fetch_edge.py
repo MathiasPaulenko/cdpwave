@@ -69,12 +69,18 @@ class TestFetchEdgeValidation:
 
     async def test_continue_request_with_auth_response_value_not_str(self) -> None:
         d = FetchDomain(FakeSender({}))
-        with pytest.raises(TypeError, match="auth_challenge_response\\['response'\\] must be a string"):
+        with pytest.raises(
+            TypeError,
+            match="auth_challenge_response\\['response'\\] must be a string",
+        ):
             await d.continue_request_with_auth("req", {"response": 123})
 
     async def test_continue_request_with_auth_response_invalid_value(self) -> None:
         d = FetchDomain(FakeSender({}))
-        with pytest.raises(ValueError, match="auth_challenge_response\\['response'\\] must be one of"):
+        with pytest.raises(
+            ValueError,
+            match="auth_challenge_response\\['response'\\] must be one of",
+        ):
             await d.continue_request_with_auth("req", {"response": "Invalid"})
 
     async def test_continue_with_auth_request_id_not_str(self) -> None:
@@ -139,7 +145,10 @@ class TestFetchEdgeValidation:
 
     async def test_fulfill_request_no_code(self) -> None:
         d = FetchDomain(FakeSender({}))
-        with pytest.raises(ValueError, match="Either response_code or status_code must be provided"):
+        with pytest.raises(
+            ValueError,
+            match="Either response_code or status_code must be provided",
+        ):
             await d.fulfill_request("req")
 
     async def test_fulfill_request_code_not_int(self) -> None:
