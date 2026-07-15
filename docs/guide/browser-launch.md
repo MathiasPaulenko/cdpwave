@@ -12,7 +12,7 @@ browser in the following order:
 1. **`browser_path` argument** — if provided, uses this path directly.
 2. **`CDPWAVE_BROWSER_PATH` env var** — falls back to this if set.
 3. **System detection** — scans common install locations for Chrome,
-   Edge, and Brave on Windows, macOS, and Linux.
+   Edge, Brave, and Chromium on Windows, macOS, and Linux.
 
 If no browser is found, `BrowserNotFoundError` is raised.
 
@@ -23,6 +23,7 @@ If no browser is found, `BrowserNotFoundError` is raised.
 | Chrome | Yes | Yes | Yes |
 | Edge | Yes | Yes | Yes |
 | Brave | Yes | Yes | Yes |
+| Chromium | Yes | Yes | Yes |
 
 ## Launch headless
 

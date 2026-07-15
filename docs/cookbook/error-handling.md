@@ -7,13 +7,15 @@ All cdpwave exceptions inherit from `CDPError`:
 ```
 CDPError
 ├── ConnectionClosedError    # WebSocket closed
+│   └── ConnectionReconnectError  # Command lost during reconnection
 ├── CommandError             # CDP error response (has .code, .message)
 ├── CommandTimeoutError      # Command didn't respond in time
 ├── SessionClosedError       # Session closed by browser
 ├── BrowserNotFoundError     # No browser found on system
 ├── DiscoveryError           # HTTP discovery failed
 ├── LaunchTimeoutError       # Browser didn't start in time
-└── LaunchError              # Browser crashed during startup
+├── LaunchError              # Browser crashed during startup
+└── ProtocolError            # CDP response missing expected fields
 ```
 
 ## Catch specific exceptions
@@ -24,6 +26,7 @@ from cdpwave import (
     CommandError,
     CommandTimeoutError,
     BrowserNotFoundError,
+    ProtocolError,
 )
 
 try:

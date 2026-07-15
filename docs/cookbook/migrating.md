@@ -66,7 +66,7 @@ await session.input.dispatch_mouse_event(
 )
 
 # Type text
-await session.input.insert_text({"text": "Hello, world!"})
+await session.input.insert_text("Hello, world!")
 ```
 
 ### Screenshots and PDFs

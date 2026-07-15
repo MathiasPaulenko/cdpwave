@@ -24,6 +24,16 @@ client = await CDPClient.connect(host="localhost", port=9222)
 
 `CDPClient.connect` uses HTTP discovery (`/json/version`) to find the WebSocket URL. No browser process is managed — closing the client only closes the WebSocket, not the browser.
 
+### Direct WebSocket URL
+
+If you already know the WebSocket URL, skip HTTP discovery entirely:
+
+```python
+client = await CDPClient.connect(ws_url="ws://localhost:9222/devtools/browser/abc-123")
+```
+
+This is useful when the HTTP discovery endpoint is unavailable or behind a proxy.
+
 ## List and connect to pages
 
 ```python

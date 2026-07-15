@@ -10,7 +10,7 @@ pyppeteer is unmaintained (last release: Feb 2024 alpha). cdpwave is a modern, t
 | Browser | Downloads Chromium (~150MB) | Detects existing browser |
 | API style | Puppeteer port (camelCase) | Pythonic (snake_case, type hints) |
 | Typing | No type hints | mypy --strict |
-| CDP coverage | 7 domains | All 60 domains, 685 methods |
+| CDP coverage | 7 domains | All 60 domains, 689 methods |
 | Sessions | One WebSocket per tab | Flatten (one WebSocket for all) |
 | CDP access | Not exposed | Typed domains + escape hatch |
 | Context manager | Yes | Yes |
@@ -77,7 +77,7 @@ asyncio.run(main())
 
 1. **Wait helpers** — cdpwave now provides `session.wait_for_navigation()`, `session.wait_for_selector()`, `session.wait_for_load_state()`, and `session.wait_for_network_idle()` as direct replacements for pyppeteer's `waitFor*` methods.
 2. **Sync API** — for simple scripts, use `from cdpwave.sync import SyncCDPClient` as a drop-in replacement without async/await.
-3. **Full CDP access** — all 60 domains are available as typed properties: `session.page`, `session.runtime`, `session.network`, `session.dom`, `session.debugger`, `session.fetch`, `session.emulation`, `session.input`, etc.
+3. **Full CDP access** — all 60 domains with 689 typed methods are available as properties: `session.page`, `session.runtime`, `session.network`, `session.dom`, `session.debugger`, `session.fetch`, `session.emulation`, `session.input`, etc.
 4. **Event names** — Use raw CDP event names: `"Page.loadEventFired"` not `"load"`.
 5. **Flatten sessions** — All tabs share one WebSocket. No per-tab connection overhead.
 6. **Input simulation** — use `session.input.dispatch_key_event()` and `session.input.dispatch_mouse_event()` instead of `page.click()` / `page.type()`.

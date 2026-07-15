@@ -126,9 +126,24 @@ back/forward buttons will have no history to navigate through.
 
 ## Wait strategies
 
-cdpwave does not include auto-wait. The CDP protocol is event-driven,
-so you combine navigation with `asyncio` primitives to wait for
-specific conditions.
+cdpwave provides built-in wait helpers on `CDPSession` for common wait
+patterns. You can also combine navigation with `asyncio` primitives for
+custom conditions.
+
+### Built-in helpers
+
+| Method | Waits for |
+|---|---|
+| `session.wait_for_load_state("load")` | `Page.loadEventFired` |
+| `session.wait_for_load_state("DOMContentLoaded")` | `Page.lifecycleEvent` with `DOMContentLoaded` |
+| `session.wait_for_navigation(url="example.com")` | `Page.frameNavigated` matching URL |
+| `session.wait_for_selector("#btn", timeout=10)` | Element matching CSS selector |
+| `session.wait_for_network_idle(idle_time=0.5)` | All network requests finished |
+
+```python
+await session.page.navigate("https://example.com")
+await session.wait_for_load_state("load")
+```
 
 ### Wait for page load
 
@@ -191,21 +206,31 @@ Track pending requests and signal when all have completed. This is
 useful for single-page applications that load data dynamically:
 
 ```python
-pending = 0
+pending: set[str] = set()
 idle = asyncio.Event()
 
-async def on_request(_: dict) -> None:
-    nonlocal pending
-    pending += 1
+async def on_request(params: dict) -> None:
+    req_id = params.get("requestId")
+    if req_id:
+        pending.add(req_id)
 
-async def on_response(_: dict) -> None:
-    nonlocal pending
-    pending -= 1
-    if pending == 0:
+async def on_loading_finished(params: dict) -> None:
+    req_id = params.get("requestId")
+    if req_id:
+        pending.discard(req_id)
+    if not pending:
+        idle.set()
+
+async def on_loading_failed(params: dict) -> None:
+    req_id = params.get("requestId")
+    if req_id:
+        pending.discard(req_id)
+    if not pending:
         idle.set()
 
 session.on("Network.requestWillBeSent", on_request)
-session.on("Network.responseReceived", on_response)
+session.on("Network.loadingFinished", on_loading_finished)
+session.on("Network.loadingFailed", on_loading_failed)
 await session.network.enable()
 await session.page.navigate("https://example.com")
 await asyncio.wait_for(idle.wait(), timeout=15.0)
@@ -217,9 +242,9 @@ await asyncio.wait_for(idle.wait(), timeout=15.0)
     activity.
 
 !!! warning "Race conditions"
-    The simple counter above may miss requests that complete before
-    the handler is registered. For production code, register handlers
-    *before* navigating.
+    The simple set-based approach above may miss requests that complete
+    before the handler is registered. For production code, register
+    handlers *before* navigating.
 
 ### Wait for a specific URL
 

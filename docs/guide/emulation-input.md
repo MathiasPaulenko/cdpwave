@@ -453,9 +453,10 @@ async def main() -> None:
         )
 
         # Take a mobile screenshot
+        import base64
         screenshot = await session.page.capture_screenshot(format="png")
         with open("mobile.png", "wb") as f:
-            f.write(bytes.fromhex(screenshot["data"]))
+            f.write(base64.b64decode(screenshot["data"]))
 
         # Clean up overrides
         await session.emulation.clear_device_metrics_override()

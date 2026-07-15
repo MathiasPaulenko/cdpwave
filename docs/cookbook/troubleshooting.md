@@ -88,12 +88,11 @@ hatch for commands that may not exist, and wrap calls in
 `SystemInfo.getInfo` and related commands only work when sent to the
 **browser target**, not page targets.
 
-**Solution**: Use the browser-level session:
+**Solution**: Use `client.send()` to send commands to the browser target:
 
 ```python
-# Access the browser target session
-browser_session = client.browser  # or use client.send()
-result = await browser_session.send("SystemInfo.getInfo")
+# Send a command to the browser target (not a page session)
+result = await client.send("SystemInfo.getInfo")
 ```
 
 ## Page.crash may not return
