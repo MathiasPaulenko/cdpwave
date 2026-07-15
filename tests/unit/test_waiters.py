@@ -40,6 +40,12 @@ def make_session(
     dom.query_selector = _query
     session.dom = dom
 
+    runtime = MagicMock()
+    runtime.evaluate = AsyncMock(
+        return_value={"result": {"value": True}},
+    )
+    session.runtime = runtime
+
     network = MagicMock()
     network.enable = AsyncMock(return_value={})
     network.disable = AsyncMock(return_value={})
@@ -187,7 +193,7 @@ class TestWaitForNetworkIdle:
             for handler in dispatch.get("Network.requestWillBeSent", []):
                 await handler({"requestId": "r1"})
             await asyncio.sleep(0.05)
-            for handler in dispatch.get("Network.responseReceived", []):
+            for handler in dispatch.get("Network.loadingFinished", []):
                 await handler({"requestId": "r1"})
 
         task = asyncio.create_task(_fire())
@@ -222,7 +228,7 @@ class TestWaitForNetworkIdle:
             for handler in dispatch.get("Network.requestWillBeSent", []):
                 await handler({"requestId": "r1"})
             await asyncio.sleep(0.05)
-            for handler in dispatch.get("Network.responseReceived", []):
+            for handler in dispatch.get("Network.loadingFinished", []):
                 await handler({"requestId": "r1"})
 
         task = asyncio.create_task(_fire())
@@ -232,6 +238,25 @@ class TestWaitForNetworkIdle:
         await task
         session.network.enable.assert_awaited_once()
         session.network.disable.assert_not_awaited()
+
+    async def test_loading_failed_resolves(self) -> None:
+        """wait_for_network_idle should resolve when a request fails
+        via Network.loadingFailed instead of Network.loadingFinished."""
+        session, dispatch = make_session()
+
+        async def _fire() -> None:
+            await asyncio.sleep(0.05)
+            for handler in dispatch.get("Network.requestWillBeSent", []):
+                await handler({"requestId": "r1"})
+            await asyncio.sleep(0.05)
+            for handler in dispatch.get("Network.loadingFailed", []):
+                await handler({"requestId": "r1"})
+
+        task = asyncio.create_task(_fire())
+        await wait_for_network_idle(
+            session, idle_time=0.2, timeout=2.0,
+        )
+        await task
 
     async def test_disable_called_on_timeout(self) -> None:
         session, _ = make_session()

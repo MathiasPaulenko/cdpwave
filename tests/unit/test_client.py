@@ -107,6 +107,7 @@ class TestCDPClient:
         mock_launcher.launch.return_value = MagicMock(
             web_socket_debugger_url="ws://localhost:9222/devtools/browser/abc",
             port=9222,
+            pipe=False,
         )
         mock_conn = AsyncMock()
         mock_conn.is_closed = False
@@ -127,6 +128,28 @@ class TestCDPClient:
             backoff_max=30.0,
         )
         mock_conn.connect.assert_awaited_once()
+        assert client.is_closed is False
+
+    async def test_launch_with_pipe(self) -> None:
+        mock_launcher = AsyncMock()
+        mock_launcher.launch.return_value = MagicMock(
+            web_socket_debugger_url="",
+            port=0,
+            pipe=True,
+        )
+        mock_launcher.process = MagicMock()
+        mock_pipe_conn = AsyncMock()
+        mock_pipe_conn.is_closed = False
+
+        with (
+            patch(_LAUNCH, return_value=mock_launcher),
+            patch("cdpwave.client.PipeConnection", return_value=mock_pipe_conn) as mock_pipe_cls,
+        ):
+            client = await CDPClient.launch(headless=True, pipe=True)
+
+        mock_launcher.launch.assert_awaited_once()
+        mock_pipe_cls.assert_called_once_with(mock_launcher.process)
+        mock_pipe_conn.connect.assert_awaited_once()
         assert client.is_closed is False
 
     async def test_connect_to_existing_browser(self) -> None:

@@ -34,6 +34,7 @@ class TestReconnection:
         mock_launcher.launch.return_value = MagicMock(
             web_socket_debugger_url="ws://localhost:9222/devtools/browser/abc",
             port=9222,
+            pipe=False,
         )
         mock_conn = AsyncMock()
         mock_conn.is_closed = False
