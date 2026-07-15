@@ -156,26 +156,28 @@ async def wait_for_selector(
         "})"
     )
 
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + timeout
+
     try:
-        result = await asyncio.wait_for(
+        eval_result = await asyncio.wait_for(
             session.runtime.evaluate(js, await_promise=True, return_by_value=True),
             timeout=timeout,
         )
-        if result.get("result", {}).get("value") is True:
+        if eval_result.get("result", {}).get("value") is True:
             query = await session.dom.query_selector(root_node_id, selector)
             node_id: int = query.get("nodeId", 0)
             if node_id and node_id != 0:
                 return node_id
-    except (TimeoutError, Exception):
+    except TimeoutError:
         pass
 
-    deadline = asyncio.get_running_loop().time() + timeout
-    while asyncio.get_running_loop().time() < deadline:
-        result = await session.dom.query_selector(root_node_id, selector)
-        node_id = result.get("nodeId", 0)
+    while loop.time() < deadline:
+        query = await session.dom.query_selector(root_node_id, selector)
+        node_id = query.get("nodeId", 0)
         if node_id and node_id != 0:
             return node_id
-        remaining = deadline - asyncio.get_running_loop().time()
+        remaining = deadline - loop.time()
         if remaining <= 0:
             break
         await asyncio.sleep(min(poll_interval, remaining))
@@ -191,9 +193,10 @@ async def wait_for_network_idle(
 ) -> None:
     """Wait until network activity settles.
 
-    Tracks ``Network.requestWillBeSent`` and ``Network.responseReceived``
-    events. Resolves when there are no pending requests (requests without
-    a corresponding response) for at least ``idle_time`` seconds.
+    Tracks ``Network.requestWillBeSent``, ``Network.loadingFinished``,
+    and ``Network.loadingFailed`` events. Resolves when there are no
+    pending requests (requests without a corresponding completion or
+    failure) for at least ``idle_time`` seconds.
 
     Args:
         session: The CDP session to wait on.
@@ -216,7 +219,14 @@ async def wait_for_network_idle(
             pending.add(req_id)
         last_activity = loop.time()
 
-    async def _on_response(params: dict[str, Any]) -> None:
+    async def _on_loading_finished(params: dict[str, Any]) -> None:
+        nonlocal last_activity
+        req_id = params.get("requestId")
+        if req_id:
+            pending.discard(req_id)
+        last_activity = loop.time()
+
+    async def _on_loading_failed(params: dict[str, Any]) -> None:
         nonlocal last_activity
         req_id = params.get("requestId")
         if req_id:
@@ -224,7 +234,8 @@ async def wait_for_network_idle(
         last_activity = loop.time()
 
     sub_req = session.on("Network.requestWillBeSent", _on_request)
-    sub_resp = session.on("Network.responseReceived", _on_response)
+    sub_done = session.on("Network.loadingFinished", _on_loading_finished)
+    sub_fail = session.on("Network.loadingFailed", _on_loading_failed)
     try:
         deadline = loop.time() + timeout
         while True:
@@ -241,4 +252,5 @@ async def wait_for_network_idle(
                 await asyncio.sleep(max(wait, 0.05))
     finally:
         sub_req.unsubscribe()
-        sub_resp.unsubscribe()
+        sub_done.unsubscribe()
+        sub_fail.unsubscribe()

@@ -1,8 +1,21 @@
 """Runtime domain: JavaScript evaluation and remote object management."""
 
-from typing import Any
+from typing import Any, cast
 
 from cdpwave.domains.base import BaseDomain
+from cdpwave.types import (
+    RuntimeAwaitPromiseResult,
+    RuntimeCallFunctionOnResult,
+    RuntimeCompileScriptResult,
+    RuntimeEvaluateResult,
+    RuntimeGetExceptionDetailsResult,
+    RuntimeGetHeapUsageResult,
+    RuntimeGetIsolateIdResult,
+    RuntimeGetPropertiesResult,
+    RuntimeGlobalLexicalScopeNamesResult,
+    RuntimeQueryObjectsResult,
+    RuntimeRunScriptResult,
+)
 
 
 class RuntimeDomain(BaseDomain):
@@ -49,7 +62,7 @@ class RuntimeDomain(BaseDomain):
         allow_unsafe_eval_blocked_by_csp: bool = True,
         unique_context_id: str | None = None,
         serialization_options: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    ) -> RuntimeEvaluateResult:
         """Evaluate a JavaScript expression.
 
         Args:
@@ -114,7 +127,7 @@ class RuntimeDomain(BaseDomain):
             params["uniqueContextId"] = unique_context_id
         if serialization_options is not None:
             params["serializationOptions"] = serialization_options
-        return await self._call("Runtime.evaluate", params)
+        return cast("RuntimeEvaluateResult", await self._call("Runtime.evaluate", params))
 
     async def call_function_on(
         self,
@@ -131,7 +144,7 @@ class RuntimeDomain(BaseDomain):
         throw_on_side_effect: bool = False,
         unique_context_id: str | None = None,
         serialization_options: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    ) -> RuntimeCallFunctionOnResult:
         """Call a function on a remote object or in a context.
 
         Either ``object_id``, ``execution_context_id``, or
@@ -200,7 +213,10 @@ class RuntimeDomain(BaseDomain):
             params["uniqueContextId"] = unique_context_id
         if serialization_options is not None:
             params["serializationOptions"] = serialization_options
-        return await self._call("Runtime.callFunctionOn", params)
+        return cast(
+            "RuntimeCallFunctionOnResult",
+            await self._call("Runtime.callFunctionOn", params),
+        )
 
     async def release_object(self, object_id: str) -> dict[str, Any]:
         """Release a remote object by its object ID.
@@ -244,7 +260,7 @@ class RuntimeDomain(BaseDomain):
         accessor_properties_only: bool | None = None,
         generate_preview: bool = False,
         non_indexed_properties_only: bool | None = None,
-    ) -> dict[str, Any]:
+    ) -> RuntimeGetPropertiesResult:
         """Get properties of a remote object.
 
         Args:
@@ -270,7 +286,7 @@ class RuntimeDomain(BaseDomain):
             params["generatePreview"] = generate_preview
         if non_indexed_properties_only is not None:
             params["nonIndexedPropertiesOnly"] = non_indexed_properties_only
-        return await self._call("Runtime.getProperties", params)
+        return cast("RuntimeGetPropertiesResult", await self._call("Runtime.getProperties", params))
 
     async def add_binding(
         self,
@@ -325,7 +341,7 @@ class RuntimeDomain(BaseDomain):
         source_url: str = "",
         persist_script: bool = False,
         execution_context_id: int | None = None,
-    ) -> dict[str, Any]:
+    ) -> RuntimeCompileScriptResult:
         """Compile a JavaScript expression without executing it.
 
         Args:
@@ -353,7 +369,7 @@ class RuntimeDomain(BaseDomain):
             if isinstance(execution_context_id, bool) or not isinstance(execution_context_id, int):
                 raise TypeError("execution_context_id must be an int or None")
             params["executionContextId"] = execution_context_id
-        return await self._call("Runtime.compileScript", params)
+        return cast("RuntimeCompileScriptResult", await self._call("Runtime.compileScript", params))
 
     async def run_script(
         self,
@@ -365,7 +381,7 @@ class RuntimeDomain(BaseDomain):
         silent: bool = False,
         include_command_line_api: bool | None = None,
         generate_preview: bool = False,
-    ) -> dict[str, Any]:
+    ) -> RuntimeRunScriptResult:
         """Run a previously compiled script.
 
         Args:
@@ -399,7 +415,7 @@ class RuntimeDomain(BaseDomain):
             params["includeCommandLineAPI"] = include_command_line_api
         if generate_preview:
             params["generatePreview"] = generate_preview
-        return await self._call("Runtime.runScript", params)
+        return cast("RuntimeRunScriptResult", await self._call("Runtime.runScript", params))
 
     async def run_if_waiting_for_debugger(self) -> dict[str, Any]:
         """Run if the page is waiting for a debugger to attach.
@@ -412,7 +428,7 @@ class RuntimeDomain(BaseDomain):
     async def get_exception_details(
         self,
         error_object_id: str,
-    ) -> dict[str, Any]:
+    ) -> RuntimeGetExceptionDetailsResult:
         """Get details for an error object.
 
         Args:
@@ -421,16 +437,16 @@ class RuntimeDomain(BaseDomain):
         Returns:
             Dict with ``exceptionDetails``.
         """
-        return await self._call(
+        return cast("RuntimeGetExceptionDetailsResult", await self._call(
             "Runtime.getExceptionDetails",
             {"errorObjectId": error_object_id},
-        )
+        ))
 
     async def query_objects(
         self,
         prototype_object_id: str,
         object_group: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> RuntimeQueryObjectsResult:
         """Query objects with a given prototype.
 
         Args:
@@ -443,12 +459,12 @@ class RuntimeDomain(BaseDomain):
         params: dict[str, Any] = {"prototypeObjectId": prototype_object_id}
         if object_group is not None:
             params["objectGroup"] = object_group
-        return await self._call("Runtime.queryObjects", params)
+        return cast("RuntimeQueryObjectsResult", await self._call("Runtime.queryObjects", params))
 
     async def global_lexical_scope_names(
         self,
         execution_context_id: int | None = None,
-    ) -> dict[str, Any]:
+    ) -> RuntimeGlobalLexicalScopeNamesResult:
         """Get global lexical scope names (let/const/class).
 
         Args:
@@ -460,19 +476,19 @@ class RuntimeDomain(BaseDomain):
         params: dict[str, Any] = {}
         if execution_context_id is not None:
             params["executionContextId"] = execution_context_id
-        return await self._call(
+        return cast("RuntimeGlobalLexicalScopeNamesResult", await self._call(
             "Runtime.globalLexicalScopeNames",
             params if params else None,
-        )
+        ))
 
-    async def get_heap_usage(self) -> dict[str, Any]:
+    async def get_heap_usage(self) -> RuntimeGetHeapUsageResult:
         """Get the current JavaScript heap usage.
 
         Returns:
             Dict with ``usedSize``, ``totalSize``,
             ``embedderHeapUsedSize``, and ``backingStorageSize`` in bytes.
         """
-        return await self._call("Runtime.getHeapUsage")
+        return cast("RuntimeGetHeapUsageResult", await self._call("Runtime.getHeapUsage"))
 
     async def set_async_call_stack_depth(self, depth: int) -> dict[str, Any]:
         """Set the maximum depth of async call stacks.
@@ -508,7 +524,7 @@ class RuntimeDomain(BaseDomain):
         promise_object_id: str,
         return_by_value: bool = False,
         generate_preview: bool = False,
-    ) -> dict[str, Any]:
+    ) -> RuntimeAwaitPromiseResult:
         """Await a Promise remote object.
 
         Args:
@@ -527,7 +543,7 @@ class RuntimeDomain(BaseDomain):
             params["returnByValue"] = return_by_value
         if generate_preview:
             params["generatePreview"] = generate_preview
-        return await self._call("Runtime.awaitPromise", params)
+        return cast("RuntimeAwaitPromiseResult", await self._call("Runtime.awaitPromise", params))
 
     async def discard_console_entries(self) -> dict[str, Any]:
         """Discard all collected console entries.
@@ -540,13 +556,13 @@ class RuntimeDomain(BaseDomain):
         """
         return await self._call("Runtime.discardConsoleEntries")
 
-    async def get_isolate_id(self) -> dict[str, Any]:
+    async def get_isolate_id(self) -> RuntimeGetIsolateIdResult:
         """Get the isolate id.
 
         Returns:
             Dict with ``id`` string.
         """
-        return await self._call("Runtime.getIsolateId")
+        return cast("RuntimeGetIsolateIdResult", await self._call("Runtime.getIsolateId"))
 
     async def collect_garbage(self) -> dict[str, Any]:
         """Run garbage collection.

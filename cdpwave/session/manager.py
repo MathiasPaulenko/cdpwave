@@ -1,7 +1,12 @@
 """Session manager for CDP flatten sessions."""
 
+from __future__ import annotations
+
 from cdpwave.exceptions import ProtocolError
 from cdpwave.transport.connection import Connection
+from cdpwave.transport.pipe_connection import PipeConnection
+
+ConnectionType = Connection | PipeConnection
 
 
 class SessionManager:
@@ -11,7 +16,7 @@ class SessionManager:
     and closing targets via a single Connection.
     """
 
-    def __init__(self, connection: Connection) -> None:
+    def __init__(self, connection: ConnectionType) -> None:
         self._connection = connection
 
     async def create_target(

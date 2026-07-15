@@ -1,8 +1,14 @@
 """Target domain: session management and target lifecycle."""
 
-from typing import Any
+from typing import Any, cast
 
 from cdpwave.domains.base import BaseDomain
+from cdpwave.types import (
+    TargetAttachToTargetResult,
+    TargetCreateTargetResult,
+    TargetGetTargetInfoResult,
+    TargetGetTargetsResult,
+)
 
 
 class TargetDomain(BaseDomain):
@@ -23,7 +29,7 @@ class TargetDomain(BaseDomain):
         for_tab: bool = False,
         hidden: bool = False,
         focus: bool = False,
-    ) -> dict[str, Any]:
+    ) -> TargetCreateTargetResult:
         """Create a new browser target.
 
         Args:
@@ -78,13 +84,13 @@ class TargetDomain(BaseDomain):
             params["windowState"] = window_state
         if browser_context_id is not None:
             params["browserContextId"] = browser_context_id
-        return await self._call("Target.createTarget", params)
+        return cast("TargetCreateTargetResult", await self._call("Target.createTarget", params))
 
     async def attach_to_target(
         self,
         target_id: str,
         flatten: bool = True,
-    ) -> dict[str, Any]:
+    ) -> TargetAttachToTargetResult:
         """Attach to a target and return a session ID.
 
         Args:
@@ -96,10 +102,10 @@ class TargetDomain(BaseDomain):
         """
         if not isinstance(target_id, str):
             raise TypeError("target_id must be a string")
-        return await self._call(
+        return cast("TargetAttachToTargetResult", await self._call(
             "Target.attachToTarget",
             {"targetId": target_id, "flatten": flatten},
-        )
+        ))
 
     async def detach_from_target(self, session_id: str) -> dict[str, Any]:
         """Detach from a target session.
@@ -127,7 +133,7 @@ class TargetDomain(BaseDomain):
     async def get_targets(
         self,
         filter: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    ) -> TargetGetTargetsResult:
         """List all available targets.
 
         Returns all targets (pages, service workers, shared workers,
@@ -144,7 +150,7 @@ class TargetDomain(BaseDomain):
         params: dict[str, Any] = {}
         if filter is not None:
             params["filter"] = filter
-        return await self._call("Target.getTargets", params)
+        return cast("TargetGetTargetsResult", await self._call("Target.getTargets", params))
 
     async def set_auto_attach(
         self,
@@ -184,7 +190,7 @@ class TargetDomain(BaseDomain):
             {"targetId": target_id},
         )
 
-    async def get_target_info(self, target_id: str) -> dict[str, Any]:
+    async def get_target_info(self, target_id: str) -> TargetGetTargetInfoResult:
         """Get info about a specific target.
 
         Args:
@@ -193,10 +199,10 @@ class TargetDomain(BaseDomain):
         Returns:
             Dict with ``targetInfo``.
         """
-        return await self._call(
+        return cast("TargetGetTargetInfoResult", await self._call(
             "Target.getTargetInfo",
             {"targetId": target_id},
-        )
+        ))
 
     async def set_discover_targets(
         self,

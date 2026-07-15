@@ -1,8 +1,19 @@
 """Page domain: navigation, screenshots, and PDF generation."""
 
-from typing import Any
+from typing import Any, cast
 
 from cdpwave.domains.base import BaseDomain
+from cdpwave.types import (
+    PageAddScriptToEvaluateOnNewDocumentResult,
+    PageCaptureScreenshotResult,
+    PageGetFrameTreeResult,
+    PageGetLayoutMetricsResult,
+    PageGetNavigationHistoryResult,
+    PageGetResourceContentResult,
+    PageGetResourceTreeResult,
+    PageNavigateResult,
+    PagePrintToPDFResult,
+)
 
 _VALID_DOWNLOAD_BEHAVIORS = frozenset({"allow", "deny", "default"})
 
@@ -51,7 +62,7 @@ class PageDomain(BaseDomain):
         transition_type: str | None = None,
         frame_id: str | None = None,
         referrer_policy: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> PageNavigateResult:
         """Navigate the page to a URL.
 
         Args:
@@ -93,7 +104,7 @@ class PageDomain(BaseDomain):
                     f"referrer_policy must be one of {sorted(valid_policies)}"
                 )
             params["referrerPolicy"] = referrer_policy
-        return await self._call("Page.navigate", params)
+        return cast("PageNavigateResult", await self._call("Page.navigate", params))
 
     async def reload(
         self,
@@ -139,7 +150,7 @@ class PageDomain(BaseDomain):
         from_surface: bool = True,
         capture_beyond_viewport: bool = False,
         optimize_for_speed: bool | None = None,
-    ) -> dict[str, Any]:
+    ) -> PageCaptureScreenshotResult:
         """Capture a screenshot of the page.
 
         Args:
@@ -167,7 +178,10 @@ class PageDomain(BaseDomain):
             params["clip"] = clip
         if optimize_for_speed is not None:
             params["optimizeForSpeed"] = optimize_for_speed
-        return await self._call("Page.captureScreenshot", params)
+        return cast(
+            "PageCaptureScreenshotResult",
+            await self._call("Page.captureScreenshot", params),
+        )
 
     async def print_to_pdf(
         self,
@@ -188,7 +202,7 @@ class PageDomain(BaseDomain):
         return_as_stream: bool = False,
         generate_tagged_pdf: bool | None = None,
         generate_document_outline: bool | None = None,
-    ) -> dict[str, Any]:
+    ) -> PagePrintToPDFResult:
         """Print the page to PDF.
 
         Args:
@@ -241,11 +255,11 @@ class PageDomain(BaseDomain):
             params["generateTaggedPDF"] = generate_tagged_pdf
         if generate_document_outline is not None:
             params["generateDocumentOutline"] = generate_document_outline
-        return await self._call("Page.printToPDF", params)
+        return cast("PagePrintToPDFResult", await self._call("Page.printToPDF", params))
 
-    async def get_layout_metrics(self) -> dict[str, Any]:
+    async def get_layout_metrics(self) -> PageGetLayoutMetricsResult:
         """Return page layout metrics (viewport, content size)."""
-        return await self._call("Page.getLayoutMetrics")
+        return cast("PageGetLayoutMetricsResult", await self._call("Page.getLayoutMetrics"))
 
     async def go_back(self) -> dict[str, Any]:
         """Navigate to the previous page in history.
@@ -279,7 +293,7 @@ class PageDomain(BaseDomain):
             return await self.navigate_to_history_entry(entries[idx + 1]["id"])
         return {}
 
-    async def get_navigation_history(self) -> dict[str, Any]:
+    async def get_navigation_history(self) -> PageGetNavigationHistoryResult:
         """Return the navigation history of the page.
 
         Contains the current entry index and a list of all navigation
@@ -288,7 +302,7 @@ class PageDomain(BaseDomain):
         Returns:
             Response dict with ``currentIndex`` and ``entries`` list.
         """
-        return await self._call("Page.getNavigationHistory")
+        return cast("PageGetNavigationHistoryResult", await self._call("Page.getNavigationHistory"))
 
     async def reset_navigation_history(self) -> dict[str, Any]:
         """Reset the navigation history of the page.
@@ -318,7 +332,7 @@ class PageDomain(BaseDomain):
         world_name: str | None = None,
         include_command_line_api: bool | None = None,
         run_immediately: bool = False,
-    ) -> dict[str, Any]:
+    ) -> PageAddScriptToEvaluateOnNewDocumentResult:
         """Add a script to evaluate on every new document.
 
         The script runs before any other scripts on the page. Useful for
@@ -340,7 +354,10 @@ class PageDomain(BaseDomain):
             params["includeCommandLineAPI"] = include_command_line_api
         if run_immediately:
             params["runImmediately"] = True
-        return await self._call("Page.addScriptToEvaluateOnNewDocument", params)
+        return cast(
+            "PageAddScriptToEvaluateOnNewDocumentResult",
+            await self._call("Page.addScriptToEvaluateOnNewDocument", params),
+        )
 
     async def remove_script_to_evaluate_on_new_document(
         self,
@@ -356,27 +373,27 @@ class PageDomain(BaseDomain):
             {"identifier": identifier},
         )
 
-    async def get_frame_tree(self) -> dict[str, Any]:
+    async def get_frame_tree(self) -> PageGetFrameTreeResult:
         """Get the frame tree of the current page.
 
         Returns:
             Dict with ``frameTree`` containing the root frame and its children.
         """
-        return await self._call("Page.getFrameTree")
+        return cast("PageGetFrameTreeResult", await self._call("Page.getFrameTree"))
 
-    async def get_resource_tree(self) -> dict[str, Any]:
+    async def get_resource_tree(self) -> PageGetResourceTreeResult:
         """Get the resource tree of the current page.
 
         Returns:
             Dict with ``frameTree`` containing frames and their resources.
         """
-        return await self._call("Page.getResourceTree")
+        return cast("PageGetResourceTreeResult", await self._call("Page.getResourceTree"))
 
     async def get_resource_content(
         self,
         frame_id: str,
         url: str,
-    ) -> dict[str, Any]:
+    ) -> PageGetResourceContentResult:
         """Get the content of a resource by URL.
 
         Args:
@@ -386,10 +403,10 @@ class PageDomain(BaseDomain):
         Returns:
             Dict with ``content`` (base64 or text) and ``base64Encoded`` flag.
         """
-        return await self._call(
+        return cast("PageGetResourceContentResult", await self._call(
             "Page.getResourceContent",
             {"frameId": frame_id, "url": url},
-        )
+        ))
 
     async def set_bypass_csp(self, enabled: bool) -> dict[str, Any]:
         """Enable or disable Content Security Policy bypass.

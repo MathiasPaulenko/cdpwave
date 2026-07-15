@@ -155,7 +155,14 @@ class Connection:
         future = self._correlator.register(cmd_id)
 
         message = serialize_command(cmd_id, method, params, session_id)
-        await ws.send(message)
+        try:
+            await ws.send(message)
+        except websockets.ConnectionClosed:
+            self._correlator.reject(
+                cmd_id,
+                ConnectionClosedError("Connection is closed"),
+            )
+            raise ConnectionClosedError("Connection is closed") from None
         logger.debug("→ [%d] %s", cmd_id, method)
 
         if effective_timeout <= 0:

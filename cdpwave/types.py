@@ -110,3 +110,198 @@ class TargetAttachToTargetResult(TypedDict, total=False):
     """Response from ``Target.attachToTarget``."""
 
     sessionId: str
+
+
+class PageCaptureScreenshotResult(TypedDict, total=False):
+    """Response from ``Page.captureScreenshot``."""
+
+    data: str
+
+
+class PagePrintToPDFResult(TypedDict, total=False):
+    """Response from ``Page.printToPDF``."""
+
+    data: str
+    stream: str | None
+
+
+class PageGetLayoutMetricsResult(TypedDict, total=False):
+    """Response from ``Page.getLayoutMetrics``."""
+
+    layoutViewport: dict[str, Any]
+    visualViewport: dict[str, Any]
+    contentSize: dict[str, Any]
+    cssLayoutViewport: dict[str, Any]
+    cssVisualViewport: dict[str, Any]
+    cssContentSize: dict[str, Any]
+
+
+class PageGetNavigationHistoryResult(TypedDict, total=False):
+    """Response from ``Page.getNavigationHistory``."""
+
+    currentIndex: int
+    entries: list[dict[str, Any]]
+
+
+class PageGetFrameTreeResult(TypedDict, total=False):
+    """Response from ``Page.getFrameTree``."""
+
+    frameTree: dict[str, Any]
+
+
+class PageGetResourceTreeResult(TypedDict, total=False):
+    """Response from ``Page.getResourceTree``."""
+
+    frameTree: dict[str, Any]
+
+
+class PageGetResourceContentResult(TypedDict, total=False):
+    """Response from ``Page.getResourceContent``."""
+
+    content: str
+    base64Encoded: bool
+
+
+class PageAddScriptToEvaluateOnNewDocumentResult(TypedDict, total=False):
+    """Response from ``Page.addScriptToEvaluateOnNewDocument``."""
+
+    identifier: str
+
+
+class RuntimeCallFunctionOnResult(TypedDict, total=False):
+    """Response from ``Runtime.callFunctionOn``."""
+
+    result: RemoteObject
+    exceptionDetails: ExceptionDetails
+
+
+class RuntimeGetPropertiesResult(TypedDict, total=False):
+    """Response from ``Runtime.getProperties``."""
+
+    result: list[dict[str, Any]]
+    internalProperties: list[dict[str, Any]] | None
+    privateProperties: list[dict[str, Any]] | None
+    exceptionDetails: ExceptionDetails | None
+
+
+class RuntimeCompileScriptResult(TypedDict, total=False):
+    """Response from ``Runtime.compileScript``."""
+
+    scriptId: str
+    exceptionDetails: ExceptionDetails | None
+
+
+class RuntimeRunScriptResult(TypedDict, total=False):
+    """Response from ``Runtime.runScript``."""
+
+    result: RemoteObject
+    exceptionDetails: ExceptionDetails | None
+
+
+class RuntimeAwaitPromiseResult(TypedDict, total=False):
+    """Response from ``Runtime.awaitPromise``."""
+
+    result: RemoteObject
+    exceptionDetails: ExceptionDetails | None
+
+
+class RuntimeQueryObjectsResult(TypedDict, total=False):
+    """Response from ``Runtime.queryObjects``."""
+
+    objects: RemoteObject
+
+
+class RuntimeGlobalLexicalScopeNamesResult(TypedDict, total=False):
+    """Response from ``Runtime.globalLexicalScopeNames``."""
+
+    names: list[str]
+
+
+class RuntimeGetHeapUsageResult(TypedDict, total=False):
+    """Response from ``Runtime.getHeapUsage``."""
+
+    usedSize: float
+    totalSize: float
+    embedderHeapUsedSize: float | None
+    backingStorageSize: float | None
+
+
+class RuntimeGetExceptionDetailsResult(TypedDict, total=False):
+    """Response from ``Runtime.getExceptionDetails``."""
+
+    exceptionDetails: ExceptionDetails
+
+
+class RuntimeGetIsolateIdResult(TypedDict, total=False):
+    """Response from ``Runtime.getIsolateId``."""
+
+    id: str
+
+
+class NetworkGetResponseBodyResult(TypedDict, total=False):
+    """Response from ``Network.getResponseBody``."""
+
+    body: str
+    base64Encoded: bool
+
+
+class NetworkGetRequestPostDataResult(TypedDict, total=False):
+    """Response from ``Network.getRequestPostData``."""
+
+    postData: str
+
+
+class NetworkLoadNetworkResourceResult(TypedDict, total=False):
+    """Response from ``Network.loadNetworkResource``."""
+
+    resource: dict[str, Any]
+    httpStatusCode: int | None
+
+
+class DOMQuerySelectorResult(TypedDict, total=False):
+    """Response from ``DOM.querySelector``."""
+
+    nodeId: int
+
+
+class DOMDescribeNodeResult(TypedDict, total=False):
+    """Response from ``DOM.describeNode``."""
+
+    node: dict[str, Any]
+
+
+class DOMGetOuterHTMLResult(TypedDict, total=False):
+    """Response from ``DOM.getOuterHTML``."""
+
+    outerHTML: str
+
+
+class DOMResolveNodeResult(TypedDict, total=False):
+    """Response from ``DOM.resolveNode``."""
+
+    object: RemoteObject
+
+
+class DOMSearchResult(TypedDict, total=False):
+    """Response from ``DOM.performSearch``."""
+
+    searchId: str
+    resultCount: int
+
+
+class DOMGetSearchResultsResult(TypedDict, total=False):
+    """Response from ``DOM.getSearchResults``."""
+
+    nodeIds: list[int]
+
+
+class TargetGetTargetsResult(TypedDict, total=False):
+    """Response from ``Target.getTargets``."""
+
+    targetInfos: list[dict[str, Any]]
+
+
+class TargetGetTargetInfoResult(TypedDict, total=False):
+    """Response from ``Target.getTargetInfo``."""
+
+    targetInfo: dict[str, Any]

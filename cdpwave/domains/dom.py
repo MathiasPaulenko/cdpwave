@@ -1,8 +1,17 @@
 """DOM domain: document inspection and element manipulation."""
 
-from typing import Any
+from typing import Any, cast
 
 from cdpwave.domains.base import BaseDomain
+from cdpwave.types import (
+    DOMDescribeNodeResult,
+    DOMGetDocumentResult,
+    DOMGetOuterHTMLResult,
+    DOMGetSearchResultsResult,
+    DOMQuerySelectorResult,
+    DOMResolveNodeResult,
+    DOMSearchResult,
+)
 
 _VALID_WHITESPACE = frozenset({"none", "all"})
 _VALID_RELATIONS = frozenset({
@@ -61,7 +70,7 @@ class DOMDomain(BaseDomain):
         self,
         depth: int = -1,
         pierce: bool = False,
-    ) -> dict[str, Any]:
+    ) -> DOMGetDocumentResult:
         """Get the DOM document tree.
 
         Args:
@@ -77,10 +86,10 @@ class DOMDomain(BaseDomain):
         params: dict[str, Any] = {"depth": depth}
         if pierce:
             params["pierce"] = pierce
-        return await self._call(
+        return cast("DOMGetDocumentResult", await self._call(
             "DOM.getDocument",
             params,
-        )
+        ))
 
     async def get_outer_html(
         self,
@@ -88,7 +97,7 @@ class DOMDomain(BaseDomain):
         backend_node_id: int | None = None,
         object_id: str | None = None,
         include_shadow_dom: bool = False,
-    ) -> dict[str, Any]:
+    ) -> DOMGetOuterHTMLResult:
         """Get the outer HTML of a node.
 
         Args:
@@ -109,13 +118,13 @@ class DOMDomain(BaseDomain):
             params["objectId"] = object_id
         if include_shadow_dom:
             params["includeShadowDOM"] = True
-        return await self._call("DOM.getOuterHTML", params)
+        return cast("DOMGetOuterHTMLResult", await self._call("DOM.getOuterHTML", params))
 
     async def query_selector(
         self,
         node_id: int,
         selector: str,
-    ) -> dict[str, Any]:
+    ) -> DOMQuerySelectorResult:
         """Find the first element matching a CSS selector.
 
         Args:
@@ -125,10 +134,10 @@ class DOMDomain(BaseDomain):
         Returns:
             Response dict containing ``nodeId`` (0 if not found).
         """
-        return await self._call(
+        return cast("DOMQuerySelectorResult", await self._call(
             "DOM.querySelector",
             {"nodeId": node_id, "selector": selector},
-        )
+        ))
 
     async def query_selector_all(
         self,
@@ -282,7 +291,7 @@ class DOMDomain(BaseDomain):
         object_id: str | None = None,
         depth: int = -1,
         pierce: bool = False,
-    ) -> dict[str, Any]:
+    ) -> DOMDescribeNodeResult:
         """Describe a DOM node.
 
         Args:
@@ -306,7 +315,7 @@ class DOMDomain(BaseDomain):
             params["backendNodeId"] = backend_node_id
         if object_id is not None:
             params["objectId"] = object_id
-        return await self._call("DOM.describeNode", params)
+        return cast("DOMDescribeNodeResult", await self._call("DOM.describeNode", params))
 
     async def get_box_model(
         self,
@@ -369,7 +378,7 @@ class DOMDomain(BaseDomain):
         backend_node_id: int | None = None,
         object_group: str | None = None,
         execution_context_id: int | None = None,
-    ) -> dict[str, Any]:
+    ) -> DOMResolveNodeResult:
         """Resolve a DOM node to a remote object.
 
         Args:
@@ -400,7 +409,7 @@ class DOMDomain(BaseDomain):
             params["objectGroup"] = object_group
         if execution_context_id is not None:
             params["executionContextId"] = execution_context_id
-        return await self._call("DOM.resolveNode", params)
+        return cast("DOMResolveNodeResult", await self._call("DOM.resolveNode", params))
 
     async def request_node(
         self,
@@ -511,7 +520,7 @@ class DOMDomain(BaseDomain):
         self,
         query: str,
         include_user_agent_shadow_dom: bool = False,
-    ) -> dict[str, Any]:
+    ) -> DOMSearchResult:
         """Search the DOM for a query.
 
         Supports XPath and CSS selectors.
@@ -526,14 +535,14 @@ class DOMDomain(BaseDomain):
         params: dict[str, Any] = {"query": query}
         if include_user_agent_shadow_dom:
             params["includeUserAgentShadowDOM"] = True
-        return await self._call("DOM.performSearch", params)
+        return cast("DOMSearchResult", await self._call("DOM.performSearch", params))
 
     async def get_search_results(
         self,
         search_id: str,
         from_index: int,
         to_index: int,
-    ) -> dict[str, Any]:
+    ) -> DOMGetSearchResultsResult:
         """Get search results from a previous search.
 
         Args:
@@ -544,14 +553,14 @@ class DOMDomain(BaseDomain):
         Returns:
             Dict with ``nodeIds`` list.
         """
-        return await self._call(
+        return cast("DOMGetSearchResultsResult", await self._call(
             "DOM.getSearchResults",
             {
                 "searchId": search_id,
                 "fromIndex": from_index,
                 "toIndex": to_index,
             },
-        )
+        ))
 
     async def discard_search_results(self, search_id: str) -> dict[str, Any]:
         """Discard search results.

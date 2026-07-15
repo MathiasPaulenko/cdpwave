@@ -1,8 +1,14 @@
 """Network domain: monitoring, cookies, cache, and emulation."""
 
-from typing import Any
+from typing import Any, cast
 
 from cdpwave.domains.base import BaseDomain
+from cdpwave.types import (
+    NetworkGetCookiesResult,
+    NetworkGetRequestPostDataResult,
+    NetworkGetResponseBodyResult,
+    NetworkLoadNetworkResourceResult,
+)
 
 _VALID_SAME_SITE = frozenset({"Strict", "Lax", "None"})
 _VALID_COOKIE_PRIORITY = frozenset({"Low", "Medium", "High"})
@@ -157,7 +163,7 @@ class NetworkDomain(BaseDomain):
     async def get_cookies(
         self,
         urls: list[str] | None = None,
-    ) -> dict[str, Any]:
+    ) -> NetworkGetCookiesResult:
         """Get cookies for the current page or specified URLs.
 
         Args:
@@ -178,7 +184,7 @@ class NetworkDomain(BaseDomain):
                         f"got {type(u).__name__}"
                     )
             params["urls"] = urls
-        return await self._call("Network.getCookies", params)
+        return cast("NetworkGetCookiesResult", await self._call("Network.getCookies", params))
 
     async def set_cookie(
         self,
@@ -325,7 +331,7 @@ class NetworkDomain(BaseDomain):
     async def get_response_body(
         self,
         request_id: str,
-    ) -> dict[str, Any]:
+    ) -> NetworkGetResponseBodyResult:
         """Get the body of a response by request ID.
 
         Args:
@@ -336,10 +342,10 @@ class NetworkDomain(BaseDomain):
         """
         if not isinstance(request_id, str):
             raise TypeError("request_id must be a str")
-        return await self._call(
+        return cast("NetworkGetResponseBodyResult", await self._call(
             "Network.getResponseBody",
             {"requestId": request_id},
-        )
+        ))
 
     async def set_cache_disabled(
         self,
@@ -405,7 +411,7 @@ class NetworkDomain(BaseDomain):
         url: str,
         options: dict[str, Any],
         frame_id: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> NetworkLoadNetworkResourceResult:
         """Load a network resource directly.
 
         Args:
@@ -426,9 +432,12 @@ class NetworkDomain(BaseDomain):
             if not isinstance(frame_id, str):
                 raise TypeError("frame_id must be a str or None")
             params["frameId"] = frame_id
-        return await self._call("Network.loadNetworkResource", params)
+        return cast(
+            "NetworkLoadNetworkResourceResult",
+            await self._call("Network.loadNetworkResource", params),
+        )
 
-    async def get_request_post_data(self, request_id: str) -> dict[str, Any]:
+    async def get_request_post_data(self, request_id: str) -> NetworkGetRequestPostDataResult:
         """Get the POST data of a request.
 
         Args:
@@ -439,10 +448,10 @@ class NetworkDomain(BaseDomain):
         """
         if not isinstance(request_id, str):
             raise TypeError("request_id must be a str")
-        return await self._call(
+        return cast("NetworkGetRequestPostDataResult", await self._call(
             "Network.getRequestPostData",
             {"requestId": request_id},
-        )
+        ))
 
     async def set_cookies(
         self,

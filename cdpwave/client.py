@@ -75,11 +75,13 @@ from cdpwave.exceptions import (
     CommandError,
     CommandTimeoutError,
     ConnectionClosedError,
+    LaunchError,
     ProtocolError,
     SessionClosedError,
 )
-from cdpwave.session.manager import SessionManager
+from cdpwave.session.manager import ConnectionType, SessionManager
 from cdpwave.transport.connection import Connection
+from cdpwave.transport.pipe_connection import PipeConnection
 from cdpwave.types import CommandSender, EventErrorCallback
 
 logger = logging.getLogger("cdpwave.client")
@@ -95,7 +97,7 @@ class CDPSession:
 
     def __init__(
         self,
-        connection: Connection,
+        connection: ConnectionType,
         session_id: str,
         target_id: str,
         client: CDPClient | None = None,
@@ -915,10 +917,10 @@ class BrowserContext:
             return
         self._closed = True
         for session in self._sessions:
-            with contextlib.suppress(CommandError, ConnectionClosedError):
+            with contextlib.suppress(CommandError, ConnectionClosedError, CommandTimeoutError):
                 await session.close()
         self._sessions.clear()
-        with contextlib.suppress(CommandError, ConnectionClosedError):
+        with contextlib.suppress(CommandError, ConnectionClosedError, CommandTimeoutError):
             await self._client._connection.send_command(
                 "Target.disposeBrowserContext",
                 {"browserContextId": self._context_id},
@@ -949,7 +951,7 @@ class CDPClient:
 
     def __init__(
         self,
-        connection: Connection,
+        connection: ConnectionType,
         launcher: BrowserLauncher | None = None,
         discovery: TargetDiscovery | None = None,
         strict_events: bool = False,
@@ -969,6 +971,7 @@ class CDPClient:
         self._sessions: dict[str, CDPSession] = {}
         self._managed_targets: set[str] = set()
         self._session_targets: dict[str, str] = {}
+        self._auto_attach_targets: set[str] = set()
         self._closed = False
         self._browser = BrowserDomain(self.send)
 
@@ -983,6 +986,11 @@ class CDPClient:
         exist in the browser. Targets that have been closed are skipped.
         """
         count = len(self._sessions)
+        self._auto_attach_targets = {
+            s._target_id
+            for s in self._sessions.values()
+            if s._auto_attach_enabled
+        }
         for session in self._sessions.values():
             session._closed = True
             session._dispatcher.clear()
@@ -1033,6 +1041,16 @@ class CDPClient:
             sid: session._target_id
             for sid, session in self._sessions.items()
         }
+        for session in self._sessions.values():
+            if session._target_id in self._auto_attach_targets:
+                try:
+                    await session._enable_auto_attach()
+                except Exception:
+                    logger.warning(
+                        "Failed to re-enable auto-attach for session %s",
+                        session._session_id,
+                        exc_info=True,
+                    )
         if reattached:
             logger.info("Re-attached to %d targets after reconnection", reattached)
 
@@ -1057,9 +1075,9 @@ class CDPClient:
             if detached_session_id is not None:
                 session = self._sessions.get(detached_session_id)
                 if session is not None:
-                    if session._auto_attach_enabled:
-                        parent = self._sessions.get(session_id) if session_id else None
-                        if parent is not None:
+                    if session_id is not None:
+                        parent = self._sessions.get(session_id)
+                        if parent is not None and detached_session_id in parent._sub_sessions:
                             parent._handle_detached_from_target(params)
                             return
                     session._closed = True
@@ -1148,6 +1166,7 @@ class CDPClient:
         max_retries: int = 0,
         backoff_base: float = 1.0,
         backoff_max: float = 30.0,
+        pipe: bool = False,
     ) -> _LaunchContext:
         """Launch a new browser and return a connected CDPClient.
 
@@ -1164,6 +1183,8 @@ class CDPClient:
             max_retries: Maximum WebSocket reconnection attempts (0 = no reconnect).
             backoff_base: Initial reconnection backoff delay in seconds.
             backoff_max: Maximum reconnection backoff delay in seconds.
+            pipe: Use ``--remote-debugging-pipe`` instead of a TCP port.
+                More secure (no port exposed) but no reconnection support.
 
         Returns:
             A _LaunchContext that resolves to a connected CDPClient.
@@ -1176,8 +1197,20 @@ class CDPClient:
                 headless=headless,
                 user_data_dir=user_data_dir,
                 extra_args=extra_args,
+                pipe=pipe,
             )
             info = await launcher.launch(timeout=timeout)
+
+            if info.pipe:
+                proc = launcher.process
+                if proc is None:
+                    raise LaunchError("Browser process not available after pipe launch")
+                connection: Connection | PipeConnection = PipeConnection(proc)
+                await connection.connect()
+                client = cls(connection, launcher=launcher, discovery=None)
+                connection._event_callback = client._event_callback
+                return client
+
             discovery = TargetDiscovery(port=info.port)
             connection = Connection(
                 info.web_socket_debugger_url,

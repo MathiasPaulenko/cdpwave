@@ -57,6 +57,7 @@ class BrowserInfo:
         protocol_version: CDP protocol version.
         user_agent: Browser user agent string.
         port: The remote debugging port.
+        pipe: Whether the browser was launched with ``--remote-debugging-pipe``.
     """
 
     web_socket_debugger_url: str
@@ -64,6 +65,7 @@ class BrowserInfo:
     protocol_version: str
     user_agent: str
     port: int
+    pipe: bool = False
 
 
 class BrowserLauncher:
@@ -80,12 +82,14 @@ class BrowserLauncher:
         headless: bool = True,
         user_data_dir: str | None = None,
         extra_args: list[str] | None = None,
+        pipe: bool = False,
     ) -> None:
         self._browser_path = browser_path
         self._port = port
         self._headless = headless
         self._user_data_dir = user_data_dir
         self._extra_args = extra_args
+        self._pipe = pipe
         self._process: asyncio.subprocess.Process | None = None
         self._temp_dir: str | None = None
         self._info: BrowserInfo | None = None
@@ -101,7 +105,9 @@ class BrowserLauncher:
             self._browser_path = find_browser()
 
         port_socket: socket.socket | None = None
-        if self._port != 0:
+        if self._pipe:
+            port = 0
+        elif self._port != 0:
             port = self._port
         else:
             port, port_socket = _find_free_port()
@@ -114,11 +120,15 @@ class BrowserLauncher:
 
         args = [
             self._browser_path,
-            f"--remote-debugging-port={port}",
             f"--user-data-dir={user_data_dir}",
-            "--remote-allow-origins=*",
             *_DEFAULT_FLAGS,
         ]
+
+        if self._pipe:
+            args.append("--remote-debugging-pipe")
+        else:
+            args.append(f"--remote-debugging-port={port}")
+            args.append("--remote-allow-origins=*")
 
         if self._headless:
             args.append("--headless=new")
@@ -153,6 +163,9 @@ class BrowserLauncher:
         """
         if self._process is not None:
             raise RuntimeError("Browser is already running")
+
+        if self._pipe:
+            return await self._launch_pipe(timeout=timeout)
 
         max_retries = 3 if self._port == 0 else 1
         for attempt in range(max_retries):
@@ -191,6 +204,40 @@ class BrowserLauncher:
                 )
 
         raise LaunchError("Failed to launch browser after retries")
+
+    async def _launch_pipe(self, timeout: float = 10.0) -> BrowserInfo:
+        """Launch browser with ``--remote-debugging-pipe``.
+
+        No HTTP discovery is needed — communication is via stdin/stdout.
+        """
+        args, _ = self._build_args()
+        self._process = await asyncio.create_subprocess_exec(
+            *args,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+
+        await asyncio.sleep(0.2)
+        if self._process.returncode is not None:
+            stderr_data = b""
+            if self._process.stderr is not None:
+                stderr_data = await self._process.stderr.read()
+            stderr_text = stderr_data.decode("utf-8", errors="replace").strip()
+            raise LaunchError(
+                f"Browser process exited with code {self._process.returncode}"
+                + (f": {stderr_text}" if stderr_text else "")
+            )
+
+        self._info = BrowserInfo(
+            web_socket_debugger_url="",
+            browser_version="",
+            protocol_version="",
+            user_agent="",
+            port=0,
+            pipe=True,
+        )
+        return self._info
 
     async def _wait_for_endpoint(self, timeout: float = 10.0) -> BrowserInfo:
         """Poll the HTTP discovery endpoint until the browser is ready."""
@@ -263,6 +310,11 @@ class BrowserLauncher:
     def info(self) -> BrowserInfo | None:
         """BrowserInfo if the browser has been launched, else None."""
         return self._info
+
+    @property
+    def process(self) -> asyncio.subprocess.Process | None:
+        """The browser subprocess, or None if not launched."""
+        return self._process
 
     def __repr__(self) -> str:
         state = "running" if self.is_running else "stopped"
