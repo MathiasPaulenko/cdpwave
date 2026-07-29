@@ -8,24 +8,16 @@
 
   <rect x="32" y="32" width="448" height="448" rx="96" ry="96" fill="url(#bg)"/>
 
-  <!-- Wave (wave ecosystem brand) -->
-  <path d="M 112 220 Q 176 160 240 220 T 368 220 T 400 220"
-        fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity="0.4"/>
-  <path d="M 112 270 Q 176 210 240 270 T 368 270 T 400 270"
+  <!-- Wave (ecosystem brand) -->
+  <path d="M 112 240 Q 176 180 240 240 T 368 240 T 400 240"
+        fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity="0.35"/>
+  <path d="M 112 290 Q 176 230 240 290 T 368 290 T 400 290"
         fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
 
-  <!-- DevTools gear (CDP = Chrome DevTools Protocol) -->
-  <g transform="translate(256, 380)">
-    <circle r="36" fill="none" stroke="#FFFFFF" stroke-width="8" opacity="0.9"/>
-    <circle r="14" fill="#FFFFFF" opacity="0.9"/>
-    <!-- Gear teeth -->
-    <rect x="-6" y="-52" width="12" height="16" rx="3" fill="#FFFFFF" opacity="0.9"/>
-    <rect x="-6" y="36" width="12" height="16" rx="3" fill="#FFFFFF" opacity="0.9"/>
-    <rect x="-52" y="-6" width="16" height="12" rx="3" fill="#FFFFFF" opacity="0.9"/>
-    <rect x="36" y="-6" width="16" height="12" rx="3" fill="#FFFFFF" opacity="0.9"/>
-    <rect x="-40" y="-40" width="14" height="14" rx="3" transform="rotate(45 -33 -33)" fill="#FFFFFF" opacity="0.9"/>
-    <rect x="26" y="-40" width="14" height="14" rx="3" transform="rotate(45 33 -33)" fill="#FFFFFF" opacity="0.9"/>
-    <rect x="-40" y="26" width="14" height="14" rx="3" transform="rotate(45 -33 33)" fill="#FFFFFF" opacity="0.9"/>
-    <rect x="26" y="26" width="14" height="14" rx="3" transform="rotate(45 33 33)" fill="#FFFFFF" opacity="0.9"/>
-  </g>
+  <!-- DevTools inspector brackets — subtle, minimal -->
+  <path d="M 196 370 L 168 386 L 196 402"
+        fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+  <path d="M 316 370 L 344 386 L 316 402"
+        fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+  <line x1="296" y1="362" x2="216" y2="410" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.5"/>
 </svg>
