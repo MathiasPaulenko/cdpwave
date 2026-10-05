@@ -456,21 +456,32 @@ class TestPerformanceE2E:
         ):
             await _wait_for_page(session)
             await session.performance.enable()
+            await session.runtime.enable()
             r1 = await session.performance.get_metrics()
-            await _run_heavy_js(session)
-            await asyncio.sleep(0.5)
-            r2 = await session.performance.get_metrics()
-            assert len(r1["metrics"]) > 0
-            assert len(r2["metrics"]) > 0
             heap1 = next(
                 (m["value"] for m in r1["metrics"] if m["name"] == "JSHeapUsedSize"),
                 0,
             )
-            heap2 = next(
-                (m["value"] for m in r2["metrics"] if m["name"] == "JSHeapUsedSize"),
-                0,
+            # Retain the allocation on window so GC cannot reclaim it
+            await session.runtime.evaluate(
+                "window.__heapGrowthTest = "
+                "Array.from({length: 100000}, (_, i) => ({i, data: new Array(10).fill(i)}))",
+                return_by_value=True,
             )
-            assert heap2 >= heap1
+            # Heap metrics update asynchronously — poll until growth shows
+            heap2 = heap1
+            for _ in range(20):
+                await asyncio.sleep(0.5)
+                r2 = await session.performance.get_metrics()
+                heap2 = next(
+                    (m["value"] for m in r2["metrics"] if m["name"] == "JSHeapUsedSize"),
+                    0,
+                )
+                if heap2 > heap1:
+                    break
+            assert len(r1["metrics"]) > 0
+            assert len(r2["metrics"]) > 0
+            assert heap2 > heap1
             await session.performance.disable()
 
     async def test_enable_with_empty_string_time_domain(self) -> None:

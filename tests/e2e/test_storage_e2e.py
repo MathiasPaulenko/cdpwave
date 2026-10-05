@@ -11,6 +11,7 @@ import pytest
 
 from cdpwave import CDPClient, CDPSession
 from cdpwave.browser.finder import find_browser
+from cdpwave.exceptions import CommandError
 
 
 def _browser_available() -> bool:
@@ -182,8 +183,13 @@ class TestStorageE2E:
         ):
             await _wait_for_page(session)
 
-            await session.storage.set_interest_group_tracking(True)
-            await session.storage.set_interest_group_tracking(False)
+            try:
+                await session.storage.set_interest_group_tracking(True)
+                await session.storage.set_interest_group_tracking(False)
+            except CommandError as exc:
+                if exc.code == -32601:
+                    pytest.skip("Storage.setInterestGroupTracking not in this Chrome")
+                raise
 
     async def test_interest_group_auction_tracking_toggle(self) -> None:
         async with (
@@ -192,8 +198,15 @@ class TestStorageE2E:
         ):
             await _wait_for_page(session)
 
-            await session.storage.set_interest_group_auction_tracking(True)
-            await session.storage.set_interest_group_auction_tracking(False)
+            try:
+                await session.storage.set_interest_group_auction_tracking(True)
+                await session.storage.set_interest_group_auction_tracking(False)
+            except CommandError as exc:
+                if exc.code == -32601:
+                    pytest.skip(
+                        "Storage.setInterestGroupAuctionTracking not in this Chrome"
+                    )
+                raise
 
     async def test_shared_storage_tracking_toggle(self) -> None:
         async with (
@@ -202,8 +215,13 @@ class TestStorageE2E:
         ):
             await _wait_for_page(session)
 
-            await session.storage.set_shared_storage_tracking(True)
-            await session.storage.set_shared_storage_tracking(False)
+            try:
+                await session.storage.set_shared_storage_tracking(True)
+                await session.storage.set_shared_storage_tracking(False)
+            except CommandError as exc:
+                if exc.code == -32601:
+                    pytest.skip("Storage.setSharedStorageTracking not in this Chrome")
+                raise
 
     @pytest.mark.skip(reason="CI Chrome: Invalid Storage Key for set_storage_bucket_tracking")
     async def test_storage_bucket_tracking_toggle(self) -> None:
