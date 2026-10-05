@@ -3,12 +3,12 @@ import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
-import websockets
+from websockets.exceptions import ConnectionClosed as WSConnectionClosed
 
 from cdpwave.exceptions import CommandError, CommandTimeoutError, ConnectionClosedError
 from cdpwave.transport.connection import Connection
 
-_WS_CONNECT = "cdpwave.transport.connection.websockets.connect"
+_WS_CONNECT = "cdpwave.transport.connection.connect"
 
 
 class FakeWebSocket:
@@ -170,7 +170,7 @@ class TestConnection:
                 return self
 
             async def __anext__(self) -> str:
-                raise websockets.ConnectionClosed(None, None)
+                raise WSConnectionClosed(None, None)
 
         mock_ws = ClosedWS()
 
@@ -394,7 +394,7 @@ class TestConnection:
                 return self
 
             async def __anext__(self) -> str:
-                raise websockets.ConnectionClosed(None, None)
+                raise WSConnectionClosed(None, None)
 
         fake_ws = FakeWebSocket([])
 
@@ -424,7 +424,7 @@ class TestConnection:
                 return self
 
             async def __anext__(self) -> str:
-                raise websockets.ConnectionClosed(None, None)
+                raise WSConnectionClosed(None, None)
 
         with patch(_WS_CONNECT, new_callable=AsyncMock) as mock_connect:
             mock_connect.side_effect = [ClosingWS(), OSError("refused")]

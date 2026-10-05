@@ -322,7 +322,7 @@ class TestConnectionEventCallback:
         mock_ws = EventWS()
 
         with patch(
-            "cdpwave.transport.connection.websockets.connect",
+            "cdpwave.transport.connection.connect",
             new_callable=AsyncMock,
         ) as mock_connect:
             mock_connect.return_value = mock_ws
@@ -359,7 +359,7 @@ class TestConnectionEventCallback:
         mock_ws = EventWS()
 
         with patch(
-            "cdpwave.transport.connection.websockets.connect",
+            "cdpwave.transport.connection.connect",
             new_callable=AsyncMock,
         ) as mock_connect:
             mock_connect.return_value = mock_ws

@@ -7,8 +7,8 @@ import logging
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-import websockets
-from websockets.asyncio.client import ClientConnection
+from websockets.asyncio.client import ClientConnection, connect
+from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 
 from cdpwave.exceptions import (
     CommandError,
@@ -89,7 +89,7 @@ class Connection:
 
     async def connect(self) -> None:
         """Open the WebSocket connection and start the receive loop."""
-        self._ws = await websockets.connect(
+        self._ws = await connect(
             self._url,
             max_size=None,
             ping_interval=20,
@@ -157,7 +157,7 @@ class Connection:
         message = serialize_command(cmd_id, method, params, session_id)
         try:
             await ws.send(message)
-        except websockets.ConnectionClosed:
+        except ConnectionClosed:
             self._correlator.reject(
                 cmd_id,
                 ConnectionClosedError("Connection is closed"),
@@ -223,7 +223,7 @@ class Connection:
                 )
                 await asyncio.sleep(delay)
                 try:
-                    self._ws = await websockets.connect(
+                    self._ws = await connect(
                         self._url,
                         max_size=None,
                         ping_interval=20,
@@ -294,9 +294,9 @@ class Connection:
                         task.add_done_callback(_log_task_exception)
                     else:
                         logger.debug("← event: %s (session=%s)", method, session)
-        except websockets.ConnectionClosedOK:
+        except ConnectionClosedOK:
             logger.info("WebSocket closed normally")
-        except websockets.ConnectionClosed:
+        except ConnectionClosed:
             logger.info("WebSocket closed by remote")
         except asyncio.CancelledError:
             logger.debug("Receive loop cancelled")

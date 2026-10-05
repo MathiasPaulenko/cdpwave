@@ -15,7 +15,7 @@ from cdpwave.exceptions import (
 )
 from cdpwave.transport.connection import Connection
 
-_WS_CONNECT = "cdpwave.transport.connection.websockets.connect"
+_WS_CONNECT = "cdpwave.transport.connection.connect"
 
 
 class FakeWebSocket:

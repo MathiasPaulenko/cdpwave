@@ -2,11 +2,13 @@
 
 import asyncio
 import contextlib
+import inspect
 import json
 import logging
 import os
 import shutil
 import socket
+import subprocess
 import tempfile
 import urllib.request
 from dataclasses import dataclass
@@ -30,16 +32,16 @@ def _is_ci() -> bool:
 
 
 def _find_free_port() -> tuple[int, socket.socket | None]:
-    """Bind a ephemeral socket to find a free port.
+    """Bind an ephemeral socket to find a free port.
 
-    Returns the port and the bound socket. The caller must keep the socket
-    open until the port is in use by the browser, then close it. This
-    eliminates the TOCTOU race where another process could grab the port
-    between finding it and using it.
+    Returns the port and the bound socket. The caller should keep the
+    socket open until just before spawning the browser, then close it —
+    this shrinks the TOCTOU window where another process could grab the
+    port between finding it and the browser binding it.
 
     Returns:
-        A tuple of (port, socket) where socket is the bound socket to
-        hold the port, or None if a specific port was requested.
+        A tuple of (port, socket) where socket is the bound socket
+        holding the port, or None if a specific port was requested.
     """
     s = socket.socket()
     s.bind(("127.0.0.1", 0))
@@ -90,9 +92,11 @@ class BrowserLauncher:
         self._user_data_dir = user_data_dir
         self._extra_args = extra_args
         self._pipe = pipe
-        self._process: asyncio.subprocess.Process | None = None
+        self._process: asyncio.subprocess.Process | subprocess.Popen[bytes] | None = None
         self._temp_dir: str | None = None
         self._info: BrowserInfo | None = None
+        self._pipe_read_fd: int | None = None
+        self._pipe_write_fd: int | None = None
 
     def _build_args(self) -> tuple[list[str], socket.socket | None]:
         """Build the command-line arguments for the browser process.
@@ -174,19 +178,18 @@ class BrowserLauncher:
                 self._user_data_dir = None
             args, port_socket = self._build_args()
 
-            if port_socket is not None:
-                port_socket.close()
-
             self._process = await asyncio.create_subprocess_exec(
                 *args,
                 stdout=asyncio.subprocess.DEVNULL,
                 stderr=asyncio.subprocess.PIPE,
             )
+            if port_socket is not None:
+                port_socket.close()
 
             try:
                 self._info = await self._wait_for_endpoint(timeout=timeout)
                 return self._info
-            except LaunchError:
+            except (LaunchError, LaunchTimeoutError):
                 if self._process is not None:
                     with contextlib.suppress(Exception):
                         self._process.terminate()
@@ -208,22 +211,59 @@ class BrowserLauncher:
     async def _launch_pipe(self, timeout: float = 10.0) -> BrowserInfo:
         """Launch browser with ``--remote-debugging-pipe``.
 
-        No HTTP discovery is needed — communication is via stdin/stdout.
+        Chrome's pipe protocol uses file descriptors 3 (commands in)
+        and 4 (messages out) with NUL-delimited JSON. POSIX only.
+
+        No HTTP discovery is needed — readiness is implicit once the
+        process is alive.
         """
+        if os.name != "posix":
+            raise LaunchError(
+                "--remote-debugging-pipe is only supported on POSIX systems"
+            )
+
         args, _ = self._build_args()
-        self._process = await asyncio.create_subprocess_exec(
-            *args,
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
+
+        # rd3/wr3: parent writes to wr3, browser reads from fd 3 (rd3).
+        # rd4/wr4: browser writes to fd 4 (wr4), parent reads from rd4.
+        rd3, wr3 = os.pipe()
+        rd4, wr4 = os.pipe()
+
+        def _map_child_fds() -> None:
+            os.dup2(rd3, 3)
+            os.dup2(wr4, 4)
+
+        try:
+            # asyncio.subprocess cannot pass fds 3/4 to the child or run
+            # a preexec_fn, so Chrome's pipe protocol requires Popen here.
+            self._process = subprocess.Popen(  # noqa: ASYNC220
+                args,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                pass_fds=(rd3, wr4),
+                preexec_fn=_map_child_fds,
+            )
+        except OSError as exc:
+            for fd in (rd3, wr3, rd4, wr4):
+                with contextlib.suppress(OSError):
+                    os.close(fd)
+            raise LaunchError(f"Failed to launch browser process: {exc}") from exc
+
+        os.close(rd3)
+        os.close(wr4)
+        self._pipe_read_fd = rd4
+        self._pipe_write_fd = wr3
 
         await asyncio.sleep(0.2)
-        if self._process.returncode is not None:
-            stderr_data = b""
-            if self._process.stderr is not None:
-                stderr_data = await self._process.stderr.read()
+        if self._process.poll() is not None:
+            stderr_data = self._process.stderr.read() if self._process.stderr else b""
             stderr_text = stderr_data.decode("utf-8", errors="replace").strip()
+            for fd in (rd4, wr3):
+                with contextlib.suppress(OSError):
+                    os.close(fd)
+            self._pipe_read_fd = None
+            self._pipe_write_fd = None
             raise LaunchError(
                 f"Browser process exited with code {self._process.returncode}"
                 + (f": {stderr_text}" if stderr_text else "")
@@ -243,21 +283,34 @@ class BrowserLauncher:
         """Poll the HTTP discovery endpoint until the browser is ready."""
         url = f"http://127.0.0.1:{self._port}/json/version"
         delay = 0.1
-        elapsed = 0.0
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + timeout
 
-        while elapsed < timeout:
-            if self._process is not None and self._process.returncode is not None:
+        while loop.time() < deadline:
+            proc = self._process
+            if proc is not None:
+                if isinstance(proc, subprocess.Popen):
+                    exited = proc.poll() is not None
+                else:
+                    exited = proc.returncode is not None
+            else:
+                exited = False
+            if exited and proc is not None:
                 stderr_data = b""
-                if self._process.stderr is not None:
-                    stderr_data = await self._process.stderr.read()
+                if proc.stderr is not None:
+                    read_result = proc.stderr.read()
+                    if inspect.isawaitable(read_result):
+                        stderr_data = await read_result
+                    else:
+                        stderr_data = read_result
                 stderr_text = stderr_data.decode("utf-8", errors="replace").strip()
                 raise LaunchError(
-                    f"Browser process exited with code {self._process.returncode}"
+                    f"Browser process exited with code {proc.returncode}"
                     + (f": {stderr_text}" if stderr_text else "")
                 )
 
             try:
-                fetch_timeout = min(5.0, timeout - elapsed)
+                fetch_timeout = min(5.0, deadline - loop.time())
                 data = await asyncio.to_thread(_fetch_version, url, fetch_timeout)
                 return BrowserInfo(
                     web_socket_debugger_url=str(data.get("webSocketDebuggerUrl", "")),
@@ -268,7 +321,6 @@ class BrowserLauncher:
                 )
             except Exception:
                 await asyncio.sleep(delay)
-                elapsed += delay
                 delay = min(delay * 1.5, 1.0)
 
         raise LaunchTimeoutError(
@@ -277,9 +329,28 @@ class BrowserLauncher:
 
     async def close(self) -> None:
         """Terminate the browser process and clean up temporary files."""
+        for fd in (self._pipe_read_fd, self._pipe_write_fd):
+            if fd is not None:
+                with contextlib.suppress(OSError):
+                    os.close(fd)
+        self._pipe_read_fd = None
+        self._pipe_write_fd = None
+
         if self._process is not None:
             with contextlib.suppress(Exception):
-                if self._process.returncode is None:
+                if isinstance(self._process, subprocess.Popen):
+                    if self._process.poll() is None:
+                        self._process.terminate()
+                        try:
+                            await asyncio.wait_for(
+                                asyncio.to_thread(self._process.wait), timeout=2.0
+                            )
+                        except TimeoutError:
+                            self._process.kill()
+                            await asyncio.wait_for(
+                                asyncio.to_thread(self._process.wait), timeout=5.0
+                            )
+                elif self._process.returncode is None:
                     self._process.terminate()
                     try:
                         await asyncio.wait_for(self._process.wait(), timeout=2.0)
@@ -296,7 +367,7 @@ class BrowserLauncher:
 
     def __del__(self) -> None:
         with contextlib.suppress(Exception):
-            if self._process is not None and self._process.returncode is None:
+            if self._process is not None and self.is_running:
                 logger.warning(
                     "BrowserLauncher was not closed; browser process may still be running"
                 )
@@ -304,7 +375,16 @@ class BrowserLauncher:
     @property
     def is_running(self) -> bool:
         """Whether the browser process is still running."""
+        if isinstance(self._process, subprocess.Popen):
+            return self._process.poll() is None
         return self._process is not None and self._process.returncode is None
+
+    @property
+    def pipe_fds(self) -> tuple[int, int] | None:
+        """The (read_fd, write_fd) pair for pipe mode, or None."""
+        if self._pipe_read_fd is None or self._pipe_write_fd is None:
+            return None
+        return self._pipe_read_fd, self._pipe_write_fd
 
     @property
     def info(self) -> BrowserInfo | None:
@@ -312,7 +392,9 @@ class BrowserLauncher:
         return self._info
 
     @property
-    def process(self) -> asyncio.subprocess.Process | None:
+    def process(
+        self,
+    ) -> asyncio.subprocess.Process | subprocess.Popen[bytes] | None:
         """The browser subprocess, or None if not launched."""
         return self._process
 
