@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import subprocess
 from typing import Any
 
 from cdpwave.browser.discovery import TargetDiscovery, TargetInfo
@@ -75,6 +76,7 @@ from cdpwave.exceptions import (
     CommandError,
     CommandTimeoutError,
     ConnectionClosedError,
+    DiscoveryError,
     LaunchError,
     ProtocolError,
     SessionClosedError,
@@ -883,6 +885,8 @@ class BrowserContext:
         Returns:
             A CDPSession connected to the new page.
         """
+        if self._closed:
+            raise SessionClosedError("Browser context is closed")
         target_id = await self._client._session_manager.create_target(
             url,
             browser_context_id=self._context_id,
@@ -974,6 +978,7 @@ class CDPClient:
         self._auto_attach_targets: set[str] = set()
         self._closed = False
         self._browser = BrowserDomain(self.send)
+        self._system_info = SystemInfoDomain(self.send)
 
     async def _invalidate_sessions(self) -> None:
         """Invalidate all sessions after a reconnection.
@@ -1062,39 +1067,37 @@ class CDPClient:
     ) -> None:
         """Internal callback for routing CDP events to the correct dispatcher."""
         if event_name == "Target.attachedToTarget":
-            parent_session_id = params.get("sessionId")
-            if parent_session_id is not None:
-                parent = self._sessions.get(parent_session_id)
+            if session_id is not None:
+                parent = self._sessions.get(session_id)
                 if parent is not None:
                     parent._handle_attached_to_target(params)
-                    return
-            return
-
-        if event_name == "Target.detachedFromTarget":
+        elif event_name == "Target.detachedFromTarget":
             detached_session_id = params.get("sessionId")
             if detached_session_id is not None:
                 session = self._sessions.get(detached_session_id)
                 if session is not None:
-                    if session_id is not None:
-                        parent = self._sessions.get(session_id)
-                        if parent is not None and detached_session_id in parent._sub_sessions:
-                            parent._handle_detached_from_target(params)
-                            return
-                    session._closed = True
-                    session._dispatcher.clear()
-                    self._session_dispatchers.pop(detached_session_id, None)
-                    self._sessions.pop(detached_session_id, None)
-                    self._session_targets.pop(detached_session_id, None)
-                    logger.info(
-                        "Session %s detached by browser",
-                        detached_session_id,
+                    parent = (
+                        self._sessions.get(session_id)
+                        if session_id is not None
+                        else None
                     )
+                    if parent is not None and detached_session_id in parent._sub_sessions:
+                        parent._handle_detached_from_target(params)
+                    else:
+                        session._closed = True
+                        session._dispatcher.clear()
+                        self._session_dispatchers.pop(detached_session_id, None)
+                        self._sessions.pop(detached_session_id, None)
+                        self._session_targets.pop(detached_session_id, None)
+                        logger.info(
+                            "Session %s detached by browser",
+                            detached_session_id,
+                        )
                 else:
                     logger.debug(
                         "Target.detachedFromTarget for unknown session %s",
                         detached_session_id,
                     )
-            return
 
         if session_id is None:
             await self._dispatcher.dispatch(event_name, params)
@@ -1154,6 +1157,16 @@ class CDPClient:
         """Browser domain wrapper for browser-level commands."""
         return self._browser
 
+    @property
+    def system_info(self) -> SystemInfoDomain:
+        """SystemInfo domain at browser level (no session).
+
+        ``SystemInfo.getInfo`` and ``SystemInfo.getProcessInfo`` are
+        browser-target commands. For session-level calls such as
+        ``get_feature_state``, use ``session.system_info`` instead.
+        """
+        return self._system_info
+
     @classmethod
     def launch(
         cls,
@@ -1201,24 +1214,33 @@ class CDPClient:
             )
             info = await launcher.launch(timeout=timeout)
 
-            if info.pipe:
-                proc = launcher.process
-                if proc is None:
-                    raise LaunchError("Browser process not available after pipe launch")
-                connection: Connection | PipeConnection = PipeConnection(proc)
-                await connection.connect()
-                client = cls(connection, launcher=launcher, discovery=None)
-                connection._event_callback = client._event_callback
-                return client
+            try:
+                if info.pipe:
+                    proc = launcher.process
+                    fds = launcher.pipe_fds
+                    if proc is None or fds is None:
+                        raise LaunchError("Browser pipe not available after pipe launch")
+                    connection: Connection | PipeConnection = PipeConnection(
+                        read_fd=fds[0],
+                        write_fd=fds[1],
+                        process=proc if isinstance(proc, subprocess.Popen) else None,
+                    )
+                    await connection.connect()
+                    client = cls(connection, launcher=launcher, discovery=None)
+                    connection._event_callback = client._event_callback
+                    return client
 
-            discovery = TargetDiscovery(port=info.port)
-            connection = Connection(
-                info.web_socket_debugger_url,
-                max_retries=max_retries,
-                backoff_base=backoff_base,
-                backoff_max=backoff_max,
-            )
-            await connection.connect()
+                discovery = TargetDiscovery(port=info.port)
+                connection = Connection(
+                    info.web_socket_debugger_url,
+                    max_retries=max_retries,
+                    backoff_base=backoff_base,
+                    backoff_max=backoff_max,
+                )
+                await connection.connect()
+            except Exception:
+                await launcher.close()
+                raise
             client = cls(connection, launcher=launcher, discovery=discovery)
             connection._event_callback = client._event_callback
             connection._on_reconnect = client._invalidate_sessions
@@ -1270,7 +1292,11 @@ class CDPClient:
                 backoff_base=backoff_base,
                 backoff_max=backoff_max,
             )
-            await connection.connect()
+            try:
+                await connection.connect()
+            except Exception:
+                await connection.close()
+                raise
             client = cls(connection, launcher=None, discovery=discovery)
             connection._event_callback = client._event_callback
             connection._on_reconnect = client._invalidate_sessions
@@ -1318,7 +1344,9 @@ class CDPClient:
     async def get_pages(self) -> list[TargetInfo]:
         """List all open page targets in the browser."""
         if self._discovery is None:
-            raise RuntimeError("Discovery is not available")
+            raise DiscoveryError(
+                "HTTP discovery is not available (pipe connection or direct ws_url)"
+            )
         targets = await self._discovery.list_targets()
         return [t for t in targets if t.type == "page"]
 

@@ -51,6 +51,11 @@ def make_session(
     network.disable = AsyncMock(return_value={})
     session.network = network
 
+    page = MagicMock()
+    page.enable = AsyncMock(return_value={})
+    page.set_lifecycle_events_enabled = AsyncMock(return_value={})
+    session.page = page
+
     dispatch = dispatch or {}
 
     def _on(event_name: str, handler: Any) -> Any:

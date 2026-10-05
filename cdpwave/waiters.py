@@ -8,8 +8,11 @@ idle. All helpers accept a configurable timeout.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from typing import TYPE_CHECKING, Any
+
+from cdpwave.exceptions import CommandError
 
 if TYPE_CHECKING:
     from cdpwave.client import CDPSession
@@ -18,7 +21,6 @@ logger = logging.getLogger("cdpwave.waiters")
 
 DEFAULT_TIMEOUT = 30.0
 POLL_INTERVAL = 0.1
-NETWORK_IDLE_THRESHOLD = 500  # ms without requests
 
 _VALID_LOAD_STATES = frozenset({
     "DOMContentLoaded",
@@ -37,9 +39,10 @@ async def wait_for_navigation(
 ) -> dict[str, Any]:
     """Wait for a navigation event.
 
-    Subscribes to ``Page.frameNavigated`` and resolves when the
-    main frame navigates. If ``url`` is provided, waits until the
-    navigation reaches that URL.
+    Enables the Page domain automatically, subscribes to
+    ``Page.frameNavigated``, and resolves when the main frame
+    navigates. If ``url`` is provided, waits until the navigation
+    reaches that URL.
 
     Args:
         session: The CDP session to wait on.
@@ -64,6 +67,9 @@ async def wait_for_navigation(
 
     sub = session.on("Page.frameNavigated", _handler)
     try:
+        # Enable Page *after* subscribing so fast navigations are
+        # never missed between enable and subscription.
+        await session.page.enable()
         await asyncio.wait_for(event.wait(), timeout=timeout)
         return captured[0]
     finally:
@@ -77,8 +83,11 @@ async def wait_for_load_state(
 ) -> dict[str, Any]:
     """Wait for a specific page lifecycle event.
 
-    Listens for ``Page.lifecycleEvent`` and resolves when the
-    given lifecycle state is reached.
+    Enables the Page domain and lifecycle events automatically, then
+    resolves when the given state is reached. For ``"load"`` and
+    ``"DOMContentLoaded"`` it also accepts ``Page.loadEventFired`` /
+    ``Page.domContentEventFired`` as a fallback when lifecycle events
+    are unavailable.
 
     Args:
         session: The CDP session to wait on.
@@ -89,7 +98,8 @@ async def wait_for_load_state(
         timeout: Maximum seconds to wait.
 
     Returns:
-        The ``Page.lifecycleEvent`` event params.
+        The ``Page.lifecycleEvent`` event params (or the fallback
+        event params for ``"load"``/``"DOMContentLoaded"``).
 
     Raises:
         ValueError: If ``state`` is not a valid lifecycle state.
@@ -109,12 +119,28 @@ async def wait_for_load_state(
             captured.append(params)
             event.set()
 
-    sub = session.on("Page.lifecycleEvent", _handler)
+    async def _load_handler(params: dict[str, Any]) -> None:
+        captured.append(params)
+        event.set()
+
+    subs = [session.on("Page.lifecycleEvent", _handler)]
+    # Fallback events for the standard states, which fire with just
+    # Page.enable even when lifecycle events are unavailable.
+    if state == "load":
+        subs.append(session.on("Page.loadEventFired", _load_handler))
+    elif state == "DOMContentLoaded":
+        subs.append(session.on("Page.domContentEventFired", _load_handler))
     try:
+        # Enable Page + lifecycle events *after* subscribing so events
+        # are never missed in between.
+        await session.page.enable()
+        with contextlib.suppress(CommandError):
+            await session.page.set_lifecycle_events_enabled(True)
         await asyncio.wait_for(event.wait(), timeout=timeout)
         return captured[0]
     finally:
-        sub.unsubscribe()
+        for s in subs:
+            s.unsubscribe()
 
 
 async def wait_for_selector(
@@ -145,6 +171,13 @@ async def wait_for_selector(
     """
     await session.dom.enable()
 
+    if root_node_id == 1:
+        try:
+            doc = await session.dom.get_document(depth=0)
+            root_node_id = doc.get("root", {}).get("nodeId", root_node_id)
+        except (CommandError, KeyError, TypeError):
+            pass
+
     js = (
         "new Promise((resolve) => {"
         f"const el = document.querySelector({selector!r});"
@@ -169,8 +202,8 @@ async def wait_for_selector(
             node_id: int = query.get("nodeId", 0)
             if node_id and node_id != 0:
                 return node_id
-    except TimeoutError:
-        pass
+    except Exception:
+        logger.debug("MutationObserver wait failed, falling back to polling")
 
     while loop.time() < deadline:
         query = await session.dom.query_selector(root_node_id, selector)

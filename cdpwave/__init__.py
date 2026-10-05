@@ -3,9 +3,13 @@
 Public API exports for the cdpwave package.
 """
 
+from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _version
 
-__version__ = _version("cdpwave")
+try:
+    __version__ = _version("cdpwave")
+except PackageNotFoundError:  # running from a source checkout without install
+    __version__ = "0.0.0.dev0"
 
 from cdpwave.client import BrowserContext, CDPClient, CDPSession
 from cdpwave.events.dispatcher import EventDispatcher

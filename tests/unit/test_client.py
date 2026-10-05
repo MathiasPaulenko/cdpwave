@@ -3,7 +3,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from cdpwave.browser.discovery import TargetInfo
-from cdpwave.client import CDPClient, CDPSession
+from cdpwave.client import BrowserContext, CDPClient, CDPSession
+from cdpwave.exceptions import DiscoveryError, SessionClosedError
 
 _LAUNCH = "cdpwave.client.BrowserLauncher"
 _CONNECT = "cdpwave.client.Connection"
@@ -148,7 +149,11 @@ class TestCDPClient:
             client = await CDPClient.launch(headless=True, pipe=True)
 
         mock_launcher.launch.assert_awaited_once()
-        mock_pipe_cls.assert_called_once_with(mock_launcher.process)
+        mock_pipe_cls.assert_called_once_with(
+            read_fd=mock_launcher.pipe_fds[0],
+            write_fd=mock_launcher.pipe_fds[1],
+            process=None,
+        )
         mock_pipe_conn.connect.assert_awaited_once()
         assert client.is_closed is False
 
@@ -226,7 +231,7 @@ class TestCDPClient:
     async def test_get_pages_no_discovery_raises(self) -> None:
         conn = AsyncMock()
         client = CDPClient(conn, discovery=None)
-        with pytest.raises(RuntimeError):
+        with pytest.raises(DiscoveryError):
             await client.get_pages()
 
     async def test_connect_to_page(self) -> None:
@@ -349,3 +354,164 @@ class TestCDPClient:
         await client._invalidate_sessions()
 
         assert len(session._dispatcher._handlers) == 0
+
+
+class TestAutoAttachRouting:
+    """Regression tests for Target.* event routing through _event_callback.
+
+    The top-level ``sessionId`` of a CDP message is the parent session
+    that issued ``setAutoAttach``; ``params["sessionId"]`` is the child.
+    """
+
+    async def test_attached_to_target_creates_sub_session(self) -> None:
+        conn = AsyncMock()
+        conn.is_closed = False
+        client = CDPClient(conn)
+        parent = CDPSession(conn, "P-1", "T-1", client=client)
+        client._sessions["P-1"] = parent
+
+        await client._event_callback(
+            "Target.attachedToTarget",
+            {
+                "sessionId": "CHILD-1",
+                "targetInfo": {"targetId": "T-CHILD", "type": "iframe"},
+            },
+            "P-1",
+        )
+
+        assert "CHILD-1" in parent._sub_sessions
+        assert "CHILD-1" in client._sessions
+        assert client._sessions["CHILD-1"]._target_id == "T-CHILD"
+
+    async def test_attached_to_target_dispatched_to_handlers(self) -> None:
+        conn = AsyncMock()
+        conn.is_closed = False
+        client = CDPClient(conn)
+        parent = CDPSession(conn, "P-1", "T-1", client=client)
+        client._sessions["P-1"] = parent
+        captured: list[dict] = []
+
+        async def _handler(params: dict) -> None:
+            captured.append(params)
+
+        parent.on("Target.attachedToTarget", _handler)
+
+        params = {
+            "sessionId": "CHILD-1",
+            "targetInfo": {"targetId": "T-CHILD", "type": "worker"},
+        }
+        await client._event_callback("Target.attachedToTarget", params, "P-1")
+
+        assert captured == [params]
+
+    async def test_attached_to_target_browser_level_dispatches(self) -> None:
+        """Events with no top-level sessionId go to client.on() handlers."""
+        conn = AsyncMock()
+        conn.is_closed = False
+        client = CDPClient(conn)
+        captured: list[dict] = []
+
+        async def _handler(params: dict) -> None:
+            captured.append(params)
+
+        client.on("Target.attachedToTarget", _handler)
+
+        params = {
+            "sessionId": "CHILD-1",
+            "targetInfo": {"targetId": "T-CHILD", "type": "worker"},
+        }
+        await client._event_callback("Target.attachedToTarget", params, None)
+
+        assert captured == [params]
+
+    async def test_detached_from_target_cleans_sub_session(self) -> None:
+        conn = AsyncMock()
+        conn.is_closed = False
+        client = CDPClient(conn)
+        parent = CDPSession(conn, "P-1", "T-1", client=client)
+        client._sessions["P-1"] = parent
+        parent._handle_attached_to_target({
+            "sessionId": "CHILD-1",
+            "targetInfo": {"targetId": "T-CHILD", "type": "worker"},
+        })
+        child = parent._sub_sessions["CHILD-1"]
+
+        await client._event_callback(
+            "Target.detachedFromTarget",
+            {"sessionId": "CHILD-1"},
+            "P-1",
+        )
+
+        assert "CHILD-1" not in parent._sub_sessions
+        assert child.is_closed
+        assert "CHILD-1" not in client._sessions
+        assert "CHILD-1" not in client._session_dispatchers
+
+
+class TestBrowserContextGuards:
+    async def test_new_page_on_closed_context_raises(self) -> None:
+        conn = AsyncMock()
+        conn.is_closed = False
+        client = CDPClient(conn)
+        context = BrowserContext(client, "ctx-1")
+        context._closed = True
+
+        with pytest.raises(SessionClosedError):
+            await context.new_page()
+
+
+class TestLaunchCleanup:
+    async def test_launch_connection_failure_closes_launcher(self) -> None:
+        """If the WebSocket handshake fails after the browser starts,
+        the browser process must be cleaned up."""
+        mock_launcher = AsyncMock()
+        mock_launcher.launch.return_value = MagicMock(
+            web_socket_debugger_url="ws://127.0.0.1:1234/devtools/browser/x",
+            port=1234,
+            pipe=False,
+        )
+        mock_conn = AsyncMock()
+        mock_conn.connect.side_effect = OSError("connection refused")
+
+        with (
+            patch(_LAUNCH, return_value=mock_launcher),
+            patch(_CONNECT, return_value=mock_conn),
+            patch(_DISCOVERY),
+            pytest.raises(OSError, match="connection refused"),
+        ):
+            await CDPClient.launch(headless=True)
+
+        mock_launcher.close.assert_awaited_once()
+
+    async def test_connect_failure_closes_connection(self) -> None:
+        mock_conn = AsyncMock()
+        mock_conn.connect.side_effect = OSError("connection refused")
+
+        with (
+            patch(_CONNECT, return_value=mock_conn),
+            patch(_DISCOVERY),
+            pytest.raises(OSError, match="connection refused"),
+        ):
+            await CDPClient.connect(ws_url="ws://127.0.0.1:1234/x")
+
+        mock_conn.close.assert_awaited_once()
+
+
+class TestClientSystemInfo:
+    def test_client_exposes_browser_level_system_info(self) -> None:
+        conn = AsyncMock()
+        conn.is_closed = False
+        client = CDPClient(conn)
+        client._system_info = MagicMock()
+        assert client.system_info is client._system_info
+
+    async def test_client_system_info_sends_browser_target(self) -> None:
+        conn = AsyncMock()
+        conn.is_closed = False
+        conn.send_command.return_value = {"gpu": {}}
+        client = CDPClient(conn)
+
+        result = await client.system_info.get_info()
+
+        conn.send_command.assert_awaited_once_with("SystemInfo.getInfo", None)
+        assert result == {"gpu": {}}
