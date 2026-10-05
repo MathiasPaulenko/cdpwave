@@ -18,22 +18,7 @@ jobs:
       - run: ruff check .
       - run: mypy cdpwave/
 
-  unit-tests:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.11", "3.12", "3.13"]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-      - run: pip install -e ".[dev]"
-      - run: ruff check .
-      - run: mypy cdpwave/
-      - run: pytest tests/unit/ -v --cov=cdpwave --cov-report=term-missing
-
+  # Unit tests run in test.yml (multi-OS matrix with coverage)
   integration-tests:
     runs-on: ubuntu-latest
     steps:
