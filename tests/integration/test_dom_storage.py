@@ -104,6 +104,11 @@ class TestDOMStorageIntegration:
         assert result["entries"] == []
 
     async def test_local_and_session_storage_isolated(self, page: CDPSession) -> None:
+        # sessionStorage only exists once the page has touched it
+        await page.runtime.evaluate(
+            "sessionStorage.setItem('_init', '1')",
+            return_by_value=True,
+        )
         local_id = {"securityOrigin": "https://example.com", "isLocalStorage": True}
         session_id = {"securityOrigin": "https://example.com", "isLocalStorage": False}
         await page.dom_storage.set_dom_storage_item(local_id, "shared-key", "local-val")

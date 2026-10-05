@@ -15,6 +15,7 @@ from typing import Any
 import pytest
 
 from cdpwave import CDPClient, CDPSession
+from cdpwave.exceptions import CommandError
 
 
 async def _wait_for_page(page: CDPSession) -> None:
@@ -222,11 +223,22 @@ class TestDebuggerScriptSource:
             await session.page.navigate("https://example.com")
             await asyncio.sleep(3.0)
 
-            if scripts:
-                script_id = scripts[0]["scriptId"]
-                result = await session.debugger.get_script_source(script_id)
+            # Early scripts may belong to a discarded context (about:blank);
+            # try each until one is still valid.
+            got_source = False
+            for script in reversed(scripts):
+                try:
+                    result = await session.debugger.get_script_source(
+                        script["scriptId"]
+                    )
+                except CommandError:
+                    continue
                 assert isinstance(result, dict)
                 assert "scriptSource" in result
+                got_source = True
+                break
+            assert scripts, "expected Debugger.scriptParsed events"
+            assert got_source, "no script could be resolved"
 
             await session.debugger.disable()
 

@@ -274,10 +274,13 @@ class TestCacheStorageIntegration:
             await CDPClient.launch(headless=True) as client,
             await client.new_page() as session,
         ):
-            await _wait_for_page(session)
+            frame_id = await _wait_for_page(session)
+            # securityOrigin is deprecated — resolve the real storageKey
+            # for the frame to avoid "No frame found for given storage key".
+            key = await session.storage.get_storage_key_for_frame(frame_id)
             result = await session.send(
                 "CacheStorage.requestCacheNames",
-                {"securityOrigin": "https://example.com"},
+                {"storageKey": key["storageKey"]},
             )
             assert "caches" in result
 
