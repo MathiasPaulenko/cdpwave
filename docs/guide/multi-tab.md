@@ -192,7 +192,8 @@ Enable target discovery to receive events when new targets are created
 or destroyed:
 
 ```python
-await client.target.set_discover_targets(discover=True)
+# Target.setDiscoverTargets is a browser-level command
+await client.send("Target.setDiscoverTargets", {"discover": True})
 
 async def on_created(params: dict) -> None:
     info = params["targetInfo"]
@@ -210,10 +211,12 @@ when a page opens a popup or creates a service worker.
 
 ## Auto-attach to child targets
 
-Automatically attach to new child targets (iframes, workers):
+Automatically attach to new child targets (iframes, workers). The
+easiest way is `new_page(auto_attach=True)` — or enable it manually
+on a session:
 
 ```python
-await client.target.set_auto_attach(
+await session.target.set_auto_attach(
     auto_attach=True,
     wait_for_debugger_on_start=True,
     flatten=True,
@@ -221,7 +224,8 @@ await client.target.set_auto_attach(
 ```
 
 With `flatten=True`, new child targets get flatten sessions
-automatically. Listen for `Target.attachedToTarget` to get the session:
+automatically, appear in `session.sub_sessions`, and fire
+`Target.attachedToTarget` on the parent session:
 
 ```python
 async def on_attached(params: dict) -> None:
@@ -229,7 +233,7 @@ async def on_attached(params: dict) -> None:
     session_id = params["sessionId"]
     print(f"Attached to {target_info['type']}: {target_info['url']}")
 
-client.on("Target.attachedToTarget", on_attached)
+session.on("Target.attachedToTarget", on_attached)
 ```
 
 ## Cleanup

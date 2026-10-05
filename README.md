@@ -5,7 +5,7 @@
 <h3 align="center">Chrome DevTools Protocol for Python — direct, typed, async</h3>
 
 <p align="center">
-  <strong>60 CDP domains · 689 typed methods · zero Node.js · zero ChromeDriver · zero browser downloads</strong>
+  <strong>60 CDP domains · 692 typed methods · zero Node.js · zero ChromeDriver · zero browser downloads</strong>
 </p>
 
 ---
@@ -48,7 +48,7 @@ It is the CDP backend that powers [wavexis](https://github.com/MathiasPaulenko/w
 
 ### Key features
 
-- **Full CDP coverage** — all 60 CDP domains implemented with 689 typed methods
+- **Broad CDP coverage** — 60 domains with 692 typed methods (~95% of the protocol), plus `session.send()` for the rest
 - **Direct WebSocket** — single connection to Chrome's DevTools Protocol, no intermediate layers
 - **Fully typed** — `mypy --strict` across the entire codebase, IDE autocomplete everywhere
 - **Async-first** — built on `asyncio`, no threading, no blocking calls
@@ -60,7 +60,7 @@ It is the CDP backend that powers [wavexis](https://github.com/MathiasPaulenko/w
 - **Direct WebSocket URL** — `CDPClient.connect(ws_url=...)` bypasses HTTP discovery
 - **Event helpers** — `session.wait_for_event()` and `session.on()` for async event handling
 - **Multi-tab sessions** — `client.sessions` property tracks all active sessions
-- **1424 integration tests** — against a real Chromium browser covering all domains
+- **1437 integration tests** — against a real Chromium browser covering all domains
 
 ### How it works
 
@@ -112,10 +112,11 @@ async def main() -> None:
         )
         print(result["result"]["value"])  # "Example Domain"
 
-        # Take a screenshot
+        # Take a screenshot (data is base64-encoded PNG)
         screenshot = await session.page.capture_screenshot()
         with open("screenshot.png", "wb") as f:
-            f.write(bytes.fromhex(screenshot["data"]))
+            import base64
+            f.write(base64.b64decode(screenshot["data"]))
 
         # Navigate somewhere else
         await session.page.navigate("https://example.org")
@@ -165,14 +166,16 @@ print(result["metrics"])
 async with await CDPClient.launch() as client:
     session = await client.new_page("https://example.com")
 
-    # Listen for console messages
+    # Listen for console messages (runtime events need the domain enabled)
+    await session.runtime.enable()
+
     def on_console(msg):
         print(f"[console] {msg['args']}")
 
     session.on("Runtime.consoleAPICalled", on_console)
 
-    # Wait for a specific event
-    await session.wait_for_event("Page.loadEventFired")
+    # Wait for the page load event
+    await session.wait_for_load_state("load")
 ```
 
 ## Documentation

@@ -95,7 +95,7 @@ result = await session.css.get_style_sheet_text(style_sheet_id="ss1")
 print(result["text"])
 
 await session.css.set_style_sheet_text(
-    stylesheet_id="ss1",
+    style_sheet_id="ss1",
     text=".my-class { color: red; }",
 )
 ```
@@ -126,7 +126,7 @@ interaction — useful for testing pseudo-state styles:
 ```python
 await session.css.force_pseudo_state(
     node_id=1,
-    pseudo_state=["hover"],
+    forced_pseudo_classes=["hover"],
 )
 ```
 
@@ -182,19 +182,23 @@ await session.overlay.highlight_node(
 )
 ```
 
-### Highlight a frame
+### Highlight a rect
+
+Draw a highlight over an arbitrary region of the viewport:
 
 ```python
-await session.overlay.highlight_frame(
-    frame_id="frame1",
-    highlight_config={"showInfo": True},
+await session.overlay.highlight_rect(
+    x=10,
+    y=10,
+    width=200,
+    height=100,
 )
 ```
 
 ### Clear highlight
 
 ```python
-await session.overlay.clear_highlight()
+await session.overlay.hide_highlight()
 ```
 
 ### Set inspect mode
@@ -216,7 +220,7 @@ await session.overlay.set_inspect_mode(
 await session.overlay.set_show_fps_counter(show=True)
 
 # Show paint rects (areas being repainted)
-await session.overlay.set_show_paint_rects(show=True)
+await session.overlay.set_show_paint_rects(result=True)
 
 # Show debug borders around elements
 await session.overlay.set_show_debug_borders(show=True)
@@ -273,19 +277,13 @@ The `Audits` domain provides accessibility and performance audits.
 
 ### Check contrast
 
-Check color contrast for accessibility compliance:
+Run a contrast audit on the page:
 
 ```python
-result = await session.audits.check_contrast(
-    node_id=1,
-    contrast_algorithm="AA",
-)
-for issue in result["issues"]:
-    print(f"Contrast ratio: {issue['contrastRatio']}")
+result = await session.audits.check_contrast()
+for issue in result.get("issues", []):
+    print(f"Contrast issue: {issue}")
 ```
-
-Contrast algorithms: `"AA"` (4.5:1 for normal text) or `"AAA"`
-(7:1 for normal text).
 
 ### Get encoded response
 
@@ -313,13 +311,11 @@ and `navigator.credentials.get()` calls.
 await session.web_authn.enable()
 
 result = await session.web_authn.add_virtual_authenticator(
-    options={
-        "protocol": "ctap2",
-        "transport": "internal",
-        "hasResidentKey": True,
-        "hasUserVerification": True,
-        "isUserVerified": True,
-    },
+    protocol="ctap2",
+    transport="internal",
+    has_resident_key=True,
+    has_user_verification=True,
+    is_user_verified=True,
 )
 authenticator_id = result["authenticatorId"]
 ```
@@ -393,11 +389,11 @@ await session.animation.enable()
 await session.animation.set_playback_rate(playback_rate=2.0)  # 2x speed
 ```
 
-### Pause and resume all animations
+### Pause and resume animations
 
 ```python
-await session.animation.pause_all()
-await session.animation.resume_all()
+await session.animation.set_paused(animations=["anim1", "anim2"], paused=True)
+await session.animation.set_paused(animations=["anim1", "anim2"], paused=False)
 ```
 
 ### Seek animations
@@ -544,14 +540,16 @@ await session.media.enable()
 ### Listen to player events
 
 ```python
-async def on_player_created(event: dict) -> None:
-    print(f"Media player created: {event['playerId']}")
+async def on_players_created(event: dict) -> None:
+    for player in event["players"]:
+        print(f"Media player created: {player['playerId']}")
 
 async def on_player_event(event: dict) -> None:
-    print(f"Player {event['playerId']}: {event['event']['eventName']}")
+    for ev in event["events"]:
+        print(f"Player {event['playerId']}: {ev['eventName']}")
 
-session.on("Media.playerCreated", on_player_created)
-session.on("Media.playerEvent", on_player_event)
+session.on("Media.playersCreated", on_players_created)
+session.on("Media.playerEventsAdded", on_player_event)
 ```
 
 ## SystemInfo
@@ -745,7 +743,7 @@ await session.bluetooth_emulation.simulate_preconnected_peripheral(
 
 # Simulate an advertisement
 await session.bluetooth_emulation.simulate_advertisement(
-    advertisement={"type": "broadcast", "serviceUuids": []},
+    entry={"scanEvent": {}, "txPower": 0},
 )
 
 await session.bluetooth_emulation.disable()
@@ -771,7 +769,7 @@ await session.fed_cm.reset_cooldown()
 # await session.fed_cm.select_account(dialog_id="dialog-1", account_index=0)
 
 # Click the dialog's continue button (requires dialog ID from event)
-# await session.fed_cm.click_dialog_button(dialog_id="dialog-1", button="ConfirmIdpLoginContinue")
+# await session.fed_cm.click_dialog_button(dialog_id="dialog-1", dialog_button="ConfirmIdpLoginContinue")
 
 # Dismiss a dialog
 # await session.fed_cm.dismiss_dialog(dialog_id="dialog-1", trigger_cooldown=True)
@@ -837,7 +835,9 @@ behavior for testing without real credential providers.
 
 ```python
 await session.digital_credentials.set_virtual_wallet_behavior(
-    behavior="spare",
+    action="respond",           # "respond", "decline", "wait", "clear"
+    protocol="openid4vp",
+    response={"data": "credential"},
 )
 ```
 
@@ -860,34 +860,35 @@ The `SmartCardEmulation` domain simulates smart card operations for
 testing Web Smart Card API interactions. It provides methods to report
 results for various smart card operations.
 
+Each `report_*` method answers a `*Requested` event — the
+`request_id` comes from the event params.
+
 ```python
 await session.smart_card_emulation.enable()
 
 # Report the result of establishing a context
 await session.smart_card_emulation.report_establish_context_result(
-    context_id="ctx-1",
-    result=0,
+    request_id="req-1",   # from SmartCardEmulation.establishContextRequested
+    context_id=1,
 )
 
 # Report the result of listing readers
 await session.smart_card_emulation.report_list_readers_result(
-    context_id="ctx-1",
-    readers=[{"name": "Reader 1", "state": 0}],
+    request_id="req-2",   # from SmartCardEmulation.listReadersRequested
+    readers=["Reader 1", "Reader 2"],
 )
 
 # Report the result of connecting to a card
 await session.smart_card_emulation.report_connect_result(
-    context_id="ctx-1",
-    reader="Reader 1",
-    card_handle="card-1",
-    active_protocol=1,
-    result=0,
+    request_id="req-3",   # from SmartCardEmulation.connectRequested
+    handle=1,
+    active_protocol="t1",
 )
 
 # Report an error
 await session.smart_card_emulation.report_error(
-    context_id="ctx-1",
-    error=1,
+    request_id="req-4",
+    result_code="cardNotPresent",
 )
 
 await session.smart_card_emulation.disable()
@@ -902,17 +903,13 @@ await session.smart_card_emulation.disable()
 The `WebMCP` domain integrates the Model Context Protocol with the
 browser, enabling AI-driven page interactions.
 
+The domain currently exposes only `enable` and `disable`. Once
+enabled, listen for `WebMCP.*` events via `session.on()`.
+
 ```python
 await session.web_mcp.enable()
 
-# Invoke a tool registered by the page
-result = await session.web_mcp.invoke_tool(
-    tool_name="search",
-    arguments={"query": "hello"},
-)
-
-# Cancel an ongoing invocation
-await session.web_mcp.cancel_invocation(invocation_id="inv-1")
+# ... observe WebMCP events ...
 
 await session.web_mcp.disable()
 ```

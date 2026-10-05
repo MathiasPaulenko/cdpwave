@@ -13,9 +13,12 @@ to page events:
 await session.page.enable()
 ```
 
-`Page.enable` activates lifecycle events such as `Page.loadEventFired`,
-`Page.frameNavigated`, and `Page.lifecycleEvent`. Without it, you won't
-receive any page-related events.
+`Page.enable` activates events such as `Page.loadEventFired`,
+`Page.frameNavigated`, and `Page.domContentEventFired`. Without it,
+you won't receive any page-related events. Note that
+`Page.lifecycleEvent` additionally requires
+`Page.setLifecycleEventsEnabled` — the `wait_for_load_state()` helper
+handles both automatically.
 
 ## Navigate to a URL
 
@@ -166,10 +169,12 @@ await asyncio.wait_for(loaded.wait(), timeout=10.0)
 **How it works**: `Page.loadEventFired` is the CDP equivalent of the
 browser's `window.onload` event. It fires after all resources (images,
 stylesheets, scripts) have been downloaded. If you only need the DOM
-to be ready (faster), listen for `Page.lifecycleEvent` with
-`params["name"] == "DOMContentLoaded"` instead:
+to be ready (faster), enable lifecycle events and listen for
+`Page.lifecycleEvent` with `params["name"] == "DOMContentLoaded"`:
 
 ```python
+await session.page.set_lifecycle_events_enabled(True)
+
 dom_ready = asyncio.Event()
 
 async def on_lifecycle(params: dict) -> None:

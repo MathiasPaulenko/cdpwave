@@ -87,13 +87,10 @@ await session.debugger.remove_breakpoint(breakpoint_id="bp1")
 
 ### Enable/disable all breakpoints
 
-```python
-# Disable all breakpoints (they remain set but inactive)
-await session.debugger.set_breakpoints_active(False)
-
-# Re-enable
-await session.debugger.set_breakpoints_active(True)
-```
+!!! warning "Removed in modern Chrome"
+    `Debugger.setBreakpointsActive` was removed from recent versions
+    of the protocol. To ignore all breakpoints temporarily, use
+    `set_skip_all_pauses(True)` instead (see below).
 
 ### Get possible breakpoints
 

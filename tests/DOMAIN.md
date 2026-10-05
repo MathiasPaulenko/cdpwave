@@ -9,8 +9,8 @@ Comparación contra `browser_protocol.json` + `js_protocol.json` (tip-of-tree, S
 | Dominios CDP | 52 |
 | Dominios cdpwave | 60 (58 de CDP + `sensor` y `worker` extra) |
 | Métodos CDP totales | 670 |
-| Métodos implementados | 688 |
-| Métodos faltantes | 36 |
+| Métodos implementados | 692 |
+| Métodos faltantes | 34 |
 | Métodos extra (convenience/aliases) | 53 |
 | Cobertura de métodos | 94.6% |
 
@@ -26,7 +26,7 @@ Ordenado por importancia para automatización de navegadores (cobertura tipo Pla
 | Runtime | 23 | 23 | 1 | 1 | ✅ |
 | DOM | 53 | 54 | 1 | 2 | ✅ |
 | Input | 13 | 14 | 0 | 1 | ✅ |
-| Network | 41 | 34 | 2 | 2 | ✅ |
+| Network | 41 | 37 | 0 | 3 | ✅ |
 | Target | 18 | 19 | 0 | 1 | ✅ |
 | Emulation | 47 | 57 | 0 | 10 | ✅ |
 
@@ -100,7 +100,7 @@ Ordenado por importancia para automatización de navegadores (cobertura tipo Pla
 | Ads | 1 | 1 | 0 | 0 | ✅ |
 | CrashReportContext | 1 | 1 | 0 | 0 | ✅ |
 | DigitalCredentials | 1 | 1 | 0 | 0 | ✅ |
-| **TOTAL** | **670** | **681** | **30** | **53** |
+| **TOTAL** | **670** | **692** | **28** | **53** |
 
 ## Métodos faltantes (29)
 

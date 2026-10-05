@@ -109,7 +109,7 @@ because you can pass arguments and target specific objects.
 ```python
 result = await session.runtime.call_function_on(
     "function(a, b) { return a + b; }",
-    arguments=[{"value": 2}, {"value": 3}],
+    args=[{"value": 2}, {"value": 3}],
     return_by_value=True,
 )
 print(result["result"]["value"])  # 5
@@ -197,7 +197,7 @@ For scripts you execute repeatedly, compile once and run many times:
 
 ```python
 compiled = await session.runtime.compile_script(
-    source="return 1 + 2;",
+    expression="return 1 + 2;",
     execution_context_id=None,  # use default context
 )
 script_id = compiled["scriptId"]
@@ -422,7 +422,7 @@ async def main() -> None:
         # Call function with arguments
         result = await session.runtime.call_function_on(
             "function(a, b) { return a + b; }",
-            arguments=[{"value": 10}, {"value": 20}],
+            args=[{"value": 10}, {"value": 20}],
             return_by_value=True,
         )
         print(f"10 + 20 = {result['result']['value']}")

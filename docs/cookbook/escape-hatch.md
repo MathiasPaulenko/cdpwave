@@ -1,6 +1,6 @@
 # Escape Hatch
 
-cdpwave covers all 60 CDP domains with 689 typed methods. For any CDP command
+cdpwave covers all 60 CDP domains with 692 typed methods. For any CDP command
 that doesn't have a dedicated wrapper — or for experimental/new commands —
 use `session.send()` — the escape hatch.
 
@@ -58,7 +58,7 @@ Type text character by character:
 ```python
 for char in "cdpwave":
     await session.input.dispatch_key_event(
-        type_="char", text=char,
+        type="char", text=char,
     )
 ```
 
@@ -66,13 +66,13 @@ Press Enter:
 
 ```python
 await session.input.dispatch_key_event(
-    type_="keyDown",
+    type="keyDown",
     key="Enter",
     code="Enter",
     windows_virtual_key_code=13,
 )
 await session.input.dispatch_key_event(
-    type_="keyUp",
+    type="keyUp",
     key="Enter",
     code="Enter",
     windows_virtual_key_code=13,
@@ -110,7 +110,7 @@ except CommandError as e:
 | IDE autocomplete | Yes | No |
 | Validation | Pythonic params | Manual dict |
 | Documentation | Docstrings | CDP spec |
-| Coverage | 689 methods | All CDP commands |
+| Coverage | 692 methods | All CDP commands |
 
 Prefer typed wrappers when available. Use `send()` only for commands without
 a wrapper or when you need raw control.

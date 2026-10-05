@@ -15,7 +15,7 @@ Browser  →  WebSocket  →  cdpwave EventDispatcher  →  Your handlers
    `params` field.
 3. cdpwave matches the `method` to registered handlers and calls each
    one with the `params` dict.
-4. Handlers run concurrently as asyncio tasks.
+4. Handlers for an event run sequentially, in registration order.
 
 ### Session vs browser events
 
@@ -46,9 +46,9 @@ async def on_load(params: dict) -> None:
 session.on("Page.loadEventFired", on_load)
 ```
 
-The handler must be an `async` function that accepts a single `dict`
-argument — the event parameters. The handler is called every time the
-event fires.
+The handler accepts a single `dict` argument — the event parameters.
+It can be `async` or a plain function (its return value is awaited if
+awaitable). The handler is called every time the event fires.
 
 ### Return value
 
@@ -74,8 +74,9 @@ sub.unsubscribe()
 session.off("Page.loadEventFired", on_load)
 ```
 
-`off()` removes a specific handler by reference. If the same handler
-was registered multiple times, all instances are removed.
+`off()` removes a specific handler by reference — the first matching
+instance. If the same handler was registered multiple times, call
+`off()` once per registration.
 
 ## Error isolation
 
@@ -113,7 +114,7 @@ session.on("Page.loadEventFired", handler_b)
 ```
 
 Both `handler_a` and `handler_b` are called when `Page.loadEventFired`
-fires. They run as separate asyncio tasks, so they execute concurrently.
+fires. They run sequentially on the event loop, in registration order.
 
 ## Browser-level events
 
@@ -140,7 +141,7 @@ Common browser-level events:
 |---|---|---|---|
 | `Page.loadEventFired` | Page `load` event | Session | `Page.enable` |
 | `Page.frameNavigated` | Frame navigated | Session | `Page.enable` |
-| `Page.lifecycleEvent` | Lifecycle state change | Session | `Page.enable` |
+| `Page.lifecycleEvent` | Lifecycle state change | Session | `Page.enable` + `Page.setLifecycleEventsEnabled` |
 | `Runtime.consoleAPICalled` | `console.log()` called | Session | `Runtime.enable` |
 | `Runtime.exceptionThrown` | Uncaught JS exception | Session | `Runtime.enable` |
 | `Runtime.bindingCalled` | JS binding invoked | Session | `Runtime.enable` + `add_binding` |
@@ -219,6 +220,19 @@ async def on_console(params: dict) -> None:
 
 session.on("Runtime.consoleAPICalled", on_console)
 ```
+
+### wait_for_event (built-in)
+
+`session.wait_for_event()` registers a one-shot handler that resolves
+with the event params — the manual `asyncio.Event` pattern above in
+one call:
+
+```python
+params = await session.wait_for_event("Page.loadEventFired", timeout=10.0)
+```
+
+The handler is removed automatically after the event fires or the
+timeout expires. Raises `TimeoutError` on timeout.
 
 ### Event with timeout
 

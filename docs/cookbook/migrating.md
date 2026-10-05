@@ -30,10 +30,10 @@ from cdpwave.sync import SyncCDPClient
 
 with SyncCDPClient.launch(headless=True) as client:
     page = client.new_page("https://example.com")
-    page.run(page.wait_for_load_state("load"))
-    result = page.run(page.runtime.evaluate(
+    page.wait_for_load_state("load")
+    result = page.runtime.evaluate(
         "document.title", return_by_value=True,
-    ))
+    )
     print(result["result"]["value"])
 ```
 

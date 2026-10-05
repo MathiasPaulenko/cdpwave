@@ -23,17 +23,14 @@ pip install -e ".[dev]"
 ### Running Tests
 
 ```bash
-# Unit tests (no browser required)
+# Unit tests (no browser required — also the default for `pytest`)
 python -m pytest tests/unit/ -v --cov=cdpwave --cov-report=term-missing
 
 # Integration tests (requires Chrome installed)
 python -m pytest tests/integration/ -v --timeout=60
 
-# Run all tests
-python -m pytest tests/ -v
-
-# Manual smoke test (requires Chrome installed)
-python tests/manual_smoke.py
+# E2E scenario tests (requires Chrome installed)
+python -m pytest tests/e2e/ -v --timeout=120
 
 # Linting and type checking
 ruff check .
@@ -53,7 +50,7 @@ tests/
 │   ├── test_missing_domains.py      # Tests for experimental domains
 │   ├── test_expanded_casuistics.py  # Expanded parameter coverage
 │   └── ...                          # Per-domain integration tests
-└── manual_smoke.py     # Manual smoke test
+└── e2e/                # End-to-end scenario tests against real Chrome
 ```
 
 Integration tests use `pytest.mark.integration` and require a
@@ -69,13 +66,13 @@ cdpwave/
 │   ├── transport/        # WebSocket connection and message handling
 │   ├── session/          # Session management
 │   ├── events/           # Event dispatcher and handlers
-│   ├── domains/          # CDP domain wrappers (60 domains, 685 methods)
+│   ├── domains/          # CDP domain wrappers (60 domains, 692 methods)
 │   ├── client.py         # CDPClient and CDPSession (public API)
 │   └── exceptions.py     # Custom exceptions
 ├── tests/                # Test suite
-│   ├── unit/             # Unit tests with mocks (1128 tests)
-│   ├── integration/      # Integration tests against real Chrome (322 tests)
-│   └── manual_smoke.py   # Manual integration test
+│   ├── unit/             # Unit tests with mocks (~5200 tests)
+│   ├── integration/      # Integration tests against real Chrome (1437 tests)
+│   └── e2e/              # End-to-end scenario tests (~1321 tests)
 ├── docs/                 # MkDocs documentation
 └── pyproject.toml        # Project configuration
 ```
@@ -141,7 +138,8 @@ Use the **Feature Request** issue template. Describe:
 
 Releases are managed by the maintainer:
 
-1. Version bump in `pyproject.toml` and `cdpwave/__init__.py`
+1. Version bump in `pyproject.toml` (`cdpwave.__version__` is read
+   dynamically from the package metadata)
 2. Create annotated git tag (`vX.Y.Z`)
 3. GitHub Actions builds and publishes to PyPI automatically
 

@@ -48,12 +48,10 @@ The root node contains:
 
 ### Get a child node
 
-Retrieve a specific node's children:
+Ask the browser to push a node's children (for lazily populated trees):
 
 ```python
-result = await session.dom.get_child_nodes(node_id)
-for child in result["nodes"]:
-    print(f"  {child['nodeName']}: {child.get('attributes', [])}")
+await session.dom.request_child_nodes(node_id)
 ```
 
 ## Querying elements
@@ -109,9 +107,17 @@ print(html["outerHTML"])
 
 ### Get inner HTML
 
+CDP has no `getInnerHTML` command — resolve the node and evaluate
+`innerHTML` in JavaScript:
+
 ```python
-html = await session.dom.get_inner_html(node_id)
-print(html["innerHTML"])
+obj = await session.dom.resolve_node(node_id)
+result = await session.runtime.call_function_on(
+    "function() { return this.innerHTML; }",
+    object_id=obj["object"]["objectId"],
+    return_by_value=True,
+)
+print(result["result"]["value"])
 ```
 
 ### Get attribute
@@ -154,10 +160,16 @@ await session.dom.set_outer_html(node_id, "<h2>Replaced</h2>")
 
 ### Set inner HTML
 
-Replace an element's children:
+Replace an element's children. There is no CDP `setInnerHTML` command,
+so evaluate `innerHTML` on the resolved node:
 
 ```python
-await session.dom.set_inner_html(node_id, "<p>New content</p>")
+obj = await session.dom.resolve_node(node_id)
+await session.runtime.call_function_on(
+    "function(html) { this.innerHTML = html; }",
+    object_id=obj["object"]["objectId"],
+    args=[{"value": "<p>New content</p>"}],
+)
 ```
 
 ### Remove a node
@@ -168,12 +180,12 @@ await session.dom.remove_node(node_id)
 
 ### Request a node
 
-Request the browser to send the node's children (useful for lazy-loaded
-content):
+Resolve a JavaScript remote object back to its DOM node ID:
 
 ```python
-result = await session.dom.request_node(node_id)
-print(result["nodes"])
+obj = await session.runtime.evaluate("document.querySelector('h1')")
+result = await session.dom.request_node(obj["result"]["objectId"])
+print(result["nodeId"])
 ```
 
 ## Element interaction
@@ -306,9 +318,9 @@ the tree. You can then query inside shadow DOM:
 ```python
 # Find a shadow host
 host = await session.dom.query_selector(root_id, "my-component")
-# Get its shadow root
-children = await session.dom.get_child_nodes(host["nodeId"])
-shadow_root = children["nodes"][0]  # shadow root is first child
+# Its shadow root is listed in the node description
+desc = await session.dom.describe_node(host["nodeId"])
+shadow_root = desc["node"]["shadowRoots"][0]
 # Query inside shadow DOM
 inner = await session.dom.query_selector(shadow_root["nodeId"], ".inner")
 ```

@@ -140,16 +140,17 @@ await session.profiler.stop_precise_coverage()
 !!! tip "Precise vs best-effort"
     Precise coverage (`start_precise_coverage`) instruments every
     function call — accurate but slower. Best-effort coverage
-    (`start_coverage`) is lighter but may miss infrequently
+    (`get_best_effort_coverage`) is lighter but may miss infrequently
     executed code.
 
 ### Best effort coverage
 
+Best-effort coverage needs no start/stop — call it at any point:
+
 ```python
-await session.profiler.start_coverage()
+await session.profiler.enable()
 # ... run code ...
-result = await session.profiler.take_coverage()
-await session.profiler.stop_coverage()
+result = await session.profiler.get_best_effort_coverage()
 ```
 
 ### Console profile finished
@@ -269,13 +270,16 @@ file compatible with `chrome://tracing` and Perfetto.
 
 ```python
 await session.tracing.start(
-    categories=[
-        "-*",                                    # Disable all default categories
-        "devtools.timeline",                     # Timeline events
-        "v8.execute",                            # V8 execution
-        "disabled-by-default-devtools.timeline", # Detailed timeline
-    ],
-    options="record-as-much-as-possible",
+    transfer_mode="ReportEvents",  # events arrive via Tracing.dataCollected
+    trace_config={
+        "recordMode": "recordAsMuchAsPossible",
+        "excludedCategories": ["*"],                    # disable defaults
+        "includedCategories": [
+            "devtools.timeline",                      # timeline events
+            "v8.execute",                             # V8 execution
+            "disabled-by-default-devtools.timeline",  # detailed timeline
+        ],
+    },
 )
 ```
 
@@ -287,20 +291,20 @@ await session.tracing.start(
 ### Stop tracing and collect data
 
 ```python
-trace_data: list[str] = []
+trace_data: list[dict] = []
 
 async def on_data_collected(event: dict) -> None:
-    # event["value"] contains trace data as a string
-    # (typically a sequence of JSON objects, one per line)
-    trace_data.append(event["value"])
+    # event["value"] is a list of trace event dicts
+    trace_data.extend(event["value"])
 
 session.on("Tracing.dataCollected", on_data_collected)
 
 await session.tracing.end()
 
 # Save the trace
+import json
 with open("trace.json", "w") as f:
-    f.write("".join(trace_data))
+    json.dump(trace_data, f)
 ```
 
 The trace file can be loaded in `chrome://tracing` or

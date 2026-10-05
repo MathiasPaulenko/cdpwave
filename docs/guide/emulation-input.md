@@ -62,10 +62,10 @@ reproduce performance issues that only appear on slow devices.
 Test how a page renders without JavaScript:
 
 ```python
-await session.emulation.set_javascript_disabled(True)
+await session.emulation.set_script_execution_disabled(True)
 await session.page.reload()
 # ... inspect the no-JS rendering ...
-await session.emulation.set_javascript_disabled(False)
+await session.emulation.set_script_execution_disabled(False)
 ```
 
 ### Hide scrollbars
@@ -173,7 +173,7 @@ Type a string character by character:
 ```python
 for char in "Hello, World!":
     await session.input.dispatch_key_event(
-        type_="char",
+        type="char",
         text=char,
     )
 ```
@@ -187,13 +187,13 @@ Press a key (Enter):
 
 ```python
 await session.input.dispatch_key_event(
-    type_="keyDown",
+    type="keyDown",
     key="Enter",
     code="Enter",
     windows_virtual_key_code=13,
 )
 await session.input.dispatch_key_event(
-    type_="keyUp",
+    type="keyUp",
     key="Enter",
     code="Enter",
     windows_virtual_key_code=13,
@@ -205,14 +205,14 @@ Key combinations (Ctrl+C):
 ```python
 # Press Control
 await session.input.dispatch_key_event(
-    type_="keyDown",
+    type="keyDown",
     key="ControlLeft",
     code="ControlLeft",
     windows_virtual_key_code=162,
 )
 # Press C while Control is held
 await session.input.dispatch_key_event(
-    type_="keyDown",
+    type="keyDown",
     key="c",
     code="KeyC",
     windows_virtual_key_code=67,
@@ -220,14 +220,14 @@ await session.input.dispatch_key_event(
 )
 # Release C
 await session.input.dispatch_key_event(
-    type_="keyUp",
+    type="keyUp",
     key="c",
     code="KeyC",
     windows_virtual_key_code=67,
 )
 # Release Control
 await session.input.dispatch_key_event(
-    type_="keyUp",
+    type="keyUp",
     key="ControlLeft",
     code="ControlLeft",
     windows_virtual_key_code=162,
@@ -249,14 +249,14 @@ Click at coordinates:
 
 ```python
 await session.input.dispatch_mouse_event(
-    type_="mousePressed",
+    type="mousePressed",
     x=100,
     y=200,
     button="left",
     click_count=1,
 )
 await session.input.dispatch_mouse_event(
-    type_="mouseReleased",
+    type="mouseReleased",
     x=100,
     y=200,
     button="left",
@@ -273,14 +273,14 @@ Double-click:
 
 ```python
 await session.input.dispatch_mouse_event(
-    type_="mousePressed",
+    type="mousePressed",
     x=100,
     y=200,
     button="left",
     click_count=2,
 )
 await session.input.dispatch_mouse_event(
-    type_="mouseReleased",
+    type="mouseReleased",
     x=100,
     y=200,
     button="left",
@@ -292,14 +292,14 @@ Right-click (context menu):
 
 ```python
 await session.input.dispatch_mouse_event(
-    type_="mousePressed",
+    type="mousePressed",
     x=100,
     y=200,
     button="right",
     click_count=1,
 )
 await session.input.dispatch_mouse_event(
-    type_="mouseReleased",
+    type="mouseReleased",
     x=100,
     y=200,
     button="right",
@@ -311,7 +311,7 @@ Mouse wheel scroll:
 
 ```python
 await session.input.dispatch_mouse_event(
-    type_="mouseWheel",
+    type="mouseWheel",
     x=100,
     y=200,
     delta_x=0,
@@ -328,11 +328,11 @@ Tap (touchStart + touchEnd):
 
 ```python
 await session.input.dispatch_touch_event(
-    type_="touchStart",
+    type="touchStart",
     touch_points=[{"x": 100, "y": 200}],
 )
 await session.input.dispatch_touch_event(
-    type_="touchEnd",
+    type="touchEnd",
     touch_points=[],
 )
 ```
@@ -344,13 +344,13 @@ and `data`:
 
 ```python
 await session.input.dispatch_drag_event(
-    type_="dragEnter",
+    type="dragEnter",
     x=100,
     y=200,
     data={"items": [{"mimeType": "text/plain", "data": "Hello"}]},
 )
 await session.input.dispatch_drag_event(
-    type_="drop",
+    type="drop",
     x=200,
     y=300,
     data={"items": [{"mimeType": "text/plain", "data": "Hello"}]},
@@ -363,7 +363,7 @@ Emulate a pinch-to-zoom gesture via mouse:
 
 ```python
 await session.input.emulate_touch_from_mouse_event(
-    type_="mouseMoved",
+    type="mouseMoved",
     x=200,
     y=300,
     button="none",
@@ -376,17 +376,30 @@ await session.input.emulate_touch_from_mouse_event(
 
 ## Sensors
 
-Override sensor readings to test sensor-dependent web APIs:
+Sensor overrides live in the `Emulation` domain (the standalone
+`Sensor` domain was removed from modern Chrome). Enable the override
+and set a reading:
 
 ```python
-await session.sensor.set_sensor_override(
-    type_="accelerometer",
-    reading={"x": 0, "y": 9.8, "z": 0},
+await session.emulation.set_sensor_override_enabled(
+    enabled=True,
+    type="accelerometer",
+)
+await session.emulation.set_sensor_override_readings(
+    type="accelerometer",
+    reading={"xyz": {"x": 0, "y": 9.8, "z": 0}},
 )
 ```
 
+The `reading` shape depends on the sensor type: `{"xyz": {...}}` for
+accelerometer/gyroscope/magnetometer/linear-acceleration/gravity,
+`{"single": {"value": ...}}` for ambient-light, and
+`{"quaternion": {...}}` for orientation sensors.
+
 Supported sensor types: `"accelerometer"`, `"gyroscope"`,
-`"magnetometer"`, `"ambient-light-sensor"`, `"proximity"`.
+`"linear-acceleration"`, `"absolute-orientation"`,
+`"relative-orientation"`, `"ambient-light"`, `"gravity"`,
+`"magnetometer"`.
 
 ## Device orientation
 
@@ -438,14 +451,14 @@ async def main() -> None:
 
         # Click a button
         await session.input.dispatch_mouse_event(
-            type_="mousePressed",
+            type="mousePressed",
             x=195,
             y=400,
             button="left",
             click_count=1,
         )
         await session.input.dispatch_mouse_event(
-            type_="mouseReleased",
+            type="mouseReleased",
             x=195,
             y=400,
             button="left",

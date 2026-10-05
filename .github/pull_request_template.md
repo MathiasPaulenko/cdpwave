@@ -26,7 +26,6 @@
 - [ ] `ruff check .` passes
 - [ ] `mypy cdpwave/` passes
 - [ ] `python -m pytest tests/unit/ -v` passes
-- [ ] `python tests/manual_smoke.py` passes (if applicable)
 - [ ] Added new unit tests for new functionality
 - [ ] Updated documentation (if applicable)
 

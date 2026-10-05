@@ -187,6 +187,25 @@ Use `connect` when:
 - You're running in an environment where process spawning is
   restricted.
 
+## Pipe transport
+
+By default, cdpwave connects to the browser over a local WebSocket
+port. Pass `pipe=True` to use `--remote-debugging-pipe` instead —
+the browser communicates through anonymous pipes, so no TCP port is
+exposed at all:
+
+```python
+client = await CDPClient.launch(pipe=True)
+```
+
+Pipe transport is more secure (nothing else on the machine can
+connect) but has limitations:
+
+- **POSIX only** — it relies on file descriptors 3/4, so it is not
+  supported on Windows.
+- **No reconnection** — if the pipe breaks, `max_retries` has no
+  effect.
+
 ## Context manager
 
 Always use `async with` for guaranteed cleanup:
@@ -229,8 +248,8 @@ environments via these env vars: `CI`, `GITHUB_ACTIONS`, `GITLAB_CI`,
 In Docker containers, you may also need:
 
 - `--disable-gpu` — GPU acceleration isn't available in containers.
-- `--disable-dev-shm-usage` — avoid `/dev/shm` exhaustion. cdpwave
-  adds this automatically when `/dev/shm` is small.
+- `--disable-dev-shm-usage` — avoid `/dev/shm` exhaustion by writing
+  shared memory to `/tmp` instead. Pass it via `extra_args`.
 - `--ipc=host` — shared memory for rendering (Docker run flag, not
   Chrome flag).
 

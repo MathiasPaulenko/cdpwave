@@ -139,10 +139,7 @@ await session.storage.clear_trust_tokens(issuer_origin="https://issuer.example.c
 Track shared storage operations for an origin:
 
 ```python
-await session.storage.set_shared_storage_tracking(
-    tracking=True,
-    host="example.com",
-)
+await session.storage.set_shared_storage_tracking(enable=True)
 ```
 
 ## CacheStorage domain
@@ -182,6 +179,7 @@ Retrieve a cached response by URL:
 await session.cache_storage.request_cached_response(
     cache_id="cache1",
     request_url="https://example.com/data.json",
+    request_headers={},
 )
 ```
 
@@ -299,7 +297,7 @@ await session.network.set_cookie(
 ### Delete a cookie
 
 ```python
-await session.network.delete_cookie(
+await session.network.delete_cookies(
     name="session",
     domain="example.com",
     path="/",

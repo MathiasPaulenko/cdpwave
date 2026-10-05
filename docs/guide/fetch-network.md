@@ -62,6 +62,7 @@ continue, modify, or block each request:
 
 ```python
 import asyncio
+import base64
 from cdpwave import CDPSession
 
 async def handle_requests(session: CDPSession) -> None:
@@ -76,12 +77,12 @@ async def handle_requests(session: CDPSession) -> None:
                 error_reason="Failed",
             )
         elif "api.example.com/mock" in url:
-            # Return a mock response
+            # Return a mock response (body must be base64)
             await session.fetch.fulfill_request(
                 request_id=event["requestId"],
                 status_code=200,
                 response_headers=[{"name": "Content-Type", "value": "application/json"}],
-                body='{"mocked": true}',
+                body=base64.b64encode(b'{"mocked": true}').decode(),
             )
         else:
             # Let the request proceed normally
@@ -127,6 +128,8 @@ original values.
 Return a synthetic response without hitting the network:
 
 ```python
+import base64
+
 await session.fetch.fulfill_request(
     request_id=event["requestId"],
     status_code=200,
@@ -134,14 +137,14 @@ await session.fetch.fulfill_request(
         {"name": "Content-Type", "value": "application/json"},
         {"name": "Access-Control-Allow-Origin", "value": "*"},
     ],
-    body='{"users": [{"id": 1, "name": "Alice"}]}',
+    body=base64.b64encode(b'{"users": [{"id": 1, "name": "Alice"}]}').decode(),
 )
 ```
 
 !!! note "Body encoding"
-    The `body` parameter must be a base64-encoded string. cdpwave
-    handles the encoding automatically — pass plain text and it will
-    be encoded for you.
+    The `body` parameter must be a **base64-encoded** string — it is
+    passed to the browser as-is. Encode it yourself:
+    `base64.b64encode(payload_bytes).decode()`.
 
 ### Continuing with auth
 
@@ -150,11 +153,9 @@ Provide credentials for a 401 response:
 ```python
 await session.fetch.continue_with_auth(
     request_id=event["requestId"],
-    auth_challenge_response={
-        "response": "ProvideCredentials",
-        "username": "user",
-        "password": "pass",
-    },
+    response="ProvideCredentials",
+    username="user",
+    password="pass",
 )
 ```
 
@@ -388,6 +389,7 @@ result = await session.network.load_network_resource(
 
 ```python
 import asyncio
+import base64
 from cdpwave import CDPClient
 
 async def main() -> None:
@@ -413,7 +415,7 @@ async def main() -> None:
                     response_headers=[
                         {"name": "Content-Type", "value": "application/json"}
                     ],
-                    body='{"intercepted": true}',
+                    body=base64.b64encode(b'{"intercepted": true}').decode(),
                 )
             else:
                 await session.fetch.continue_request(

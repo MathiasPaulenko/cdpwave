@@ -72,7 +72,6 @@ Known removed/deprecated commands include:
 | `Log` | `getViolationsReport` |
 | `Profiler` | `startTypeProfile`, `stopTypeProfile` |
 | `HeapProfiler` | `addHeapSnapshotChunk`, `getLastSeenObjectId` |
-| `Security` | `getVisibleSecurityState` |
 | `Accessibility` | `getAXNode`, `getImageData` |
 | `Animation` | `pause`, `resume` |
 | `ServiceWorker` | `update`, `inspectWorker`, `getWorkers`, `getMessages` |
@@ -91,7 +90,10 @@ hatch for commands that may not exist, and wrap calls in
 **Solution**: Use `client.send()` to send commands to the browser target:
 
 ```python
-# Send a command to the browser target (not a page session)
+# Browser-level domain wrapper (preferred)
+result = await client.system_info.get_info()
+
+# Equivalent: send a command to the browser target (not a page session)
 result = await client.send("SystemInfo.getInfo")
 ```
 

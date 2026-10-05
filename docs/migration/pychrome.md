@@ -1,6 +1,6 @@
 # Migrating from pychrome
 
-pychrome is a threading-based CDP wrapper. cdpwave is a modern async-first replacement with full CDP coverage, type hints, and browser detection.
+pychrome is a threading-based CDP wrapper. cdpwave is a modern async-first replacement with broad CDP coverage, type hints, and browser detection.
 
 ## Key differences
 
@@ -10,7 +10,7 @@ pychrome is a threading-based CDP wrapper. cdpwave is a modern async-first repla
 | Sessions | Legacy (one WS per tab) | Flatten (one WS for all) |
 | Browser launcher | No | Yes (auto-detection) |
 | Typing | No type hints | mypy --strict |
-| CDP coverage | Dynamic (everything is dynamic) | All 60 domains, 689 typed methods |
+| CDP coverage | Dynamic (everything is dynamic) | All 60 domains, 692 typed methods |
 | API | `tab.Page.navigate(url=...)` | `await session.page.navigate("...")` |
 | Context manager | No | Yes |
 | Events | Sync callbacks | Async handlers with error isolation |
@@ -69,9 +69,9 @@ asyncio.run(main())
 1. **No `tab.start()`** — sessions are ready immediately after `new_page()` or `connect_to_page()`.
 2. **No `tab.wait()`** — use `session.wait_for_load_state()`, `session.wait_for_navigation()`, or `session.wait_for_selector()` instead of blocking waits.
 3. **Sync API** — for simple scripts that mirror pychrome's sync style, use `from cdpwave.sync import SyncCDPClient` for a synchronous wrapper.
-4. **Async handlers** — event handlers must be `async def`, not regular functions.
+4. **Async handlers** — event handlers are typically `async def` (plain functions are also accepted; their result is awaited only if awaitable).
 5. **Full domain access** — all 60 CDP domains are typed properties: `session.page`, `session.runtime`, `session.network`, `session.dom`, `session.debugger`, `session.fetch`, `session.emulation`, `session.input`, etc.
 6. **Browser detection** — `CDPClient.launch()` finds and starts Chrome automatically. No need to run Chrome separately.
 7. **Flatten sessions** — all tabs share one WebSocket connection via `sessionId` multiplexing.
 8. **Context manager** — use `async with` for guaranteed cleanup. No manual `stop()` / `close_tab()`.
-9. **Typed wrappers** — unlike pychrome where everything is dynamic, cdpwave provides typed methods with docstrings and IDE autocomplete for all 689 CDP commands.
+9. **Typed wrappers** — unlike pychrome where everything is dynamic, cdpwave provides typed methods with docstrings and IDE autocomplete for all 692 CDP commands.
