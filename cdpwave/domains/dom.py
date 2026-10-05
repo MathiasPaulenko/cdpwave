@@ -187,6 +187,24 @@ class DOMDomain(BaseDomain):
             {"nodeId": node_id, "name": name, "value": value},
         )
 
+    async def get_attributes(
+        self,
+        node_id: int,
+    ) -> dict[str, Any]:
+        """Get all attributes of a node.
+
+        Args:
+            node_id: The node ID to inspect.
+
+        Returns:
+            Response dict containing ``attributes`` — a flat list of
+            ``[name1, value1, name2, value2, ...]``.
+        """
+        return await self._call(
+            "DOM.getAttributes",
+            {"nodeId": node_id},
+        )
+
     async def get_attribute(
         self,
         node_id: int,
@@ -206,10 +224,7 @@ class DOMDomain(BaseDomain):
             name/value pairs) or ``value`` (single attribute value
             when ``name`` is provided).
         """
-        result = await self._call(
-            "DOM.getAttributes",
-            {"nodeId": node_id},
-        )
+        result = await self.get_attributes(node_id)
         if name is not None:
             attrs = result.get("attributes", [])
             for i in range(0, len(attrs) - 1, 2):

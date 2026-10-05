@@ -138,6 +138,20 @@ class NetworkDomain(BaseDomain):
             {"headers": headers},
         )
 
+    async def set_extra_http_headers(
+        self,
+        headers: dict[str, str],
+    ) -> dict[str, Any]:
+        """Set extra HTTP headers for all requests.
+
+        Alias for :meth:`set_extra_request_headers` matching the CDP
+        command name ``Network.setExtraHTTPHeaders``.
+
+        Args:
+            headers: Dict of header name to value.
+        """
+        return await self.set_extra_request_headers(headers)
+
     async def clear_browser_cookies(self) -> dict[str, Any]:
         """Clear all browser cookies.
 
@@ -467,6 +481,57 @@ class NetworkDomain(BaseDomain):
             raise TypeError("cookies must be a list")
         return await self._call("Network.setCookies", {"cookies": cookies})
 
+    async def emulate_network_conditions(
+        self,
+        offline: bool,
+        latency: float,
+        download_throughput: float,
+        upload_throughput: float,
+        connection_type: str | None = None,
+    ) -> dict[str, Any]:
+        """Emulate network conditions for the page.
+
+        .. deprecated::
+            CDP marks this command deprecated in favor of
+            :meth:`emulate_network_conditions_by_rule` and
+            :meth:`override_network_state`, but it remains functional
+            on current Chrome versions.
+
+        Args:
+            offline: True to emulate internet disconnection.
+            latency: Minimum latency from request sent to response
+                headers (milliseconds).
+            download_throughput: Max download throughput in bytes/sec.
+                -1 disables throttling.
+            upload_throughput: Max upload throughput in bytes/sec.
+                -1 disables throttling.
+            connection_type: Optional connection type
+                (``"none"``, ``"cellular2g"``, ``"cellular3g"``,
+                ``"cellular4g"``, ``"bluetooth"``, ``"ethernet"``,
+                ``"wifi"``, ``"wimax"``, ``"other"``).
+        """
+        if not isinstance(offline, bool):
+            raise TypeError("offline must be a bool")
+        if isinstance(latency, bool) or not isinstance(latency, (int, float)):
+            raise TypeError("latency must be a number")
+        if isinstance(download_throughput, bool) or not isinstance(
+            download_throughput, (int, float)
+        ):
+            raise TypeError("download_throughput must be a number")
+        if isinstance(upload_throughput, bool) or not isinstance(
+            upload_throughput, (int, float)
+        ):
+            raise TypeError("upload_throughput must be a number")
+        params: dict[str, Any] = {
+            "offline": offline,
+            "latency": latency,
+            "downloadThroughput": download_throughput,
+            "uploadThroughput": upload_throughput,
+        }
+        if connection_type is not None:
+            params["connectionType"] = connection_type
+        return await self._call("Network.emulateNetworkConditions", params)
+
     async def emulate_network_conditions_by_rule(
         self,
         matched_network_conditions: list[dict[str, Any]],
@@ -568,6 +633,20 @@ class NetworkDomain(BaseDomain):
     async def clear_accepted_encodings_override(self) -> dict[str, Any]:
         """Clear the accepted encodings override."""
         return await self._call("Network.clearAcceptedEncodingsOverride")
+
+    async def get_all_cookies(self) -> NetworkGetCookiesResult:
+        """Get all cookies in the browser's cookie jar.
+
+        Unlike :meth:`get_cookies`, which filters by URL, this returns
+        cookies from all browser contexts and origins. It is a
+        browser-level command; on page sessions it may fail on Chrome
+        builds that restrict it to the browser target — in that case
+        use ``client.send("Network.getAllCookies")``.
+
+        Returns:
+            Response dict containing ``cookies`` list.
+        """
+        return cast("NetworkGetCookiesResult", await self._call("Network.getAllCookies"))
 
     async def get_certificate(self, origin: str) -> dict[str, Any]:
         """Get the certificate for a given origin.
