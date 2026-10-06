@@ -136,6 +136,62 @@ async with await CDPClient.connect(host="localhost", port=9222) as client:
     # ...
 ```
 
+## Export to PDF
+
+```python
+import base64
+
+session = await client.new_page("https://example.com")
+await session.wait_for_load_state("load")
+
+pdf = await session.page.print_to_pdf(print_background=True)
+with open("page.pdf", "wb") as f:
+    f.write(base64.b64decode(pdf["data"]))
+```
+
+## Emulate a mobile device
+
+```python
+# iPhone-sized viewport with a mobile user agent
+await session.emulation.set_device_metrics_override(
+    width=390, height=844, device_scale_factor=3, mobile=True
+)
+await session.emulation.set_user_agent_override(
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
+    "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+)
+await session.page.navigate("https://example.com")
+```
+
+## Intercept and mock requests
+
+```python
+async def on_request_paused(params):
+    await session.fetch.fulfill_request(
+        params["requestId"],
+        response_code=200,
+        response_headers=[{"name": "Content-Type", "value": "application/json"}],
+        body=base64.b64encode(b'{"mocked": true}').decode(),
+    )
+
+await session.fetch.enable(patterns=[{"urlPattern": "*/api/*"}])
+session.on("Fetch.requestPaused", on_request_paused)
+await session.page.navigate("https://example.com")
+```
+
+## Type into a page
+
+```python
+document = await session.dom.get_document()
+node = await session.dom.query_selector(
+    document["root"]["nodeId"], "input[name=q]"
+)
+await session.dom.focus(node["nodeId"])
+await session.input.insert_text("hello world")
+await session.input.dispatch_key_event("keyDown", key="Enter", code="Enter")
+await session.input.dispatch_key_event("keyUp", key="Enter", code="Enter")
+```
+
 ## Multi-tab sessions
 
 ```python
@@ -143,12 +199,23 @@ async with await CDPClient.launch() as client:
     tab1 = await client.new_page("https://example.com")
     tab2 = await client.new_page("https://example.org")
 
-    # Work on both tabs independently
-    title1 = await tab1.runtime.evaluate("document.title", return_by_value=True)
+    # Each tab is an independent session — screenshot one while the
+    # other keeps running
+    shot = await tab1.page.capture_screenshot()
     title2 = await tab2.runtime.evaluate("document.title", return_by_value=True)
+```
 
-    print(title1["result"]["value"])  # "Example Domain"
-    print(title2["result"]["value"])  # "IANA-managed domains"
+## Synchronous API
+
+Same surface without `async`/`await` — useful for scripts and REPLs:
+
+```python
+from cdpwave.sync import SyncCDPClient
+
+with SyncCDPClient.launch(headless=True) as client:
+    page = client.new_page("https://example.com")
+    result = page.runtime.evaluate("document.title", return_by_value=True)
+    print(result["result"]["value"])
 ```
 
 ## Escape hatch
@@ -164,15 +231,16 @@ print(result["metrics"])
 
 ```python
 async with await CDPClient.launch() as client:
-    session = await client.new_page("https://example.com")
+    session = await client.new_page()
 
-    # Listen for console messages (runtime events need the domain enabled)
-    await session.runtime.enable()
+    # Watch every request the page makes
+    await session.network.enable()
 
-    def on_console(msg):
-        print(f"[console] {msg['args']}")
+    def on_request(params):
+        print(f"→ {params['request']['method']} {params['request']['url']}")
 
-    session.on("Runtime.consoleAPICalled", on_console)
+    session.on("Network.requestWillBeSent", on_request)
+    await session.page.navigate("https://example.com")
 
     # Wait for the page load event
     await session.wait_for_load_state("load")
