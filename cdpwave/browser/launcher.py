@@ -10,6 +10,7 @@ import shutil
 import socket
 import subprocess
 import tempfile
+import threading
 import urllib.request
 from dataclasses import dataclass
 from typing import Any
@@ -104,6 +105,8 @@ class BrowserLauncher:
         self._info: BrowserInfo | None = None
         self._pipe_read_fd: int | None = None
         self._pipe_write_fd: int | None = None
+        self._stderr_tail: list[bytes] = []
+        self._stderr_thread: threading.Thread | None = None
 
     def _build_args(self) -> tuple[list[str], socket.socket | None]:
         """Build the command-line arguments for the browser process.
@@ -256,16 +259,23 @@ class BrowserLauncher:
             rd3 = _rehome(rd3)
         if wr4 == 3:
             wr4 = _rehome(wr4)
-        # If 3/4 are already open in the parent (not our pipe ends), move
-        # them aside so dup2 doesn't clobber an unrelated descriptor.
+        # If 3/4 are already open in the parent and they are not our pipe
+        # ends, they belong to the runtime (event loop, sockets). Moving
+        # them would break the owner — fail loudly instead.
         ours = {rd3, wr3, rd4, wr4}
         for target in (3, 4):
+            if target in ours:
+                continue
             try:
                 fcntl.fcntl(target, fcntl.F_GETFD)
             except OSError:
                 continue  # fd not open — free to use
-            if target not in ours:
-                _rehome(target)
+            for fd in (rd3, wr3, rd4, wr4):
+                with contextlib.suppress(OSError):
+                    os.close(fd)
+            raise LaunchError(
+                f"Cannot launch pipe mode: fd {target} is already in use"
+            )
         if rd3 != 3:
             os.dup2(rd3, 3)
             os.close(rd3)
@@ -285,6 +295,26 @@ class BrowserLauncher:
                 stderr=subprocess.PIPE,
                 pass_fds=(rd3, wr4),
             )
+            # Drain stderr so Chrome never blocks on a full pipe buffer;
+            # keep the tail for error reporting on early exit.
+            self._stderr_tail = []
+
+            def _drain_stderr(stream: Any) -> None:
+                while True:
+                    chunk = stream.read(65536)
+                    if not chunk:
+                        return
+                    self._stderr_tail.append(chunk)
+                    if len(self._stderr_tail) > 8:
+                        del self._stderr_tail[: len(self._stderr_tail) - 8]
+
+            assert self._process.stderr is not None
+            self._stderr_thread = threading.Thread(
+                target=_drain_stderr,
+                args=(self._process.stderr,),
+                daemon=True,
+            )
+            self._stderr_thread.start()
         except OSError as exc:
             for fd in (rd3, wr3, rd4, wr4):
                 with contextlib.suppress(OSError):
@@ -298,8 +328,10 @@ class BrowserLauncher:
 
         await asyncio.sleep(0.2)
         if self._process.poll() is not None:
-            stderr_data = self._process.stderr.read() if self._process.stderr else b""
-            stderr_text = stderr_data.decode("utf-8", errors="replace").strip()
+            self._stderr_thread.join(timeout=1.0)
+            stderr_text = (
+                b"".join(self._stderr_tail).decode("utf-8", errors="replace").strip()
+            )
             for fd in (rd4, wr3):
                 with contextlib.suppress(OSError):
                     os.close(fd)
