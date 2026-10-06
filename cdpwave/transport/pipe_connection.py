@@ -13,7 +13,6 @@ import contextlib
 import json
 import logging
 import os
-import subprocess
 from typing import Any
 
 from cdpwave.exceptions import (
@@ -69,7 +68,7 @@ class PipeConnection:
         self,
         read_fd: int,
         write_fd: int,
-        process: subprocess.Popen[bytes] | None = None,
+        process: Any = None,
         event_callback: EventCallback | None = None,
         default_timeout: float = 30.0,
         max_event_tasks: int = 100,

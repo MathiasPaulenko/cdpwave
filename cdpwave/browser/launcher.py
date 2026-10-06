@@ -7,6 +7,7 @@ import json
 import logging
 import os
 import shutil
+import signal
 import socket
 import subprocess
 import tempfile
@@ -23,6 +24,18 @@ if os.name == "posix":
     import fcntl
 else:
     fcntl = None
+
+# POSIX-only attributes used by the pipe transport; resolved via getattr
+# so the module stays importable (and type-checkable) on Windows.
+_POSIX_SPAWN_OPEN: Any = getattr(os, "POSIX_SPAWN_OPEN", None)
+_POSIX_SPAWN_DUP2: Any = getattr(os, "POSIX_SPAWN_DUP2", None)
+_POSIX_SPAWN: Any = getattr(os, "posix_spawn", None)
+_WNOHANG: Any = getattr(os, "WNOHANG", 1)
+_SIGKILL: Any = getattr(signal, "SIGKILL", None)
+_WIFEXITED: Any = getattr(os, "WIFEXITED", None)
+_WEXITSTATUS: Any = getattr(os, "WEXITSTATUS", None)
+_WIFSIGNALED: Any = getattr(os, "WIFSIGNALED", None)
+_WTERMSIG: Any = getattr(os, "WTERMSIG", None)
 
 logger = logging.getLogger("cdpwave.browser.launcher")
 
@@ -78,6 +91,62 @@ class BrowserInfo:
     pipe: bool = False
 
 
+class _SpawnedProcess:
+    """Minimal process handle for a ``posix_spawn``-ed child.
+
+    Exposes the subset of the ``Popen`` interface the launcher uses
+    (``pid``, ``returncode``, ``poll``, ``wait``, ``terminate``, ``kill``).
+    """
+
+    def __init__(self, pid: int, stderr: Any = None) -> None:
+        self.pid = pid
+        self.stderr = stderr
+        self.returncode: int | None = None
+
+    @staticmethod
+    def _status_to_returncode(status: int) -> int:
+        if _WIFEXITED is not None and _WIFEXITED(status):
+            return int(_WEXITSTATUS(status))
+        if _WIFSIGNALED is not None and _WIFSIGNALED(status):
+            return -int(_WTERMSIG(status))
+        return status
+
+    def poll(self) -> int | None:
+        if self.returncode is not None:
+            return self.returncode
+        try:
+            pid, status = os.waitpid(self.pid, _WNOHANG)
+        except ChildProcessError:
+            self.returncode = 0  # already reaped
+            return self.returncode
+        if pid == self.pid:
+            self.returncode = self._status_to_returncode(status)
+        return self.returncode
+
+    def wait(self) -> int:
+        if self.returncode is not None:
+            return self.returncode
+        while True:
+            try:
+                pid, status = os.waitpid(self.pid, 0)
+            except InterruptedError:
+                continue
+            except ChildProcessError:
+                self.returncode = self.returncode if self.returncode is not None else 0
+                return self.returncode
+            if pid == self.pid:
+                self.returncode = self._status_to_returncode(status)
+                return self.returncode
+
+    def terminate(self) -> None:
+        with contextlib.suppress(ProcessLookupError):
+            os.kill(self.pid, signal.SIGTERM)
+
+    def kill(self) -> None:
+        with contextlib.suppress(ProcessLookupError):
+            os.kill(self.pid, _SIGKILL or signal.SIGTERM)
+
+
 class BrowserLauncher:
     """Launches and manages a Chromium-based browser process.
 
@@ -100,7 +169,9 @@ class BrowserLauncher:
         self._user_data_dir = user_data_dir
         self._extra_args = extra_args
         self._pipe = pipe
-        self._process: asyncio.subprocess.Process | subprocess.Popen[bytes] | None = None
+        self._process: (
+            asyncio.subprocess.Process | subprocess.Popen[bytes] | _SpawnedProcess | None
+        ) = None
         self._temp_dir: str | None = None
         self._info: BrowserInfo | None = None
         self._pipe_read_fd: int | None = None
@@ -236,95 +307,77 @@ class BrowserLauncher:
 
         # rd3/wr3: parent writes to wr3, browser reads from fd 3 (rd3).
         # rd4/wr4: browser writes to fd 4 (wr4), parent reads from rd4.
+        # rd_err/wr_err: browser stderr, drained so it never blocks.
         rd3, wr3 = os.pipe()
         rd4, wr4 = os.pipe()
+        rd_err, wr_err = os.pipe()
 
-        # Chrome requires the pipe ends at exactly fd 3 and fd 4. Since
-        # preexec_fn runs before subprocess closes extra fds, remap in
-        # the parent instead: move rd3 -> 3 and wr4 -> 4, then pass them
-        # via pass_fds. Our other pipe ends occupying 3/4 are first moved
-        # to a higher fd so nothing gets clobbered.
+        # posix_spawn file_actions run inside the child, so fds 3/4 may be
+        # occupied in the parent — the dup2 targets are only remapped in the
+        # child's fd table. The only hazard is our own ends colliding with
+        # the target numbers: park them above fd 4 in that case.
         assert fcntl is not None
 
-        def _rehome(fd: int) -> int:
+        def _park(fd: int) -> int:
             newfd: int = fcntl.fcntl(fd, fcntl.F_DUPFD, 5)
             os.close(fd)
             return newfd
 
-        if rd4 in (3, 4):
-            rd4 = _rehome(rd4)
-        if wr3 in (3, 4):
-            wr3 = _rehome(wr3)
         if rd3 == 4:
-            rd3 = _rehome(rd3)
+            rd3 = _park(rd3)
         if wr4 == 3:
-            wr4 = _rehome(wr4)
-        # If 3/4 are already open in the parent and they are not our pipe
-        # ends, they belong to the runtime (event loop, sockets). Moving
-        # them would break the owner — fail loudly instead.
-        ours = {rd3, wr3, rd4, wr4}
-        for target in (3, 4):
-            if target in ours:
-                continue
-            try:
-                fcntl.fcntl(target, fcntl.F_GETFD)
-            except OSError:
-                continue  # fd not open — free to use
-            for fd in (rd3, wr3, rd4, wr4):
-                with contextlib.suppress(OSError):
-                    os.close(fd)
-            raise LaunchError(
-                f"Cannot launch pipe mode: fd {target} is already in use"
-            )
-        if rd3 != 3:
-            os.dup2(rd3, 3)
-            os.close(rd3)
-            rd3 = 3
-        if wr4 != 4:
-            os.dup2(wr4, 4)
-            os.close(wr4)
-            wr4 = 4
+            wr4 = _park(wr4)
+
+        file_actions = [
+            (_POSIX_SPAWN_OPEN, 0, "/dev/null", os.O_RDONLY, 0o666),
+            (_POSIX_SPAWN_OPEN, 1, "/dev/null", os.O_WRONLY, 0o666),
+            # stderr must be remapped before 3/4 — wr_err itself may sit
+            # on one of the target numbers.
+            (_POSIX_SPAWN_DUP2, wr_err, 2),
+            (_POSIX_SPAWN_DUP2, rd3, 3),
+            (_POSIX_SPAWN_DUP2, wr4, 4),
+        ]
 
         try:
-            # asyncio.subprocess cannot pass fds 3/4 to the child or run
-            # a preexec_fn, so Chrome's pipe protocol requires Popen here.
-            self._process = subprocess.Popen(  # noqa: ASYNC220
+            pid = _POSIX_SPAWN(
+                args[0],
                 args,
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE,
-                pass_fds=(rd3, wr4),
+                os.environ.copy(),
+                file_actions=file_actions,
             )
-            # Drain stderr so Chrome never blocks on a full pipe buffer;
-            # keep the tail for error reporting on early exit.
-            self._stderr_tail = []
-
-            def _drain_stderr(stream: Any) -> None:
-                while True:
-                    chunk = stream.read(65536)
-                    if not chunk:
-                        return
-                    self._stderr_tail.append(chunk)
-                    if len(self._stderr_tail) > 8:
-                        del self._stderr_tail[: len(self._stderr_tail) - 8]
-
-            assert self._process.stderr is not None
-            self._stderr_thread = threading.Thread(
-                target=_drain_stderr,
-                args=(self._process.stderr,),
-                daemon=True,
-            )
-            self._stderr_thread.start()
         except OSError as exc:
-            for fd in (rd3, wr3, rd4, wr4):
+            for fd in (rd3, wr3, rd4, wr4, rd_err, wr_err):
                 with contextlib.suppress(OSError):
                     os.close(fd)
             raise LaunchError(f"Failed to launch browser process: {exc}") from exc
 
-        os.close(rd3)
-        os.close(wr4)
+        for fd in (rd3, wr4, wr_err):
+            os.close(fd)
+
+        self._process = _SpawnedProcess(
+            pid, stderr=os.fdopen(rd_err, "rb", buffering=0)
+        )
         self._pipe_read_fd = rd4
         self._pipe_write_fd = wr3
+
+        # Drain stderr so Chrome never blocks on a full pipe buffer;
+        # keep the tail for error reporting on early exit.
+        self._stderr_tail = []
+
+        def _drain_stderr() -> None:
+            stream: Any = self._process.stderr if self._process else None  # noqa: ASYNC220
+            if stream is None:
+                return
+            while True:
+                chunk = stream.read(65536)
+                if not chunk:
+                    return
+                self._stderr_tail.append(chunk)
+                if len(self._stderr_tail) > 8:
+                    del self._stderr_tail[: len(self._stderr_tail) - 8]
+
+        self._stderr_thread = threading.Thread(target=_drain_stderr, daemon=True)
+        self._stderr_thread.start()
 
         await asyncio.sleep(0.2)
         if self._process.poll() is not None:
@@ -362,7 +415,7 @@ class BrowserLauncher:
         while loop.time() < deadline:
             proc = self._process
             if proc is not None:
-                if isinstance(proc, subprocess.Popen):
+                if isinstance(proc, (subprocess.Popen, _SpawnedProcess)):
                     exited = proc.poll() is not None
                 else:
                     exited = proc.returncode is not None
@@ -411,7 +464,7 @@ class BrowserLauncher:
 
         if self._process is not None:
             with contextlib.suppress(Exception):
-                if isinstance(self._process, subprocess.Popen):
+                if isinstance(self._process, (subprocess.Popen, _SpawnedProcess)):
                     if self._process.poll() is None:
                         self._process.terminate()
                         try:
@@ -448,7 +501,7 @@ class BrowserLauncher:
     @property
     def is_running(self) -> bool:
         """Whether the browser process is still running."""
-        if isinstance(self._process, subprocess.Popen):
+        if isinstance(self._process, (subprocess.Popen, _SpawnedProcess)):
             return self._process.poll() is None
         return self._process is not None and self._process.returncode is None
 
@@ -467,7 +520,7 @@ class BrowserLauncher:
     @property
     def process(
         self,
-    ) -> asyncio.subprocess.Process | subprocess.Popen[bytes] | None:
+    ) -> asyncio.subprocess.Process | subprocess.Popen[bytes] | _SpawnedProcess | None:
         """The browser subprocess, or None if not launched."""
         return self._process
 

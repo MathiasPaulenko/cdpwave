@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
-import subprocess
 from typing import Any
 
 from cdpwave.browser.discovery import TargetDiscovery, TargetInfo
@@ -1223,7 +1222,7 @@ class CDPClient:
                     connection: Connection | PipeConnection = PipeConnection(
                         read_fd=fds[0],
                         write_fd=fds[1],
-                        process=proc if isinstance(proc, subprocess.Popen) else None,
+                        process=proc if getattr(proc, "pid", None) is not None else None,
                     )
                     await connection.connect()
                     client = cls(connection, launcher=launcher, discovery=None)

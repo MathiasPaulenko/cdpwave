@@ -7,6 +7,7 @@ lifecycle events), and the synchronous API over a real connection.
 import asyncio
 import contextlib
 import sys
+import time
 
 import pytest
 
@@ -117,9 +118,13 @@ class TestSyncAPIIntegration:
         with SyncCDPClient.launch(headless=True) as client:
             page = client.new_page("about:blank")
             page.page.navigate("data:text/html,<title>SyncTest</title>")
-            result = page.runtime.evaluate(
-                "document.title", return_by_value=True
-            )
+            for _ in range(20):
+                result = page.runtime.evaluate(
+                    "document.title", return_by_value=True
+                )
+                if result["result"]["value"] == "SyncTest":
+                    break
+                time.sleep(0.25)
             assert result["result"]["value"] == "SyncTest"
             page.close()
 
