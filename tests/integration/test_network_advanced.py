@@ -648,14 +648,24 @@ class TestNetworkCacheAndEncoding:
 
     async def test_set_accepted_encodings_br(self, page: CDPSession) -> None:
         await page.network.enable()
-        result = await page.network.set_accepted_encodings(["br"])
-        assert result == {}
-        result = await page.network.clear_accepted_encodings_override()
-        assert result == {}
+        try:
+            result = await page.network.set_accepted_encodings(["br"])
+            assert result == {}
+            result = await page.network.clear_accepted_encodings_override()
+            assert result == {}
+        except CommandError as exc:
+            if exc.code == -32601:
+                pytest.skip("Network.setAcceptedEncodings removed from Chrome")
+            raise
 
     async def test_set_accepted_encodings_empty_list(self, page: CDPSession) -> None:
         await page.network.enable()
-        result = await page.network.set_accepted_encodings([])
-        assert result == {}
-        result = await page.network.clear_accepted_encodings_override()
-        assert result == {}
+        try:
+            result = await page.network.set_accepted_encodings([])
+            assert result == {}
+            result = await page.network.clear_accepted_encodings_override()
+            assert result == {}
+        except CommandError as exc:
+            if exc.code == -32601:
+                pytest.skip("Network.setAcceptedEncodings removed from Chrome")
+            raise

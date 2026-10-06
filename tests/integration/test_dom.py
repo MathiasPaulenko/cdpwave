@@ -5,6 +5,14 @@ import pytest
 
 from cdpwave import CDPClient, CDPSession
 
+# Self-contained page — example.com dropped its <h1> in the 2025 redesign,
+# so tests must not depend on third-party markup.
+TEST_PAGE = (
+    "data:text/html,<html><body><h1>Example Domain</h1>"
+    "<p>First para</p><p>Second para</p>"
+    "<div>block</div><a href='/x'>link</a></body></html>"
+)
+
 
 @pytest.mark.integration
 class TestDOM:
@@ -14,7 +22,7 @@ class TestDOM:
             await client.new_page() as session,
         ):
             await session.page.enable()
-            await session.page.navigate("https://example.com")
+            await session.page.navigate(TEST_PAGE)
 
             for _ in range(10):
                 await asyncio.sleep(0.5)
@@ -33,7 +41,7 @@ class TestDOM:
             await client.new_page() as session,
         ):
             await session.page.enable()
-            await session.page.navigate("https://example.com")
+            await session.page.navigate(TEST_PAGE)
 
             for _ in range(10):
                 await asyncio.sleep(0.5)
@@ -54,7 +62,7 @@ class TestDOM:
             await client.new_page() as session,
         ):
             await session.page.enable()
-            await session.page.navigate("https://example.com")
+            await session.page.navigate(TEST_PAGE)
 
             for _ in range(10):
                 await asyncio.sleep(0.5)
@@ -72,7 +80,7 @@ class TestDOM:
             await client.new_page() as session,
         ):
             await session.page.enable()
-            await session.page.navigate("https://example.com")
+            await session.page.navigate(TEST_PAGE)
 
             for _ in range(10):
                 await asyncio.sleep(0.5)
@@ -91,7 +99,7 @@ class TestDOM:
             await client.new_page() as session,
         ):
             await session.page.enable()
-            await session.page.navigate("https://example.com")
+            await session.page.navigate(TEST_PAGE)
 
             for _ in range(10):
                 await asyncio.sleep(0.5)
@@ -635,14 +643,15 @@ class TestDOMAdvanced:
 
 
 async def _wait_for_page(
-    page: CDPSession, url: str = "https://example.com"
+    page: CDPSession, url: str = TEST_PAGE
 ) -> None:
     await page.page.enable()
     await page.page.navigate(url)
     for _ in range(20):
         await asyncio.sleep(0.5)
         result = await page.runtime.evaluate(
-            "document.title", return_by_value=True
+            "document.readyState === 'complete' && !!document.body",
+            return_by_value=True,
         )
         if result.get("result", {}).get("value"):
             break

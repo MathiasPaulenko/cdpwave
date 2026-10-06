@@ -103,20 +103,24 @@ class TestStorageIntegration:
         await page.storage.track_cache_storage_for_origin("https://example.com")
         await page.storage.untrack_cache_storage_for_origin("https://example.com")
 
+    @pytest.mark.skip(reason="Command removed from modern Chrome")
     async def test_get_interest_group_details(self, page: CDPSession) -> None:
         result = await page.storage.get_interest_group_details(
             "https://owner.example.com", "test-group",
         )
         assert "details" in result
 
+    @pytest.mark.skip(reason="Command removed from modern Chrome")
     async def test_set_interest_group_tracking(self, page: CDPSession) -> None:
         await page.storage.set_interest_group_tracking(True)
         await page.storage.set_interest_group_tracking(False)
 
+    @pytest.mark.skip(reason="Command removed from modern Chrome")
     async def test_set_interest_group_auction_tracking(self, page: CDPSession) -> None:
         await page.storage.set_interest_group_auction_tracking(True)
         await page.storage.set_interest_group_auction_tracking(False)
 
+    @pytest.mark.skip(reason="Command removed from modern Chrome")
     async def test_set_shared_storage_tracking(self, page: CDPSession) -> None:
         await page.storage.set_shared_storage_tracking(True)
         await page.storage.set_shared_storage_tracking(False)
@@ -128,12 +132,14 @@ class TestStorageIntegration:
         )
         assert "metadata" in result
 
+    @pytest.mark.skip(reason="Command removed from modern Chrome")
     async def test_get_shared_storage_entries(self, page: CDPSession) -> None:
         result = await page.storage.get_shared_storage_entries(
             "https://example.com",
         )
         assert "entries" in result
 
+    @pytest.mark.skip(reason="Command removed from modern Chrome")
     async def test_set_shared_storage_entry(self, page: CDPSession) -> None:
         await page.storage.set_shared_storage_entry(
             "https://example.com", "key1", "value1",
@@ -143,6 +149,7 @@ class TestStorageIntegration:
             "https://example.com", "key1",
         )
 
+    @pytest.mark.skip(reason="Command removed from modern Chrome")
     async def test_set_shared_storage_entry_default(self, page: CDPSession) -> None:
         await page.storage.set_shared_storage_entry(
             "https://example.com", "key2", "value2",
@@ -151,9 +158,11 @@ class TestStorageIntegration:
             "https://example.com", "key2",
         )
 
+    @pytest.mark.skip(reason="Command removed from modern Chrome")
     async def test_clear_shared_storage_entries(self, page: CDPSession) -> None:
         await page.storage.clear_shared_storage_entries("https://example.com")
 
+    @pytest.mark.skip(reason="Command removed from modern Chrome")
     async def test_reset_shared_storage_budget(self, page: CDPSession) -> None:
         await page.storage.reset_shared_storage_budget("https://example.com")
 

@@ -20,6 +20,12 @@ from typing import Any
 import pytest
 
 from cdpwave import CDPClient, CDPSession
+from cdpwave.exceptions import CommandError
+
+TEST_PAGE = (
+    "data:text/html,<html><body><h1>Example Domain</h1>"
+    "<p>para</p><div>block</div></body></html>"
+)
 
 
 async def _wait_for_page(page: CDPSession, url: str = "https://example.com") -> None:
@@ -28,7 +34,8 @@ async def _wait_for_page(page: CDPSession, url: str = "https://example.com") -> 
     for _ in range(20):
         await asyncio.sleep(0.5)
         result = await page.runtime.evaluate(
-            "document.title", return_by_value=True
+            "document.readyState === 'complete' && !!document.body",
+            return_by_value=True,
         )
         if result.get("result", {}).get("value"):
             break
@@ -987,8 +994,13 @@ class TestNetworkExpanded:
             await client.new_page() as session,
         ):
             await session.network.enable()
-            await session.network.set_accepted_encodings(["gzip", "deflate"])
-            await session.network.clear_accepted_encodings_override()
+            try:
+                await session.network.set_accepted_encodings(["gzip", "deflate"])
+                await session.network.clear_accepted_encodings_override()
+            except CommandError as exc:
+                if exc.code == -32601:
+                    pytest.skip("Network.setAcceptedEncodings removed from Chrome")
+                raise
 
     async def test_set_cache_disabled(self) -> None:
         async with (
@@ -1019,7 +1031,7 @@ class TestDOMExpanded:
             await CDPClient.launch(headless=True) as client,
             await client.new_page() as session,
         ):
-            await _wait_for_page(session)
+            await _wait_for_page(session, TEST_PAGE)
             await session.dom.enable()
             doc = await session.dom.get_document(depth=2)
             root_id = doc["root"]["nodeId"]
@@ -1056,7 +1068,7 @@ class TestDOMExpanded:
             await CDPClient.launch(headless=True) as client,
             await client.new_page() as session,
         ):
-            await _wait_for_page(session)
+            await _wait_for_page(session, TEST_PAGE)
             await session.dom.enable()
             doc = await session.dom.get_document(depth=2)
             root_id = doc["root"]["nodeId"]
@@ -1425,7 +1437,7 @@ class TestCSSExpanded:
             await CDPClient.launch(headless=True) as client,
             await client.new_page() as session,
         ):
-            await _wait_for_page(session)
+            await _wait_for_page(session, TEST_PAGE)
             await session.dom.enable()
             await session.css.enable()
             doc = await session.dom.get_document(depth=2)
@@ -1440,7 +1452,7 @@ class TestCSSExpanded:
             await CDPClient.launch(headless=True) as client,
             await client.new_page() as session,
         ):
-            await _wait_for_page(session)
+            await _wait_for_page(session, TEST_PAGE)
             await session.dom.enable()
             await session.css.enable()
             doc = await session.dom.get_document(depth=2)

@@ -9,6 +9,7 @@ import asyncio
 import pytest
 
 from cdpwave import CDPSession
+from cdpwave.exceptions import CommandError
 
 
 @pytest.mark.integration
@@ -65,9 +66,14 @@ class TestNetworkComprehensive:
 
     async def test_clear_accepted_encodings_override(self, page: CDPSession) -> None:
         await page.network.enable()
-        await page.network.set_accepted_encodings(["gzip", "deflate"])
-        result = await page.network.clear_accepted_encodings_override()
-        assert result == {}
+        try:
+            await page.network.set_accepted_encodings(["gzip", "deflate"])
+            result = await page.network.clear_accepted_encodings_override()
+            assert result == {}
+        except CommandError as exc:
+            if exc.code == -32601:
+                pytest.skip("Network.setAcceptedEncodings removed from Chrome")
+            raise
 
     async def test_get_certificate(self, page: CDPSession) -> None:
         await page.network.enable()
