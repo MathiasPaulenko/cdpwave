@@ -152,7 +152,7 @@ class TestCDPClient:
         mock_pipe_cls.assert_called_once_with(
             read_fd=mock_launcher.pipe_fds[0],
             write_fd=mock_launcher.pipe_fds[1],
-            process=None,
+            process=mock_launcher.process,
         )
         mock_pipe_conn.connect.assert_awaited_once()
         assert client.is_closed is False
