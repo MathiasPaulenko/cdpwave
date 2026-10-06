@@ -12,9 +12,16 @@ import subprocess
 import tempfile
 import urllib.request
 from dataclasses import dataclass
+from typing import Any
 
 from cdpwave.browser.finder import find_browser
 from cdpwave.exceptions import LaunchError, LaunchTimeoutError
+
+fcntl: Any
+if os.name == "posix":
+    import fcntl
+else:
+    fcntl = None
 
 logger = logging.getLogger("cdpwave.browser.launcher")
 
@@ -229,9 +236,44 @@ class BrowserLauncher:
         rd3, wr3 = os.pipe()
         rd4, wr4 = os.pipe()
 
-        def _map_child_fds() -> None:
+        # Chrome requires the pipe ends at exactly fd 3 and fd 4. Since
+        # preexec_fn runs before subprocess closes extra fds, remap in
+        # the parent instead: move rd3 -> 3 and wr4 -> 4, then pass them
+        # via pass_fds. Our other pipe ends occupying 3/4 are first moved
+        # to a higher fd so nothing gets clobbered.
+        assert fcntl is not None
+
+        def _rehome(fd: int) -> int:
+            newfd: int = fcntl.fcntl(fd, fcntl.F_DUPFD, 5)
+            os.close(fd)
+            return newfd
+
+        if rd4 in (3, 4):
+            rd4 = _rehome(rd4)
+        if wr3 in (3, 4):
+            wr3 = _rehome(wr3)
+        if rd3 == 4:
+            rd3 = _rehome(rd3)
+        if wr4 == 3:
+            wr4 = _rehome(wr4)
+        # If 3/4 are already open in the parent (not our pipe ends), move
+        # them aside so dup2 doesn't clobber an unrelated descriptor.
+        ours = {rd3, wr3, rd4, wr4}
+        for target in (3, 4):
+            try:
+                fcntl.fcntl(target, fcntl.F_GETFD)
+            except OSError:
+                continue  # fd not open — free to use
+            if target not in ours:
+                _rehome(target)
+        if rd3 != 3:
             os.dup2(rd3, 3)
+            os.close(rd3)
+            rd3 = 3
+        if wr4 != 4:
             os.dup2(wr4, 4)
+            os.close(wr4)
+            wr4 = 4
 
         try:
             # asyncio.subprocess cannot pass fds 3/4 to the child or run
@@ -242,7 +284,6 @@ class BrowserLauncher:
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.PIPE,
                 pass_fds=(rd3, wr4),
-                preexec_fn=_map_child_fds,
             )
         except OSError as exc:
             for fd in (rd3, wr3, rd4, wr4):
