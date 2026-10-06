@@ -1174,7 +1174,7 @@ class CDPClient:
         port: int = 0,
         user_data_dir: str | None = None,
         extra_args: list[str] | None = None,
-        timeout: float = 10.0,
+        timeout: float = 30.0,
         max_retries: int = 0,
         backoff_base: float = 1.0,
         backoff_max: float = 30.0,

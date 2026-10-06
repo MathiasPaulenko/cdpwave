@@ -232,7 +232,7 @@ class BrowserLauncher:
         self._temp_dir = tempfile.mkdtemp(prefix="cdpwave-")
         return self._temp_dir
 
-    async def launch(self, timeout: float = 10.0) -> BrowserInfo:
+    async def launch(self, timeout: float = 30.0) -> BrowserInfo:
         """Launch the browser and wait for the CDP endpoint to be ready.
 
         Args:
@@ -289,7 +289,7 @@ class BrowserLauncher:
 
         raise LaunchError("Failed to launch browser after retries")
 
-    async def _launch_pipe(self, timeout: float = 10.0) -> BrowserInfo:
+    async def _launch_pipe(self, timeout: float = 30.0) -> BrowserInfo:
         """Launch browser with ``--remote-debugging-pipe``.
 
         Chrome's pipe protocol uses file descriptors 3 (commands in)
@@ -405,7 +405,7 @@ class BrowserLauncher:
         )
         return self._info
 
-    async def _wait_for_endpoint(self, timeout: float = 10.0) -> BrowserInfo:
+    async def _wait_for_endpoint(self, timeout: float = 30.0) -> BrowserInfo:
         """Poll the HTTP discovery endpoint until the browser is ready."""
         url = f"http://127.0.0.1:{self._port}/json/version"
         delay = 0.1
