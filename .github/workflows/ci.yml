@@ -30,7 +30,7 @@ jobs:
       - run: |
           google-chrome --version || true
           which google-chrome || true
-      - run: pytest tests/integration/ -v --timeout=60
+      - run: pytest tests/integration/ -v --timeout=60 -n 4
         env:
           CI: "true"
 
@@ -45,6 +45,6 @@ jobs:
       - run: |
           google-chrome --version || true
           which google-chrome || true
-      - run: pytest tests/e2e/ -v --timeout=120
+      - run: pytest tests/e2e/ -v --timeout=120 -n 4
         env:
           CI: "true"
