@@ -12,7 +12,7 @@ from cdpwave.types import (
 
 _VALID_SAME_SITE = frozenset({"Strict", "Lax", "None"})
 _VALID_COOKIE_PRIORITY = frozenset({"Low", "Medium", "High"})
-_VALID_SOURCE_SCHEME = frozenset({"Secure", "NonSecure"})
+_VALID_SOURCE_SCHEME = frozenset({"Unset", "NonSecure", "Secure"})
 _VALID_CONNECTION_TYPES = frozenset({
     "none",
     "cellular2g",

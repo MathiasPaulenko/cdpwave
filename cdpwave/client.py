@@ -577,6 +577,7 @@ class CDPSession:
             if self._client is not None:
                 self._client._session_dispatchers.pop(sub_session_id, None)
                 self._client._sessions.pop(sub_session_id, None)
+                self._client._session_targets.pop(sub_session_id, None)
             logger.info("Sub-session %s detached", sub_session_id)
 
     async def send(
@@ -1213,6 +1214,7 @@ class CDPClient:
             )
             info = await launcher.launch(timeout=timeout)
 
+            client: CDPClient | None = None
             try:
                 if info.pipe:
                     proc = launcher.process
@@ -1224,9 +1226,10 @@ class CDPClient:
                         write_fd=fds[1],
                         process=proc if getattr(proc, "pid", None) is not None else None,
                     )
-                    await connection.connect()
                     client = cls(connection, launcher=launcher, discovery=None)
                     connection._event_callback = client._event_callback
+                    connection._on_reconnect = client._invalidate_sessions
+                    await connection.connect()
                     return client
 
                 discovery = TargetDiscovery(port=info.port)
@@ -1236,14 +1239,16 @@ class CDPClient:
                     backoff_base=backoff_base,
                     backoff_max=backoff_max,
                 )
+                client = cls(connection, launcher=launcher, discovery=discovery)
+                connection._event_callback = client._event_callback
+                connection._on_reconnect = client._invalidate_sessions
                 await connection.connect()
+                return client
             except Exception:
+                if client is not None:
+                    client._closed = True
                 await launcher.close()
                 raise
-            client = cls(connection, launcher=launcher, discovery=discovery)
-            connection._event_callback = client._event_callback
-            connection._on_reconnect = client._invalidate_sessions
-            return client
 
         return _LaunchContext(_do_launch())
 
@@ -1291,14 +1296,15 @@ class CDPClient:
                 backoff_base=backoff_base,
                 backoff_max=backoff_max,
             )
-            try:
-                await connection.connect()
-            except Exception:
-                await connection.close()
-                raise
             client = cls(connection, launcher=None, discovery=discovery)
             connection._event_callback = client._event_callback
             connection._on_reconnect = client._invalidate_sessions
+            try:
+                await connection.connect()
+            except Exception:
+                client._closed = True
+                await connection.close()
+                raise
             return client
 
         return _LaunchContext(_do_connect())

@@ -11,7 +11,6 @@ _VALID_SERVICES = frozenset({
     "pushMessaging",
     "notifications",
     "paymentHandler",
-    "paymentInstallments",
 })
 
 
@@ -34,7 +33,7 @@ class BackgroundServiceDomain(BaseDomain):
             service: Service name (e.g. ``"backgroundFetch"``,
                 ``"backgroundSync"``, ``"periodicBackgroundSync"``,
                 ``"pushMessaging"``, ``"notifications"``,
-                ``"paymentHandler"``, ``"paymentInstallments"``).
+                ``"paymentHandler"``).
         """
         if not isinstance(service, str):
             raise TypeError("service must be a str")

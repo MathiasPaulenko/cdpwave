@@ -129,6 +129,12 @@ def find_browser(preferred: BrowserType | None = None) -> str:
     if env_override and os.path.isfile(env_override):
         return env_override
 
+    if preferred is not None and preferred not in _SEARCH_ORDER:
+        raise BrowserNotFoundError(
+            f"Unknown browser type {preferred!r}; "
+            f"expected one of {list(_SEARCH_ORDER)}"
+        )
+
     search_order: list[BrowserType] = []
     if preferred is not None:
         search_order.append(preferred)

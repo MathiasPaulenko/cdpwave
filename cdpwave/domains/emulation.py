@@ -274,8 +274,9 @@ class EmulationDomain(BaseDomain):
         """Emulate CSS media type or media features.
 
         Args:
-            media: Media type to emulate (``"print"``, ``"screen"``, ``""``
-                to clear).
+            media: Media type to emulate (``"print"``, ``"screen"``).
+                Empty string (default) leaves the media override
+                unchanged — use :meth:`clear_emulated_media` to reset.
             features: List of media feature dicts with ``name`` and ``value``.
         """
         if media and media not in _VALID_MEDIA_TYPES:

@@ -12,7 +12,10 @@ _VALID_STORAGE_TYPES = frozenset({
     "cache_storage",
     "file_systems",
     "service_workers",
-    "web_sql",
+    "websql",
+    "shader_cache",
+    "storage_buckets",
+    "other",
 })
 
 
@@ -130,16 +133,17 @@ class StorageDomain(BaseDomain):
             raise TypeError("origin must be a string")
         if not isinstance(storage_types, str):
             raise TypeError("storage_types must be a string")
-        for st in storage_types.split(","):
-            st = st.strip()
+        parts = [st.strip() for st in storage_types.split(",")]
+        for st in parts:
             if st not in _VALID_STORAGE_TYPES:
                 raise ValueError(
                     f"invalid storage type {st!r}; "
                     f"must be one of {sorted(_VALID_STORAGE_TYPES)}"
                 )
+        normalized = ",".join(parts)
         return await self._call(
             "Storage.clearDataForOrigin",
-            {"origin": origin, "storageTypes": storage_types},
+            {"origin": origin, "storageTypes": normalized},
         )
 
     async def get_trust_tokens(self) -> dict[str, Any]:
@@ -277,16 +281,17 @@ class StorageDomain(BaseDomain):
             raise TypeError("storage_key must be a string")
         if not isinstance(storage_types, str):
             raise TypeError("storage_types must be a string")
-        for st in storage_types.split(","):
-            st = st.strip()
+        parts = [st.strip() for st in storage_types.split(",")]
+        for st in parts:
             if st not in _VALID_STORAGE_TYPES:
                 raise ValueError(
                     f"invalid storage type {st!r}; "
                     f"must be one of {sorted(_VALID_STORAGE_TYPES)}"
                 )
+        normalized = ",".join(parts)
         return await self._call(
             "Storage.clearDataForStorageKey",
-            {"storageKey": storage_key, "storageTypes": storage_types},
+            {"storageKey": storage_key, "storageTypes": normalized},
         )
 
     async def override_quota_for_origin(

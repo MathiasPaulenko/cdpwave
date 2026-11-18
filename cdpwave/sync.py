@@ -23,7 +23,7 @@ import inspect
 import threading
 from typing import Any
 
-from cdpwave.client import CDPClient, CDPSession
+from cdpwave.client import BrowserContext, CDPClient, CDPSession
 
 
 class _SyncRunner:
@@ -73,7 +73,12 @@ class _SyncRunner:
         async def _wrap() -> Any:
             return await awaitable
 
-        future = asyncio.run_coroutine_threadsafe(_wrap(), self._loop)
+        try:
+            future = asyncio.run_coroutine_threadsafe(_wrap(), self._loop)
+        except RuntimeError:
+            if inspect.iscoroutine(awaitable):
+                awaitable.close()
+            raise
         return future.result()
 
     def shutdown(self) -> None:
@@ -275,6 +280,49 @@ class SyncCDPSession:
         return _wrap(getattr(self._session, name), self._runner)
 
 
+class SyncBrowserContext:
+    """Synchronous wrapper around :class:`BrowserContext`.
+
+    Returned by :meth:`SyncCDPClient.new_context`. Pages created via
+    :meth:`new_page` are :class:`SyncCDPSession` instances.
+    """
+
+    def __init__(self, context: BrowserContext, runner: _SyncRunner) -> None:
+        self._context = context
+        self._runner = runner
+
+    @property
+    def context_id(self) -> str:
+        """The browser context ID."""
+        return self._context.context_id
+
+    @property
+    def is_closed(self) -> bool:
+        """Whether this context has been closed."""
+        return self._context.is_closed
+
+    def new_page(
+        self,
+        url: str = "about:blank",
+        auto_attach: bool = False,
+    ) -> SyncCDPSession:
+        """Create a new page target within this browser context."""
+        session = self._runner.run(
+            self._context.new_page(url=url, auto_attach=auto_attach)
+        )
+        return SyncCDPSession(session, self._runner)
+
+    def close(self) -> None:
+        """Dispose the browser context and all its sessions."""
+        self._runner.run(self._context.close())
+
+    def __enter__(self) -> SyncBrowserContext:
+        return self
+
+    def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:
+        self.close()
+
+
 class SyncCDPClient:
     """Synchronous wrapper around :class:`CDPClient`.
 
@@ -365,17 +413,34 @@ class SyncCDPClient:
         """Run an async coroutine synchronously."""
         return self._runner.run(coro)
 
-    def new_page(self, url: str = "about:blank") -> SyncCDPSession:
+    def new_page(
+        self,
+        url: str = "about:blank",
+        auto_attach: bool = False,
+    ) -> SyncCDPSession:
         """Create a new page target.
 
         Args:
             url: Initial URL.
+            auto_attach: If True, auto-attach to child targets (iframes,
+                workers) and expose them via ``session.sub_sessions``.
 
         Returns:
             A :class:`SyncCDPSession` for the new page.
         """
-        session = self._runner.run(self._client.new_page(url=url))
+        session = self._runner.run(
+            self._client.new_page(url=url, auto_attach=auto_attach)
+        )
         return SyncCDPSession(session, self._runner)
+
+    def new_context(self) -> SyncBrowserContext:
+        """Create a new isolated browser context.
+
+        Returns:
+            A :class:`SyncBrowserContext` for the new context.
+        """
+        context = self._runner.run(self._client.new_context())
+        return SyncBrowserContext(context, self._runner)
 
     def connect_to_page(self, target_id: str) -> SyncCDPSession:
         """Attach to an existing page by target ID.

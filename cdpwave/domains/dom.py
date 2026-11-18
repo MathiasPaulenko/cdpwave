@@ -18,7 +18,6 @@ _VALID_RELATIONS = frozenset({
     "PopoverTarget",
     "InterestTarget",
     "CommandFor",
-    "controlledby",
 })
 _VALID_PHYSICAL_AXES = frozenset({"Horizontal", "Vertical", "Both"})
 _VALID_LOGICAL_AXES = frozenset({"Inline", "Block", "Both"})
@@ -908,7 +907,7 @@ class DOMDomain(BaseDomain):
             node_id: Id of the node from which to query the relation.
             relation: Type of relation to get. One of
                 ``"PopoverTarget"``, ``"InterestTarget"``,
-                ``"CommandFor"``, ``"controlledby"``.
+                ``"CommandFor"``.
 
         Returns:
             Dict with ``nodeId`` of the matching element.
@@ -920,7 +919,7 @@ class DOMDomain(BaseDomain):
         if relation not in _VALID_RELATIONS:
             raise ValueError(
                 "relation must be 'PopoverTarget', 'InterestTarget', "
-                "'CommandFor', or 'controlledby'"
+                "or 'CommandFor'"
             )
         return await self._call(
             "DOM.getElementByRelation",

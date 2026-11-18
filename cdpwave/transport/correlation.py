@@ -62,6 +62,14 @@ class Correlator:
         if fut is not None and not fut.done():
             fut.set_exception(error)
 
+    def discard(self, cmd_id: int) -> None:
+        """Remove a pending command without resolving or rejecting it.
+
+        Used when the awaiting caller is cancelled: the command may still
+        be in flight, but nobody is listening for its response anymore.
+        """
+        self._pending.pop(cmd_id, None)
+
     def reject_all(self, error: Exception) -> None:
         """Reject all pending commands with the given exception.
 

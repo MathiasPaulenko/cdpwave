@@ -89,6 +89,8 @@ class Connection:
 
     async def connect(self) -> None:
         """Open the WebSocket connection and start the receive loop."""
+        if self._ws is not None or self._receive_task is not None:
+            raise ConnectionClosedError("Connection is already connected")
         self._ws = await connect(
             self._url,
             max_size=None,
@@ -163,19 +165,25 @@ class Connection:
                 ConnectionClosedError("Connection is closed"),
             )
             raise ConnectionClosedError("Connection is closed") from None
+        except Exception:
+            self._correlator.discard(cmd_id)
+            raise
         logger.debug("→ [%d] %s", cmd_id, method)
 
-        if effective_timeout <= 0:
-            return await future
-
         try:
-            return await asyncio.wait_for(future, timeout=effective_timeout)
-        except TimeoutError:
-            self._correlator.reject(
-                cmd_id,
-                CommandError(-1, f"Command timeout: {method}"),
-            )
-            raise CommandTimeoutError(f"Command timeout: {method}") from None
+            if effective_timeout <= 0:
+                return await future
+            try:
+                return await asyncio.wait_for(future, timeout=effective_timeout)
+            except TimeoutError:
+                self._correlator.reject(
+                    cmd_id,
+                    CommandError(-1, f"Command timeout: {method}"),
+                )
+                raise CommandTimeoutError(f"Command timeout: {method}") from None
+        except asyncio.CancelledError:
+            self._correlator.discard(cmd_id)
+            raise
 
     async def close(self) -> None:
         """Close the WebSocket connection and cancel the receive loop.

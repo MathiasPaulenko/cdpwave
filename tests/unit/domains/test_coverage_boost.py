@@ -2162,10 +2162,10 @@ class TestDOMCoverage:
     async def test_get_element_by_relation(self) -> None:
         fake = FakeSender({"nodeId": 5})
         domain = DOMDomain(fake)
-        await domain.get_element_by_relation(1, "controlledby")
+        await domain.get_element_by_relation(1, "CommandFor")
         assert fake.last_call == (
             "DOM.getElementByRelation",
-            {"nodeId": 1, "relation": "controlledby"},
+            {"nodeId": 1, "relation": "CommandFor"},
         )
 
     async def test_set_node_stack_traces_enabled(self) -> None:

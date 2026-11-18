@@ -7,6 +7,8 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Any
 
+from cdpwave.exceptions import DiscoveryError
+
 
 @dataclass(frozen=True)
 class TargetInfo:
@@ -65,9 +67,14 @@ class TargetDiscovery:
 
     async def get_version(self) -> VersionInfo:
         """Fetch browser version information."""
-        data: dict[str, Any] = await asyncio.to_thread(
+        data: Any = await asyncio.to_thread(
             _http_get, f"{self._base_url}/json/version"
         )
+        if not isinstance(data, dict):
+            raise DiscoveryError(
+                f"Malformed /json/version response: expected object, "
+                f"got {type(data).__name__}"
+            )
         return VersionInfo(
             browser=str(data.get("Browser", "")),
             protocol_version=str(data.get("Protocol-Version", "")),
@@ -77,18 +84,27 @@ class TargetDiscovery:
 
     async def list_targets(self) -> list[TargetInfo]:
         """List all available CDP targets."""
-        data: list[dict[str, Any]] = await asyncio.to_thread(
+        data: Any = await asyncio.to_thread(
             _http_get, f"{self._base_url}/json/list"
         )
+        if not isinstance(data, list) or not all(
+            isinstance(item, dict) for item in data
+        ):
+            raise DiscoveryError(
+                "Malformed /json/list response: expected a list of objects"
+            )
         targets: list[TargetInfo] = []
         for item in data:
+            ws_url = item.get("webSocketDebuggerUrl")
             targets.append(
                 TargetInfo(
                     target_id=str(item.get("id", "")),
                     type=str(item.get("type", "")),
                     title=str(item.get("title", "")),
                     url=str(item.get("url", "")),
-                    web_socket_debugger_url=item.get("webSocketDebuggerUrl"),
+                    web_socket_debugger_url=(
+                        str(ws_url) if ws_url is not None else None
+                    ),
                 )
             )
         return targets
@@ -96,21 +112,35 @@ class TargetDiscovery:
     async def new_tab(self, url: str = "about:blank") -> TargetInfo:
         """Create a new tab and return its target info."""
         encoded = urllib.parse.quote_plus(url)
-        data: dict[str, Any] = await asyncio.to_thread(
+        data: Any = await asyncio.to_thread(
             _http_put, f"{self._base_url}/json/new?{encoded}"
         )
+        if not isinstance(data, dict):
+            raise DiscoveryError(
+                f"Malformed /json/new response: expected object, "
+                f"got {type(data).__name__}"
+            )
+        ws_url = data.get("webSocketDebuggerUrl")
         return TargetInfo(
             target_id=str(data.get("id", "")),
             type=str(data.get("type", "")),
             title=str(data.get("title", "")),
             url=str(data.get("url", "")),
-            web_socket_debugger_url=data.get("webSocketDebuggerUrl"),
+            web_socket_debugger_url=(
+                str(ws_url) if ws_url is not None else None
+            ),
         )
 
     async def activate_tab(self, target_id: str) -> None:
         """Activate a tab by target ID."""
-        await asyncio.to_thread(_http_get, f"{self._base_url}/json/activate/{target_id}")
+        quoted = urllib.parse.quote(target_id, safe="")
+        await asyncio.to_thread(
+            _http_get, f"{self._base_url}/json/activate/{quoted}"
+        )
 
     async def close_tab(self, target_id: str) -> None:
         """Close a tab by target ID."""
-        await asyncio.to_thread(_http_get, f"{self._base_url}/json/close/{target_id}")
+        quoted = urllib.parse.quote(target_id, safe="")
+        await asyncio.to_thread(
+            _http_get, f"{self._base_url}/json/close/{quoted}"
+        )

@@ -39,6 +39,8 @@ def deserialize_message(raw: str) -> dict[str, Any]:
         Parsed CDP message dict.
     """
     result: dict[str, Any] = json.loads(raw)
+    if not isinstance(result, dict):
+        raise ValueError("CDP message is not a JSON object")
     return result
 
 

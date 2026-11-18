@@ -206,7 +206,14 @@ async def wait_for_selector(
         logger.debug("MutationObserver wait failed, falling back to polling")
 
     while loop.time() < deadline:
-        query = await session.dom.query_selector(root_node_id, selector)
+        remaining = deadline - loop.time()
+        try:
+            query = await asyncio.wait_for(
+                session.dom.query_selector(root_node_id, selector),
+                timeout=remaining,
+            )
+        except TimeoutError:
+            break
         node_id = query.get("nodeId", 0)
         if node_id and node_id != 0:
             return node_id
@@ -239,8 +246,6 @@ async def wait_for_network_idle(
     Raises:
         TimeoutError: If network doesn't settle within ``timeout``.
     """
-    await session.network.enable()
-
     loop = asyncio.get_running_loop()
     pending: set[str] = set()
     last_activity = loop.time()
@@ -270,7 +275,10 @@ async def wait_for_network_idle(
     sub_done = session.on("Network.loadingFinished", _on_loading_finished)
     sub_fail = session.on("Network.loadingFailed", _on_loading_failed)
     try:
+        # Enable Network *after* subscribing so requests started in
+        # between are never missed.
         deadline = loop.time() + timeout
+        await session.network.enable()
         while True:
             now = loop.time()
             if now >= deadline:

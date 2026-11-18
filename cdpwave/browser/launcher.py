@@ -178,6 +178,7 @@ class BrowserLauncher:
         self._pipe_write_fd: int | None = None
         self._stderr_tail: list[bytes] = []
         self._stderr_thread: threading.Thread | None = None
+        self._stderr_task: asyncio.Task[None] | None = None
 
     def _build_args(self) -> tuple[list[str], socket.socket | None]:
         """Build the command-line arguments for the browser process.
@@ -259,23 +260,63 @@ class BrowserLauncher:
                 self._user_data_dir = None
             args, port_socket = self._build_args()
 
-            self._process = await asyncio.create_subprocess_exec(
-                *args,
-                stdout=asyncio.subprocess.DEVNULL,
-                stderr=asyncio.subprocess.PIPE,
-            )
+            try:
+                self._process = await asyncio.create_subprocess_exec(
+                    *args,
+                    stdout=asyncio.subprocess.DEVNULL,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+            except Exception as exc:
+                if port_socket is not None:
+                    port_socket.close()
+                if self._temp_dir is not None:
+                    shutil.rmtree(self._temp_dir, ignore_errors=True)
+                    self._temp_dir = None
+                self._user_data_dir = None
+                raise LaunchError(
+                    f"Failed to launch browser process: {exc}"
+                ) from exc
             if port_socket is not None:
                 port_socket.close()
+
+            # Drain stderr continuously so the browser never blocks on a
+            # full pipe buffer; keep the tail for error reporting.
+            stderr_stream = (
+                self._process.stderr if self._process is not None else None
+            )
+            self._stderr_tail = []
+
+            async def _drain_stderr(stream: Any) -> None:
+                if stream is None:
+                    return
+                while True:
+                    chunk = await stream.read(65536)
+                    if not chunk:
+                        return
+                    self._stderr_tail.append(chunk)
+                    if len(self._stderr_tail) > 8:
+                        del self._stderr_tail[: len(self._stderr_tail) - 8]
+
+            self._stderr_task = asyncio.create_task(_drain_stderr(stderr_stream))
 
             try:
                 self._info = await self._wait_for_endpoint(timeout=timeout)
                 return self._info
             except (LaunchError, LaunchTimeoutError):
+                if self._stderr_task is not None:
+                    self._stderr_task.cancel()
+                    self._stderr_task = None
                 if self._process is not None:
                     with contextlib.suppress(Exception):
                         self._process.terminate()
-                    with contextlib.suppress(Exception):
+                    try:
                         await asyncio.wait_for(self._process.wait(), timeout=2.0)
+                    except Exception:
+                        with contextlib.suppress(Exception):
+                            self._process.kill()
+                            await asyncio.wait_for(
+                                self._process.wait(), timeout=2.0
+                            )
                 self._process = None
                 if self._temp_dir is not None:
                     shutil.rmtree(self._temp_dir, ignore_errors=True)
@@ -390,8 +431,18 @@ class BrowserLauncher:
                     os.close(fd)
             self._pipe_read_fd = None
             self._pipe_write_fd = None
+            returncode = self._process.returncode
+            stderr_obj = getattr(self._process, "stderr", None)
+            if stderr_obj is not None:
+                with contextlib.suppress(Exception):
+                    stderr_obj.close()
+            self._process = None
+            if self._temp_dir is not None:
+                shutil.rmtree(self._temp_dir, ignore_errors=True)
+                self._temp_dir = None
+            self._user_data_dir = None
             raise LaunchError(
-                f"Browser process exited with code {self._process.returncode}"
+                f"Browser process exited with code {returncode}"
                 + (f": {stderr_text}" if stderr_text else "")
             )
 
@@ -422,14 +473,26 @@ class BrowserLauncher:
             else:
                 exited = False
             if exited and proc is not None:
-                stderr_data = b""
-                if proc.stderr is not None:
-                    read_result = proc.stderr.read()
-                    if inspect.isawaitable(read_result):
-                        stderr_data = await read_result
-                    else:
-                        stderr_data = read_result
-                stderr_text = stderr_data.decode("utf-8", errors="replace").strip()
+                if isinstance(proc, asyncio.subprocess.Process):
+                    # The drain task consumes stderr continuously; give it a
+                    # moment to flush the tail after process exit.
+                    await asyncio.sleep(0.1)
+                    stderr_text = (
+                        b"".join(self._stderr_tail)
+                        .decode("utf-8", errors="replace")
+                        .strip()
+                    )
+                else:
+                    stderr_data = b""
+                    if proc.stderr is not None:
+                        read_result = proc.stderr.read()
+                        if inspect.isawaitable(read_result):
+                            stderr_data = await read_result
+                        else:
+                            stderr_data = read_result
+                    stderr_text = stderr_data.decode(
+                        "utf-8", errors="replace"
+                    ).strip()
                 raise LaunchError(
                     f"Browser process exited with code {proc.returncode}"
                     + (f": {stderr_text}" if stderr_text else "")
@@ -455,6 +518,12 @@ class BrowserLauncher:
 
     async def close(self) -> None:
         """Terminate the browser process and clean up temporary files."""
+        if self._stderr_task is not None:
+            self._stderr_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._stderr_task
+            self._stderr_task = None
+
         for fd in (self._pipe_read_fd, self._pipe_write_fd):
             if fd is not None:
                 with contextlib.suppress(OSError):
@@ -483,7 +552,24 @@ class BrowserLauncher:
                     except TimeoutError:
                         self._process.kill()
                         await asyncio.wait_for(self._process.wait(), timeout=5.0)
+            proc = self._process
             self._process = None
+            if proc is not None:
+                transport = getattr(proc, "_transport", None)
+                if transport is not None:
+                    with contextlib.suppress(Exception):
+                        res = transport.close()
+                        if inspect.isawaitable(res):
+                            await res
+                stderr_obj = getattr(proc, "stderr", None)
+                if stderr_obj is not None:
+                    with contextlib.suppress(Exception):
+                        res = stderr_obj.close()
+                        if inspect.isawaitable(res):
+                            await res
+            if self._stderr_thread is not None:
+                self._stderr_thread.join(timeout=1.0)
+                self._stderr_thread = None
 
         if self._temp_dir is not None:
             shutil.rmtree(self._temp_dir, ignore_errors=True)

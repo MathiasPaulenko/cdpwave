@@ -95,19 +95,50 @@ class PipeConnection:
             raise ConnectionClosedError(
                 "Pipe connections are only supported on POSIX systems"
             )
+        if self._read_transport is not None or self._write_transport is not None:
+            raise ConnectionClosedError("Connection is already connected")
         loop = asyncio.get_running_loop()
-        self._read_file = os.fdopen(self._read_fd, "rb", buffering=0)
-        self._write_file = os.fdopen(self._write_fd, "wb", buffering=0)
-        transport, _ = await loop.connect_read_pipe(
-            lambda: _ReadProtocol(self),
-            self._read_file,
-        )
-        self._read_transport = transport
-        write_transport, _ = await loop.connect_write_pipe(
-            asyncio.Protocol,
-            self._write_file,
-        )
-        self._write_transport = write_transport
+        # Duplicate the fds so this connection owns its own copies; the
+        # launcher keeps the originals and closes them independently.
+        read_fd = os.dup(self._read_fd)
+        write_fd = os.dup(self._write_fd)
+        read_file: Any = None
+        write_file: Any = None
+        try:
+            read_file = os.fdopen(read_fd, "rb", buffering=0)
+            write_file = os.fdopen(write_fd, "wb", buffering=0)
+            transport, _ = await loop.connect_read_pipe(
+                lambda: _ReadProtocol(self),
+                read_file,
+            )
+            self._read_transport = transport
+            write_transport, _ = await loop.connect_write_pipe(
+                asyncio.Protocol,
+                write_file,
+            )
+            self._write_transport = write_transport
+            self._read_file = read_file
+            self._write_file = write_file
+        except Exception:
+            for t in (self._read_transport, self._write_transport):
+                if t is not None:
+                    with contextlib.suppress(Exception):
+                        t.close()
+            self._read_transport = None
+            self._write_transport = None
+            if read_file is not None:
+                with contextlib.suppress(Exception):
+                    read_file.close()
+            else:
+                with contextlib.suppress(OSError):
+                    os.close(read_fd)
+            if write_file is not None:
+                with contextlib.suppress(Exception):
+                    write_file.close()
+            else:
+                with contextlib.suppress(OSError):
+                    os.close(write_fd)
+            raise
         pid = self._process.pid if self._process is not None else -1
         logger.info("Pipe connection established (pid=%d)", pid)
 
@@ -177,6 +208,12 @@ class PipeConnection:
             self._correlator.reject_all(
                 ConnectionClosedError("Pipe closed unexpectedly"),
             )
+            for transport in (self._read_transport, self._write_transport):
+                if transport is not None:
+                    with contextlib.suppress(Exception):
+                        transport.close()
+            self._read_transport = None
+            self._write_transport = None
             logger.info("Pipe read end closed by browser")
 
     async def send_command(
@@ -220,19 +257,25 @@ class PipeConnection:
                 ConnectionClosedError("Pipe connection is closed"),
             )
             raise ConnectionClosedError("Pipe connection is closed") from None
+        except Exception:
+            self._correlator.discard(cmd_id)
+            raise
         logger.debug("→ [%d] %s", cmd_id, method)
 
-        if effective_timeout <= 0:
-            return await future
-
         try:
-            return await asyncio.wait_for(future, timeout=effective_timeout)
-        except TimeoutError:
-            self._correlator.reject(
-                cmd_id,
-                CommandError(-1, f"Command timeout: {method}"),
-            )
-            raise CommandTimeoutError(f"Command timeout: {method}") from None
+            if effective_timeout <= 0:
+                return await future
+            try:
+                return await asyncio.wait_for(future, timeout=effective_timeout)
+            except TimeoutError:
+                self._correlator.reject(
+                    cmd_id,
+                    CommandError(-1, f"Command timeout: {method}"),
+                )
+                raise CommandTimeoutError(f"Command timeout: {method}") from None
+        except asyncio.CancelledError:
+            self._correlator.discard(cmd_id)
+            raise
 
     async def close(self) -> None:
         """Close the pipe transports and reject pending commands."""
@@ -251,6 +294,12 @@ class PipeConnection:
         if self._write_transport is not None:
             self._write_transport.close()
             self._write_transport = None
+        for file_obj in (self._read_file, self._write_file):
+            if file_obj is not None:
+                with contextlib.suppress(Exception):
+                    file_obj.close()
+        self._read_file = None
+        self._write_file = None
 
         self._correlator.reject_all(ConnectionClosedError("Pipe connection closed"))
         logger.info("Pipe connection closed")

@@ -59,6 +59,11 @@ class TestFindBrowser:
         result = find_browser()
         assert result == "/usr/bin/chrome"
 
+    def test_invalid_preferred_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("CDPWAVE_BROWSER_PATH", raising=False)
+        with pytest.raises(BrowserNotFoundError, match="Unknown browser type"):
+            find_browser(preferred="netscape")  # type: ignore[arg-type]
+
 
 class TestIndividualFinders:
     def test_find_chrome_returns_none_if_not_found(

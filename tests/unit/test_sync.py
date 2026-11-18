@@ -5,7 +5,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from cdpwave.sync import SyncCDPClient, SyncCDPSession, _SyncDomainWrapper, _SyncRunner
+from cdpwave.sync import (
+    SyncBrowserContext,
+    SyncCDPClient,
+    SyncCDPSession,
+    _SyncDomainWrapper,
+    _SyncRunner,
+)
 
 
 class TestSyncRunner:
@@ -224,6 +230,45 @@ class TestSyncCDPClient:
         mock_client.browser = mock_domain
         sync_client = SyncCDPClient(mock_client)
         assert isinstance(sync_client.browser, _SyncDomainWrapper)
+        sync_client._runner.shutdown()
+
+    def test_new_page_auto_attach(self) -> None:
+        mock_session = MagicMock()
+        mock_client = MagicMock()
+        mock_client.new_page = AsyncMock(return_value=mock_session)
+        sync_client = SyncCDPClient(mock_client)
+        sync_client.new_page("https://example.com", auto_attach=True)
+        mock_client.new_page.assert_called_once_with(
+            url="https://example.com", auto_attach=True
+        )
+        sync_client._runner.shutdown()
+
+    def test_new_context_returns_sync_wrapper(self) -> None:
+        mock_context = MagicMock()
+        mock_context.context_id = "CTX1"
+        mock_client = MagicMock()
+        mock_client.new_context = AsyncMock(return_value=mock_context)
+        sync_client = SyncCDPClient(mock_client)
+        result = sync_client.new_context()
+        assert isinstance(result, SyncBrowserContext)
+        assert result.context_id == "CTX1"
+        sync_client._runner.shutdown()
+
+    def test_context_new_page_returns_sync_session(self) -> None:
+        mock_session = MagicMock()
+        mock_session.session_id = "S9"
+        mock_context = MagicMock()
+        mock_context.new_page = AsyncMock(return_value=mock_session)
+        mock_client = MagicMock()
+        mock_client.new_context = AsyncMock(return_value=mock_context)
+        sync_client = SyncCDPClient(mock_client)
+        ctx = sync_client.new_context()
+        page = ctx.new_page("https://example.com", auto_attach=True)
+        assert isinstance(page, SyncCDPSession)
+        assert page.session_id == "S9"
+        mock_context.new_page.assert_called_once_with(
+            url="https://example.com", auto_attach=True
+        )
         sync_client._runner.shutdown()
 
 

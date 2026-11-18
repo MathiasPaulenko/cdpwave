@@ -435,6 +435,7 @@ class TestAutoAttachRouting:
             "targetInfo": {"targetId": "T-CHILD", "type": "worker"},
         })
         child = parent._sub_sessions["CHILD-1"]
+        client._session_targets["CHILD-1"] = "T-CHILD"
 
         await client._event_callback(
             "Target.detachedFromTarget",
@@ -446,6 +447,7 @@ class TestAutoAttachRouting:
         assert child.is_closed
         assert "CHILD-1" not in client._sessions
         assert "CHILD-1" not in client._session_dispatchers
+        assert "CHILD-1" not in client._session_targets
 
 
 class TestBrowserContextGuards:

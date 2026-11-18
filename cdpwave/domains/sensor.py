@@ -13,7 +13,6 @@ _VALID_SENSOR_TYPES = frozenset({
     "gravity",
     "magnetometer",
     "ambient-light",
-    "proximity",
 })
 
 
