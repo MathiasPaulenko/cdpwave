@@ -204,7 +204,7 @@ class TestNetworkFetchInterception:
         await page.network.enable()
         await page.page.navigate("https://example.com")
         await page.fetch.enable(
-            patterns=[{"urlPattern": "*example.com*", "requestStage": "Response"}],
+            patterns=[{"urlPattern": "*://example.com/*", "requestStage": "Response"}],
         )
         paused_events: list[dict[str, Any]] = []
 
@@ -433,10 +433,10 @@ class TestNetworkEmulateConditions:
     async def test_emulate_multiple_conditions(self, page: CDPSession) -> None:
         await page.network.enable()
         result = await page.network.emulate_network_conditions_by_rule([
-            {"urlPattern": "*example.com*", "offline": False,
+            {"urlPattern": "*://example.com/*", "offline": False,
              "latency": 100, "downloadThroughput": 1000,
              "uploadThroughput": 500},
-            {"urlPattern": "*httpbin.org*", "offline": True,
+            {"urlPattern": "*://httpbin.org/*", "offline": True,
              "latency": 0, "downloadThroughput": -1,
              "uploadThroughput": -1},
         ])

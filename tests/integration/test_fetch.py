@@ -85,7 +85,7 @@ class TestFetch:
                 fulfilled.append(request_id)
 
             await session.fetch.enable(
-                patterns=[{"urlPattern": "*example.com*", "requestStage": "Request"}],
+                patterns=[{"urlPattern": "*://example.com/*", "requestStage": "Request"}],
             )
             session.on("Fetch.requestPaused", on_request_paused)
 
@@ -122,7 +122,7 @@ class TestFetch:
                 failed.append(request_id)
 
             await session.fetch.enable(
-                patterns=[{"urlPattern": "*example.com*", "requestStage": "Request"}],
+                patterns=[{"urlPattern": "*://example.com/*", "requestStage": "Request"}],
             )
             session.on("Fetch.requestPaused", on_request_paused)
 
